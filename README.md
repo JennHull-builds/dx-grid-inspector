@@ -7,6 +7,8 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8.svg)
 
+**Live demo:** [dx-grid-inspector.vercel.app](https://dx-grid-inspector.vercel.app)
+
 ---
 
 ## Overview
@@ -21,6 +23,7 @@ Built as an open-source learning and portfolio project — iterating in public. 
 
 - **Template Grid Manager:** Categorise, filter, and select layout nodes (Display, Navigation, Content, Functional) with status indicators.
 - **Token Calibration Unit:** Edit corner radii, padding, surface colours, and border styles with inline validation.
+- **Live Token Preview:** Sample surface in the harness updates as you calibrate radius, padding, and colours.
 - **Built-in Sanitisation:** Parses CSS layout units (`px`, `rem`, `%`, `vh`, `vw`) and validates hex / rgba colour input.
 - **Local Test Harness:** [`src/App.tsx`](src/App.tsx) wires the panels together with mock nodes so you can try everything immediately.
 - **Tailwind CSS v4 Ready:** Uses `@tailwindcss/vite` and native CSS variable architecture.
@@ -148,9 +151,9 @@ dx-grid-inspector/
 
 Tracked as GitHub issues. Near-term:
 
-- Live token preview surface in the harness
-- Shared `DesignNode` types across components
-- Optional publishable npm package (later)
+- [x] Live token preview surface in the harness
+- [ ] Shared `DesignNode` types across components ([#3](https://github.com/JennHull-builds/dx-grid-inspector/issues/3))
+- [ ] Optional publishable npm package later ([#4](https://github.com/JennHull-builds/dx-grid-inspector/issues/4))
 
 ---
 

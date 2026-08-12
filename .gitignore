@@ -25,3 +25,8 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Local deploy helpers
+.vercel
+.vercel-deploy-files.json
+.vercel-deploy-args.jsonl
