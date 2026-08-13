@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 // Self-contained types (replacing the import from ./Dashboard)
 export type NodeCategory = 'Display' | 'Content' | 'Navigation' | 'Functional';
 
+/** Workflow status shown on each template grid node. */
+export type NodeStatus = 'Ready' | 'In Progress';
+
 export interface DesignNode {
   id: string;
   name: string;
   category: NodeCategory;
-  status: 'Ready' | 'In Progress' | string;
+  status: NodeStatus;
   properties: {
     radius: number | string;
     padding: number | string;
@@ -22,7 +25,12 @@ interface TemplateGridManagerProps {
   onSelectNode: (id: string | null) => void;
   onPurgeNode: (id: string) => void;
   onAddNode: () => void;
+  /** Updates a node's workflow status without changing selection. */
+  onUpdateStatus: (id: string, status: NodeStatus) => void;
 }
+
+const toggleNodeStatus = (status: NodeStatus): NodeStatus =>
+  status === 'Ready' ? 'In Progress' : 'Ready';
 
 const CATEGORIES: Array<'All' | NodeCategory> = [
   'All',
@@ -41,6 +49,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
   onSelectNode,
   onPurgeNode,
   onAddNode,
+  onUpdateStatus,
 }) => {
   const [activeCategory, setActiveCategory] = useState<'All' | NodeCategory>('All');
 
@@ -132,11 +141,18 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0A0A12] text-slate-400 border border-white/5">
                       {node.category}
                     </span>
-                    <span
-                      className={`text-[10px] font-mono px-2 py-0.5 rounded bg-[#0A0A12] border border-white/5 ${statusColor}`}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpdateStatus(node.id, toggleNodeStatus(node.status));
+                      }}
+                      title={`Toggle status for ${node.name}`}
+                      aria-label={`Toggle status for ${node.name}. Currently ${node.status}.`}
+                      className={`text-[10px] font-mono px-2 py-0.5 min-h-8 rounded bg-[#0A0A12] border border-white/5 hover:border-white/20 transition-colors ${statusColor}`}
                     >
                       {node.status}
-                    </span>
+                    </button>
                     <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1A1A2E] text-[#8DC63F]/80">
                       {node.properties.radius}px / {node.properties.padding}px
                     </span>

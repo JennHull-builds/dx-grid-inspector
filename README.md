@@ -21,7 +21,7 @@ Built as an open-source learning and portfolio project — iterating in public. 
 
 ## Features
 
-- **Template Grid Manager:** Categorise, filter, and select layout nodes (Display, Navigation, Content, Functional) with status indicators.
+- **Template Grid Manager:** Categorise, filter, and select layout nodes (Display, Navigation, Content, Functional). Click a status chip to toggle Ready / In Progress without changing the selected row.
 - **Token Calibration Unit:** Edit corner radii, padding, surface colours, and border styles with inline validation.
 - **Live Token Preview:** Sample surface in the harness updates as you calibrate radius, padding, and colours.
 - **Built-in Sanitisation:** Parses CSS layout units (`px`, `rem`, `%`, `vh`, `vw`) and validates hex / rgba colour input.
@@ -72,6 +72,7 @@ import { useState } from 'react'
 import {
   TemplateGridManager,
   type DesignNode,
+  type NodeStatus,
 } from './GridOverlay'
 import {
   TokenCalibrationUnit,
@@ -92,6 +93,12 @@ export default function InspectorHarness() {
     )
   }
 
+  const handleUpdateStatus = (id: string, status: NodeStatus) => {
+    setNodes((prev) =>
+      prev.map((node) => (node.id === id ? { ...node, status } : node)),
+    )
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-[#0A0A12] min-h-screen">
       <TemplateGridManager
@@ -104,6 +111,7 @@ export default function InspectorHarness() {
         onPurgeNode={(id) =>
           setNodes((prev) => prev.filter((n) => n.id !== id))
         }
+        onUpdateStatus={handleUpdateStatus}
       />
       <TokenCalibrationUnit
         selectedNode={selectedNode}

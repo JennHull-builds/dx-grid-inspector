@@ -3,6 +3,7 @@ import {
   TemplateGridManager,
   type DesignNode,
   type NodeCategory,
+  type NodeStatus,
 } from './GridOverlay'
 import {
   TokenCalibrationUnit,
@@ -74,6 +75,12 @@ function App() {
     )
   }
 
+  const handleUpdateStatus = (id: string, status: NodeStatus) => {
+    setNodes((prev) =>
+      prev.map((node) => (node.id === id ? { ...node, status } : node)),
+    )
+  }
+
   const previewRadius =
     selectedNode == null
       ? 12
@@ -106,6 +113,7 @@ function App() {
             onSelectNode={setSelectedNodeId}
             onPurgeNode={handlePurgeNode}
             onAddNode={handleAddNode}
+            onUpdateStatus={handleUpdateStatus}
           />
 
           <section className="rounded-[16px] border border-white/5 bg-[#131322] p-4 shadow-[0_0_16px_rgba(141,198,63,0.08)] sm:p-6">
