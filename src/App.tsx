@@ -171,9 +171,35 @@ function App() {
 
   return (
     <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-[#0A0A12] text-slate-300">
-      <p className="shrink-0 border-b border-white/5 px-4 py-2 text-center font-mono text-[0.65rem] uppercase tracking-[0.12em] text-[#8DC63F]/80">
-        DX Spatial Grid &amp; Token Inspector
-      </p>
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/5 px-4 py-2">
+        <p className="min-w-0 truncate font-mono text-[0.65rem] uppercase tracking-[0.12em] text-[#8DC63F]/80">
+          DX Spatial Grid &amp; Token Inspector
+        </p>
+        <nav
+          className="flex shrink-0 items-center gap-2"
+          aria-label="Project links"
+        >
+          <a
+            href="https://github.com/JennHull-builds/dx-grid-inspector"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#8DC63F]"
+          >
+            GitHub
+          </a>
+          <span className="text-white/20" aria-hidden="true">
+            ·
+          </span>
+          <a
+            href="https://github.com/JennHull-builds/dx-grid-inspector/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#8DC63F]"
+          >
+            MIT Licence
+          </a>
+        </nav>
+      </header>
 
       <header className="shrink-0 border-b border-white/5 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 lg:hidden">
         <h1 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-100">
