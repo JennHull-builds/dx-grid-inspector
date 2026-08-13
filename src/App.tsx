@@ -35,7 +35,7 @@ function LiveTokenPreview({
   previewPadding,
 }: LiveTokenPreviewProps) {
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#141416] p-4 shadow-[0_0_16px_rgba(167,139,250,0.08)] sm:p-6">
+    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#13131F] p-4 shadow-[0_0_16px_rgba(167,139,250,0.08)] sm:p-6">
       <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
         <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
           Live Token Preview
@@ -46,7 +46,7 @@ function LiveTokenPreview({
             : 'Select a node to preview calibrated tokens'}
         </p>
       </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-[12px] border border-dashed border-white/10 bg-[#0B0B0D] p-4">
+      <div className="flex min-h-0 flex-1 items-center justify-center rounded-[12px] border border-dashed border-white/10 bg-[#0A0A10] p-4">
         {selectedNode ? (
           <div
             className="max-w-full border-2 text-sm text-slate-200 transition-all duration-200"
@@ -89,7 +89,7 @@ const createMockNode = (index: number): DesignNode => {
     properties: {
       radius: 12 + index * 2,
       padding: 16 + index * 4,
-      bgPreset: '#1C1C1E',
+      bgPreset: '#1A1A2B',
       borderPreset: '#A78BFA',
     },
   }
@@ -170,7 +170,7 @@ function App() {
   const panelShell = 'min-h-0 flex-col overflow-hidden'
 
   return (
-    <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-[#0B0B0D] text-slate-300">
+    <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-[#0A0A10] text-slate-300">
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/5 px-4 py-2">
         <p className="min-w-0 truncate font-mono text-xs uppercase tracking-[0.12em] text-[#A78BFA]/80">
           DX Spatial Grid &amp; Token Inspector
@@ -216,7 +216,7 @@ function App() {
                 className={`min-h-11 rounded-[12px] border font-mono text-xs font-semibold uppercase tracking-wider transition-all ${
                   isActive
                     ? 'border-[#A78BFA]/40 bg-[#A78BFA]/15 text-[#A78BFA] shadow-[0_0_16px_rgba(167,139,250,0.15)]'
-                    : 'border-white/10 bg-[#141416] text-slate-400'
+                    : 'border-white/10 bg-[#13131F] text-slate-400'
                 }`}
               >
                 {tab.label}
@@ -248,7 +248,7 @@ function App() {
         </div>
 
         <div
-          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#141416] shadow-[0_0_16px_rgba(167,139,250,0.08)] ${
+          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#13131F] shadow-[0_0_16px_rgba(167,139,250,0.08)] ${
             mobilePanel === 'calibrate' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:h-full`}
         >

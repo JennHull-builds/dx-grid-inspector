@@ -57,7 +57,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
   );
 
   return (
-    <section className="flex flex-col h-full w-full bg-[#141416] border border-white/5 rounded-[16px] p-4 sm:p-6 overflow-hidden shadow-[0_0_16px_rgba(167,139,250,0.08)]">
+    <section className="flex flex-col h-full w-full bg-[#13131F] border border-white/5 rounded-[16px] p-4 sm:p-6 overflow-hidden shadow-[0_0_16px_rgba(167,139,250,0.08)]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-white/5 pb-3 shrink-0 gap-3">
         <div className="min-w-0">
           <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase">
@@ -128,8 +128,8 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                 }}
                 className={`group flex items-center justify-between p-3 sm:p-4 rounded-[12px] cursor-pointer transition-all border active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${
                   isSelected
-                    ? 'bg-[#1C1C1E] border-[#A78BFA]/30 shadow-[0_0_16px_rgba(167,139,250,0.15)]'
-                    : 'bg-[#0B0B0D] border-white/5 hover:border-white/10'
+                    ? 'bg-[#1A1A2B] border-[#A78BFA]/30 shadow-[0_0_16px_rgba(167,139,250,0.15)]'
+                    : 'bg-[#0A0A10] border-white/5 hover:border-white/10'
                 }`}
               >
                 <div className="flex flex-col gap-1.5 flex-1 pr-2 min-w-0">
@@ -145,7 +145,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="inline-flex items-center text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0B0B0D] text-slate-400 border border-white/5">
+                    <span className="inline-flex items-center text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0A0A10] text-slate-400 border border-white/5">
                       {node.category}
                     </span>
                     <button
@@ -157,11 +157,11 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                       onKeyDown={isolateFromRow}
                       title={`Toggle status for ${node.name}`}
                       aria-label={`Toggle status for ${node.name}. Currently ${node.status}.`}
-                      className={`inline-flex items-center justify-center text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0B0B0D] border border-white/5 hover:border-white/20 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${statusColor}`}
+                      className={`inline-flex items-center justify-center text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0A0A10] border border-white/5 hover:border-white/20 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${statusColor}`}
                     >
                       {node.status}
                     </button>
-                    <span className="inline-flex items-center text-xs font-mono px-1.5 py-0.5 min-h-8 rounded bg-[#1C1C1E] text-[#A78BFA]">
+                    <span className="inline-flex items-center text-xs font-mono px-1.5 py-0.5 min-h-8 rounded bg-[#1A1A2B] text-[#A78BFA]">
                       {node.properties.radius}px / {node.properties.padding}px
                     </span>
                   </div>

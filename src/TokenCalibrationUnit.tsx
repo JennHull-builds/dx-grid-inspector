@@ -115,7 +115,7 @@ const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
       value={pickerValue}
       onChange={(e) => onPick(e.target.value.toUpperCase())}
       onKeyDown={onKeyDown}
-      className="h-10 w-10 min-h-10 min-w-10 shrink-0 cursor-pointer rounded-[8px] border border-white/10 bg-[#141416] p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[5px] [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-[5px] [&::-moz-color-swatch]:border-none"
+      className="h-10 w-10 min-h-10 min-w-10 shrink-0 cursor-pointer rounded-[8px] border border-white/10 bg-[#13131F] p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[5px] [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-[5px] [&::-moz-color-swatch]:border-none"
     />
   );
 };
@@ -215,8 +215,8 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
               key={field.key}
               className={`rounded-[12px] border p-3 transition-all ${
                 isEditing
-                  ? 'bg-[#0B0B0D] border-[#A78BFA]/40 shadow-[0_0_16px_rgba(167,139,250,0.12)]'
-                  : 'bg-[#0B0B0D] border-white/5 hover:border-white/10'
+                  ? 'bg-[#0A0A10] border-[#A78BFA]/40 shadow-[0_0_16px_rgba(167,139,250,0.12)]'
+                  : 'bg-[#0A0A10] border-white/5 hover:border-white/10'
               }`}
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -261,7 +261,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => handleFieldKeyDown(e, field)}
                         autoFocus
-                        className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-[#141416] text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-sm outline-none focus:border-[#A78BFA]/50"
+                        className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-[#13131F] text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-sm outline-none focus:border-[#A78BFA]/50"
                       />
                       <button
                         type="button"
