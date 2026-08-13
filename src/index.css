@@ -17,5 +17,5 @@ body {
 }
 
 #root {
-  min-height: 100svh;
+  height: 100dvh;
 }
