@@ -101,7 +101,23 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
       </div>
 
       <div className="flex flex-col gap-3 overflow-y-auto overscroll-contain pr-1 flex-1 min-h-0">
-        {filteredNodes.length === 0 ? (
+        {nodes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 text-center p-8 border border-dashed border-white/10 rounded-[12px]">
+            <p className="text-sm font-medium text-slate-300 tracking-wide">
+              No nodes in the grid
+            </p>
+            <p className="text-xs font-mono text-slate-500 max-w-xs">
+              All nodes have been purged. Add a node to start inspecting spatial tokens.
+            </p>
+            <button
+              type="button"
+              onClick={onAddNode}
+              className="inline-flex items-center justify-center min-h-10 px-3 py-2 rounded-[8px] font-mono text-xs font-semibold uppercase tracking-wider bg-[#A78BFA]/15 text-[#A78BFA] border border-[#A78BFA]/40 hover:bg-[#A78BFA]/25 transition-all"
+            >
+              + Add Node
+            </button>
+          </div>
+        ) : filteredNodes.length === 0 ? (
           <div className="text-center p-6 border border-dashed border-white/10 rounded-[12px]">
             <p className="text-sm font-mono text-slate-500">
               No framework components matching the "{activeCategory}" scope.
