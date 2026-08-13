@@ -35,7 +35,7 @@ function LiveTokenPreview({
   previewPadding,
 }: LiveTokenPreviewProps) {
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#13131F] p-4 shadow-[0_0_16px_rgba(167,139,250,0.08)] sm:p-6">
+    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#13131F] p-4 shadow-[0_0_8px_#A78BFA40] sm:p-6">
       <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
         <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
           Live Token Preview
@@ -167,7 +167,7 @@ function App() {
         ? selectedNode.properties.padding
         : Number.parseFloat(String(selectedNode.properties.padding)) || 16
 
-  const panelShell = 'min-h-0 flex-col overflow-hidden'
+  const panelShell = 'min-h-0 flex-col overflow-visible'
 
   return (
     <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-[#0A0A10] text-slate-300">
@@ -215,7 +215,7 @@ function App() {
                 onClick={() => setMobilePanel(tab.id)}
                 className={`min-h-11 rounded-[12px] border font-mono text-xs font-semibold uppercase tracking-wider transition-all ${
                   isActive
-                    ? 'border-[#A78BFA]/40 bg-[#A78BFA]/15 text-[#A78BFA] shadow-[0_0_16px_rgba(167,139,250,0.15)]'
+                    ? 'border-[#A78BFA]/40 bg-[#A78BFA]/15 text-[#A78BFA] shadow-[0_0_6px_#A78BFA59]'
                     : 'border-white/10 bg-[#13131F] text-slate-400'
                 }`}
               >
@@ -248,7 +248,7 @@ function App() {
         </div>
 
         <div
-          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#13131F] shadow-[0_0_16px_rgba(167,139,250,0.08)] ${
+          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#13131F] shadow-[0_0_8px_#A78BFA40] ${
             mobilePanel === 'calibrate' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:h-full`}
         >

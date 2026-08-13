@@ -215,7 +215,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
               key={field.key}
               className={`rounded-[12px] border p-3 transition-all ${
                 isEditing
-                  ? 'bg-[#0A0A10] border-[#A78BFA]/40 shadow-[0_0_16px_rgba(167,139,250,0.12)]'
+                  ? 'bg-[#0A0A10] border-[#A78BFA]/40 shadow-[0_0_6px_#A78BFA59]'
                   : 'bg-[#0A0A10] border-white/5 hover:border-white/10'
               }`}
             >

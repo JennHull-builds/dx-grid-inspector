@@ -57,7 +57,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
   );
 
   return (
-    <section className="flex flex-col h-full w-full bg-[#13131F] border border-white/5 rounded-[16px] p-4 sm:p-6 overflow-hidden shadow-[0_0_16px_rgba(167,139,250,0.08)]">
+    <section className="flex flex-col h-full w-full bg-[#13131F] border border-white/5 rounded-[16px] p-4 sm:p-6 shadow-[0_0_8px_#A78BFA40]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-white/5 pb-3 shrink-0 gap-3">
         <div className="min-w-0">
           <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase">
@@ -128,7 +128,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                 }}
                 className={`group flex items-center justify-between p-3 sm:p-4 rounded-[12px] cursor-pointer transition-all border active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${
                   isSelected
-                    ? 'bg-[#1A1A2B] border-[#A78BFA]/30 shadow-[0_0_16px_rgba(167,139,250,0.15)]'
+                    ? 'bg-[#1A1A2B] border-[#A78BFA]/30 shadow-[0_0_6px_#A78BFA59]'
                     : 'bg-[#0A0A10] border-white/5 hover:border-white/10'
                 }`}
               >
