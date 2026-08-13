@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import { TemplateGridManager } from './GridOverlay'
 import {
   loadHarnessState,
@@ -150,6 +151,7 @@ function App() {
 
   return (
     <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-[#0A0A10] text-slate-300">
+      <Analytics />
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/5 px-4 py-2">
         <p className="min-w-0 truncate font-mono text-xs uppercase tracking-[0.12em] text-[#A78BFA]/80">
           DX Spatial Grid &amp; Token Inspector
