@@ -40,6 +40,15 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
     return node.category === activeCategory;
   });
 
+  const categoryCounts = nodes.reduce<Record<'All' | NodeCategory, number>>(
+    (acc, node) => {
+      acc.All += 1;
+      acc[node.category] += 1;
+      return acc;
+    },
+    { All: 0, Display: 0, Content: 0, Navigation: 0, Functional: 0 },
+  );
+
   return (
     <section className="flex flex-col h-full w-full bg-[#131322] border border-white/5 rounded-[16px] p-4 sm:p-6 overflow-hidden shadow-[0_0_16px_rgba(141,198,63,0.08)]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-white/5 pb-3 shrink-0 gap-3">
@@ -74,7 +83,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                   : 'bg-transparent text-slate-500 border-white/10 hover:border-white/20 hover:text-slate-300'
               }`}
             >
-              {cat}
+              {cat} ({categoryCounts[cat]})
             </button>
           );
         })}
