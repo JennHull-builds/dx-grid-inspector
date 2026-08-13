@@ -1,23 +1,5 @@
 import React, { useState } from 'react';
-
-// Self-contained types (replacing the import from ./Dashboard)
-export type NodeCategory = 'Display' | 'Content' | 'Navigation' | 'Functional';
-
-/** Workflow status shown on each template grid node. */
-export type NodeStatus = 'Ready' | 'In Progress';
-
-export interface DesignNode {
-  id: string;
-  name: string;
-  category: NodeCategory;
-  status: NodeStatus;
-  properties: {
-    radius: number | string;
-    padding: number | string;
-    bgPreset: string;
-    borderPreset: string;
-  };
-}
+import type { DesignNode, NodeCategory, NodeStatus } from './types';
 
 interface TemplateGridManagerProps {
   nodes: DesignNode[];

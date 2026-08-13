@@ -10,6 +10,7 @@ A lightweight, zero-dependency open-source developer utility built with React 19
 - **Target Deployment:** Vercel
 
 ## Core Architecture
+- `src/types.ts`: Canonical shared model (`NodeCategory`, `NodeStatus`, `DesignProperties`, `DesignNode`).
 - `src/GridOverlay.tsx`: Renders visual layout grids, status indicators, and design node categories.
 - `src/TokenCalibrationUnit.tsx`: Handles live token inputs (padding, radius, surface fills, border presets) with CSS unit sanitisation.
 - `src/App.tsx`: Local testing harness rendering mock design node state.

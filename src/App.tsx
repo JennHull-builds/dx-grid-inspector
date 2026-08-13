@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import {
-  TemplateGridManager,
-  type DesignNode,
-  type NodeCategory,
-  type NodeStatus,
-} from './GridOverlay'
-import {
-  TokenCalibrationUnit,
-  type DesignProperties,
-} from './TokenCalibrationUnit'
+import { TemplateGridManager } from './GridOverlay'
+import { TokenCalibrationUnit } from './TokenCalibrationUnit'
+import type {
+  DesignNode,
+  DesignProperties,
+  NodeCategory,
+  NodeStatus,
+} from './types'
 
 type MobilePanel = 'nodes' | 'calibrate' | 'preview'
 

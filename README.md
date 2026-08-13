@@ -27,7 +27,7 @@ Built as an open-source learning and portfolio project — iterating in public. 
 - **Built-in Sanitisation:** Parses CSS layout units (`px`, `rem`, `%`, `vh`, `vw`) and validates hex / rgba colour input.
 - **Local Test Harness:** [`src/App.tsx`](src/App.tsx) wires the panels together with mock nodes so you can try everything immediately.
 - **Tailwind CSS v4 Ready:** Uses `@tailwindcss/vite` and native CSS variable architecture.
-- **Strict TypeScript:** Explicit prop interfaces and self-contained models.
+- **Strict TypeScript:** Explicit prop interfaces and a shared `DesignNode` model in [`src/types.ts`](src/types.ts).
 
 ---
 
@@ -69,15 +69,9 @@ Embed the panels in your own React layout:
 
 ```tsx
 import { useState } from 'react'
-import {
-  TemplateGridManager,
-  type DesignNode,
-  type NodeStatus,
-} from './GridOverlay'
-import {
-  TokenCalibrationUnit,
-  type DesignProperties,
-} from './TokenCalibrationUnit'
+import { TemplateGridManager } from './GridOverlay'
+import { TokenCalibrationUnit } from './TokenCalibrationUnit'
+import type { DesignNode, DesignProperties, NodeStatus } from './types'
 
 export default function InspectorHarness() {
   const [nodes, setNodes] = useState<DesignNode[]>([])
@@ -141,7 +135,8 @@ export default function InspectorHarness() {
 ```text
 dx-grid-inspector/
 ├── src/
-│   ├── GridOverlay.tsx            # Template grid manager & design node types
+│   ├── types.ts                   # Shared DesignNode, status, and token types
+│   ├── GridOverlay.tsx            # Template grid manager
 │   ├── TokenCalibrationUnit.tsx   # Live spatial token calibration HUD
 │   ├── App.tsx                    # Interactive local test harness
 │   ├── main.tsx                   # Application entry point
@@ -160,7 +155,7 @@ dx-grid-inspector/
 Tracked as GitHub issues. Near-term:
 
 - [x] Live token preview surface in the harness
-- [ ] Shared `DesignNode` types across components ([#3](https://github.com/JennHull-builds/dx-grid-inspector/issues/3))
+- [x] Shared `DesignNode` types across components ([#3](https://github.com/JennHull-builds/dx-grid-inspector/issues/3))
 - [ ] Optional publishable npm package later ([#4](https://github.com/JennHull-builds/dx-grid-inspector/issues/4))
 
 ---

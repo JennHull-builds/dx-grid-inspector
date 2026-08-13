@@ -1,21 +1,5 @@
 import React, { useState } from 'react';
-
-/** Editable layout and surface tokens for a design node. */
-export interface DesignProperties {
-  radius: number | string;
-  padding: number | string;
-  bgPreset: string;
-  borderPreset: string;
-}
-
-/** Design node shape consumed by the token calibration HUD. */
-export interface DesignNode {
-  id: string;
-  name: string;
-  category?: string;
-  status?: string;
-  properties: DesignProperties;
-}
+import type { DesignNode, DesignProperties } from './types';
 
 interface TokenCalibrationUnitProps {
   selectedNode: DesignNode | null;
