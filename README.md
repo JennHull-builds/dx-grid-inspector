@@ -27,7 +27,8 @@ Built as an open-source learning and portfolio project — iterating in public. 
 
 - **Template Grid Manager:** Categorise, filter, and select layout nodes (Display, Navigation, Content, Functional). Click a status chip to toggle Ready / In Progress without changing the selected row.
 - **Token Calibration Unit:** Edit corner radii, padding, surface colours, and border styles with inline validation.
-- **Live Token Preview:** Sample surface in the harness updates as you calibrate radius, padding, and colours.
+- **Live Token Preview:** Sample card and button update as you calibrate radius, padding, and colours.
+- **Read from preview / copy out:** Pull computed CSS back into the HUD, or copy tokens as CSS custom properties or JSON.
 - **Built-in Sanitisation:** Parses CSS layout units (`px`, `rem`, `%`, `vh`, `vw`) and validates hex / rgba colour input.
 - **Local Test Harness:** [`src/App.tsx`](src/App.tsx) wires the panels together with mock nodes so you can try everything immediately.
 - **Tailwind CSS v4 Ready:** Uses `@tailwindcss/vite` and native CSS variable architecture.
@@ -98,7 +99,7 @@ export default function InspectorHarness() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-[#0A0A12] min-h-screen">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 bg-[#0A0A12] min-h-screen">
       <TemplateGridManager
         nodes={nodes}
         selectedNodeId={selectedId}
@@ -115,6 +116,7 @@ export default function InspectorHarness() {
         selectedNode={selectedNode}
         onUpdateProperties={handleUpdateProps}
       />
+      {/* Third column: Live Token Preview (see src/LiveTokenPreview.tsx in this repo). */}
     </div>
   )
 }
@@ -142,6 +144,9 @@ dx-grid-inspector/
 │   ├── types.ts                   # Shared DesignNode, status, and token types
 │   ├── GridOverlay.tsx            # Template grid manager
 │   ├── TokenCalibrationUnit.tsx   # Live spatial token calibration HUD
+│   ├── LiveTokenPreview.tsx       # Sample card + button preview
+│   ├── tokenExport.ts             # Read computed CSS and clipboard formatters
+│   ├── harnessStorage.ts          # localStorage snapshot for the harness
 │   ├── App.tsx                    # Interactive local test harness
 │   ├── main.tsx                   # Application entry point
 │   └── index.css                  # Tailwind CSS v4 setup
@@ -162,6 +167,8 @@ Tracked as GitHub issues. Near-term:
 
 - [x] Live token preview surface in the harness
 - [x] Shared `DesignNode` types across components ([#3](https://github.com/JennHull-builds/dx-grid-inspector/issues/3))
+- [x] Read live CSS from the preview into the HUD
+- [x] Copy calibrated tokens as CSS / JSON
 - [ ] Optional publishable npm package later ([#4](https://github.com/JennHull-builds/dx-grid-inspector/issues/4))
 
 ---

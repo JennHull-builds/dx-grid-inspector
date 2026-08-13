@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TemplateGridManager } from './GridOverlay'
 import {
   loadHarnessState,
   saveHarnessState,
   type HarnessState,
 } from './harnessStorage'
+import { LiveTokenPreview } from './LiveTokenPreview'
 import { TokenCalibrationUnit } from './TokenCalibrationUnit'
+import { readDesignPropertiesFromElement } from './tokenExport'
 import type {
   DesignNode,
   DesignProperties,
@@ -24,58 +26,6 @@ const MOBILE_TABS: Array<{ id: MobilePanel; label: string }> = [
 const isMobileViewport = (): boolean =>
   typeof window !== 'undefined' &&
   window.matchMedia('(max-width: 1023px)').matches
-
-interface LiveTokenPreviewProps {
-  selectedNode: DesignNode | null
-  previewRadius: number
-  previewPadding: number
-}
-
-/**
- * Sample surface that reflects the selected node's calibrated spatial tokens.
- */
-function LiveTokenPreview({
-  selectedNode,
-  previewRadius,
-  previewPadding,
-}: LiveTokenPreviewProps) {
-  return (
-    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#13131F] p-4 shadow-[0_0_8px_#A78BFA40] sm:p-6">
-      <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
-        <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
-          Live Token Preview
-        </h2>
-        <p className="mt-1 font-mono text-xs text-slate-500">
-          {selectedNode
-            ? `Surface for ${selectedNode.name}`
-            : 'Select a node to preview calibrated tokens'}
-        </p>
-      </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-[12px] border border-dashed border-white/10 bg-[#0A0A10] p-4">
-        {selectedNode ? (
-          <div
-            className="max-w-full border-2 text-sm text-slate-200 transition-all duration-200"
-            style={{
-              borderRadius: `${previewRadius}px`,
-              padding: `${previewPadding}px`,
-              backgroundColor: selectedNode.properties.bgPreset,
-              borderColor: selectedNode.properties.borderPreset,
-            }}
-          >
-            <p className="font-medium tracking-wide">{selectedNode.name}</p>
-            <p className="mt-1 font-mono text-xs text-slate-400">
-              {previewRadius}px radius · {previewPadding}px padding
-            </p>
-          </div>
-        ) : (
-          <p className="px-4 text-center font-mono text-sm text-slate-500">
-            Choose a node from the Template Grid Manager.
-          </p>
-        )}
-      </div>
-    </section>
-  )
-}
 
 const CATEGORY_CYCLE: NodeCategory[] = [
   'Display',
@@ -113,7 +63,7 @@ const FALLBACK_HARNESS: HarnessState = {
 }
 
 /**
- * Local testing harness for the grid overlay and token calibration components.
+ * Local testing harness for the grid manager, calibration HUD, and live preview.
  * Node list, selection, and next mock index are persisted in localStorage.
  */
 function App() {
@@ -126,6 +76,7 @@ function App() {
   )
   const [nextIndex, setNextIndex] = useState(initialHarness.nextIndex)
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('nodes')
+  const previewSurfaceRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     saveHarnessState({ nodes, selectedNodeId, nextIndex })
@@ -170,6 +121,15 @@ function App() {
   const handleUpdateStatus = (id: string, status: NodeStatus) => {
     setNodes((prev) =>
       prev.map((node) => (node.id === id ? { ...node, status } : node)),
+    )
+  }
+
+  const handleReadFromPreview = () => {
+    const surface = previewSurfaceRef.current
+    if (!selectedNodeId || !surface) return
+    handleUpdateProperties(
+      selectedNodeId,
+      readDesignPropertiesFromElement(surface),
     )
   }
 
@@ -275,6 +235,7 @@ function App() {
             key={selectedNodeId ?? 'none'}
             selectedNode={selectedNode}
             onUpdateProperties={handleUpdateProperties}
+            onReadFromPreview={handleReadFromPreview}
           />
         </div>
 
@@ -287,6 +248,7 @@ function App() {
             selectedNode={selectedNode}
             previewRadius={previewRadius}
             previewPadding={previewPadding}
+            surfaceRef={previewSurfaceRef}
           />
         </div>
       </main>

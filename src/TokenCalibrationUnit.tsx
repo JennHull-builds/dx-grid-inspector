@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { formatTokensAsCss, formatTokensAsJson } from './tokenExport';
 import type { DesignNode, DesignProperties } from './types';
 
 interface TokenCalibrationUnitProps {
   selectedNode: DesignNode | null;
   onUpdateProperties: (id: string, properties: DesignProperties) => void;
+  /** Copies computed styles from the live preview surface into this node. */
+  onReadFromPreview?: () => void;
 }
 
 type EditableField = keyof DesignProperties;
@@ -127,10 +130,12 @@ const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
 export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   selectedNode,
   onUpdateProperties,
+  onReadFromPreview,
 }) => {
   const [editingKey, setEditingKey] = useState<EditableField | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   if (!selectedNode) {
     return (
@@ -192,6 +197,20 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       setEditingKey(null);
       setError(null);
     }
+  };
+
+  const copyTokens = async (format: 'css' | 'json') => {
+    const payload =
+      format === 'css'
+        ? formatTokensAsCss(selectedNode.properties)
+        : formatTokensAsJson(selectedNode.properties);
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopyStatus(format === 'css' ? 'Copied CSS' : 'Copied JSON');
+    } catch {
+      setCopyStatus('Copy failed');
+    }
+    window.setTimeout(() => setCopyStatus(null), 2000);
   };
 
   return (
@@ -290,6 +309,37 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       {error && (
         <p className="mt-3 text-xs font-mono text-red-400 shrink-0">{error}</p>
       )}
+
+      <div className="mt-3 flex shrink-0 flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+        {onReadFromPreview && (
+          <button
+            type="button"
+            onClick={onReadFromPreview}
+            className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+          >
+            Read from preview
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => void copyTokens('css')}
+          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+        >
+          Copy CSS
+        </button>
+        <button
+          type="button"
+          onClick={() => void copyTokens('json')}
+          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+        >
+          Copy JSON
+        </button>
+        {copyStatus && (
+          <span className="font-mono text-xs text-[#A78BFA]" role="status">
+            {copyStatus}
+          </span>
+        )}
+      </div>
     </section>
   );
 };
