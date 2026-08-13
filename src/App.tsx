@@ -1,5 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { TemplateGridManager } from './GridOverlay'
+import {
+  loadHarnessState,
+  saveHarnessState,
+  type HarnessState,
+} from './harnessStorage'
 import { TokenCalibrationUnit } from './TokenCalibrationUnit'
 import type {
   DesignNode,
@@ -101,16 +106,30 @@ const INITIAL_NODES: DesignNode[] = [
   createMockNode(2),
 ]
 
+const FALLBACK_HARNESS: HarnessState = {
+  nodes: INITIAL_NODES,
+  selectedNodeId: INITIAL_NODES[0]?.id ?? null,
+  nextIndex: INITIAL_NODES.length,
+}
+
 /**
  * Local testing harness for the grid overlay and token calibration components.
+ * Node list, selection, and next mock index are persisted in localStorage.
  */
 function App() {
-  const [nodes, setNodes] = useState<DesignNode[]>(INITIAL_NODES)
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
-    INITIAL_NODES[0]?.id ?? null,
+  const [initialHarness] = useState<HarnessState>(() =>
+    loadHarnessState(FALLBACK_HARNESS),
   )
-  const [nextIndex, setNextIndex] = useState(INITIAL_NODES.length)
+  const [nodes, setNodes] = useState<DesignNode[]>(initialHarness.nodes)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
+    initialHarness.selectedNodeId,
+  )
+  const [nextIndex, setNextIndex] = useState(initialHarness.nextIndex)
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('nodes')
+
+  useEffect(() => {
+    saveHarnessState({ nodes, selectedNodeId, nextIndex })
+  }, [nodes, selectedNodeId, nextIndex])
 
   const selectedNode =
     nodes.find((node) => node.id === selectedNodeId) ?? null
