@@ -110,7 +110,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
               node.status === 'Ready'
                 ? 'text-[#A78BFA]'
                 : node.status === 'In Progress'
-                  ? 'text-amber-400'
+                  ? 'text-[#22D3EE]'
                   : 'text-slate-500';
 
             return (
