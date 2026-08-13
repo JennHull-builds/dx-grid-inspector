@@ -14,6 +14,13 @@ interface TemplateGridManagerProps {
 const toggleNodeStatus = (status: NodeStatus): NodeStatus =>
   status === 'Ready' ? 'In Progress' : 'Ready';
 
+const isActivationKey = (key: string): boolean => key === 'Enter' || key === ' ';
+
+/** Stops inner controls from also activating the parent row. */
+const isolateFromRow = (event: React.SyntheticEvent) => {
+  event.stopPropagation();
+};
+
 const CATEGORIES: Array<'All' | NodeCategory> = [
   'All',
   'Display',
@@ -23,7 +30,7 @@ const CATEGORIES: Array<'All' | NodeCategory> = [
 ];
 
 /**
- * Visual template grid overlay with category filters, status indicators, and node selection.
+ * Visual template grid overlay with category filters, status indicators, and keyboard-accessible node selection.
  */
 export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
   nodes,
@@ -109,8 +116,17 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
             return (
               <div
                 key={node.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                aria-label={`Select ${node.name}`}
                 onClick={() => onSelectNode(node.id)}
-                className={`group flex items-center justify-between p-3 sm:p-4 rounded-[12px] cursor-pointer transition-all border active:scale-[0.99] ${
+                onKeyDown={(event) => {
+                  if (!isActivationKey(event.key)) return;
+                  event.preventDefault();
+                  onSelectNode(node.id);
+                }}
+                className={`group flex items-center justify-between p-3 sm:p-4 rounded-[12px] cursor-pointer transition-all border active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${
                   isSelected
                     ? 'bg-[#1A1A2E] border-[#A78BFA]/30 shadow-[0_0_16px_rgba(167,139,250,0.15)]'
                     : 'bg-[#0A0A12] border-white/5 hover:border-white/10'
@@ -134,13 +150,14 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                     </span>
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={(event) => {
+                        isolateFromRow(event);
                         onUpdateStatus(node.id, toggleNodeStatus(node.status));
                       }}
+                      onKeyDown={isolateFromRow}
                       title={`Toggle status for ${node.name}`}
                       aria-label={`Toggle status for ${node.name}. Currently ${node.status}.`}
-                      className={`text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0A0A12] border border-white/5 hover:border-white/20 transition-colors ${statusColor}`}
+                      className={`text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0A0A12] border border-white/5 hover:border-white/20 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${statusColor}`}
                     >
                       {node.status}
                     </button>
@@ -152,12 +169,14 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
 
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={(event) => {
+                    isolateFromRow(event);
                     onPurgeNode(node.id);
                   }}
+                  onKeyDown={isolateFromRow}
                   title={`Delete ${node.name}`}
-                  className="min-h-10 min-w-10 flex items-center justify-center rounded-md bg-white/0 hover:bg-white/5 text-slate-500 hover:text-red-400 font-mono text-xl leading-none transition-all opacity-100 lg:opacity-60 lg:group-hover:opacity-100"
+                  aria-label={`Delete ${node.name}`}
+                  className="min-h-10 min-w-10 flex items-center justify-center rounded-md bg-white/0 hover:bg-white/5 text-slate-500 hover:text-red-400 font-mono text-xl leading-none transition-all opacity-100 lg:opacity-60 lg:group-hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] focus-visible:opacity-100"
                 >
                   ×
                 </button>
