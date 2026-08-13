@@ -19,7 +19,7 @@ export function LiveTokenPreview({
   surfaceRef,
 }: LiveTokenPreviewProps) {
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#13131F] p-4 shadow-[0_0_8px_#A78BFA40] sm:p-6">
+    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#13131F] p-4 sm:p-6">
       <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
         <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
           Live Token Preview

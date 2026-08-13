@@ -61,7 +61,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
   );
 
   return (
-    <section className="flex flex-col h-full w-full bg-[#13131F] border border-white/5 rounded-[16px] p-4 sm:p-6 shadow-[0_0_8px_#A78BFA40]">
+    <section className="flex flex-col h-full w-full bg-[#13131F] border border-white/5 rounded-[16px] p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-white/5 pb-3 shrink-0 gap-3">
         <div className="min-w-0">
           <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase">

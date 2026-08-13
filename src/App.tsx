@@ -227,7 +227,7 @@ function App() {
         </div>
 
         <div
-          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#13131F] shadow-[0_0_8px_#A78BFA40] ${
+          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#13131F] ${
             mobilePanel === 'calibrate' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:h-full`}
         >
