@@ -64,6 +64,24 @@ const sanitizeBorder = (val: string): string | null => {
   return sanitizeHex(cleanVal);
 };
 
+/**
+ * Convert a valid hex colour to the `#rrggbb` form required by native colour inputs.
+ * Returns null for rgba and other non-hex values so the picker is not forced to overwrite them.
+ */
+const hexForColourInput = (val: string): string | null => {
+  const sanitized = sanitizeHex(val);
+  if (!sanitized) return null;
+
+  if (sanitized.length === 4) {
+    const r = sanitized[1];
+    const g = sanitized[2];
+    const b = sanitized[3];
+    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+  }
+
+  return sanitized.toLowerCase();
+};
+
 const displayValue = (key: EditableField, properties: DesignProperties): string => {
   if (key === 'radius' || key === 'padding') {
     return `${properties[key]}px`;
@@ -71,8 +89,40 @@ const displayValue = (key: EditableField, properties: DesignProperties): string 
   return String(properties[key]);
 };
 
+interface ColourPickerInputProps {
+  label: string;
+  value: string;
+  onPick: (hex: string) => void;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
+}
+
+/**
+ * Native HTML colour picker. The paired text field remains the source of truth for hex/rgba.
+ */
+const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
+  label,
+  value,
+  onPick,
+  onKeyDown,
+}) => {
+  const pickerValue = hexForColourInput(value) ?? '#000000';
+
+  return (
+    <input
+      type="color"
+      aria-label={`${label} colour picker`}
+      title={`${label} colour picker`}
+      value={pickerValue}
+      onChange={(e) => onPick(e.target.value.toUpperCase())}
+      onKeyDown={onKeyDown}
+      className="h-10 w-10 min-h-10 min-w-10 shrink-0 cursor-pointer rounded-[8px] border border-white/10 bg-[#131322] p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[5px] [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-[5px] [&::-moz-color-swatch]:border-none"
+    />
+  );
+};
+
 /**
  * Live token calibration HUD for padding, radius, surface fills, and border presets.
+ * Surface Fill and Border Preset pair a native colour picker with a hex/rgba text field.
  */
 export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   selectedNode,
@@ -133,6 +183,17 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     setError(null);
   };
 
+  const handleFieldKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: FieldConfig,
+  ) => {
+    if (e.key === 'Enter') saveField(field);
+    if (e.key === 'Escape') {
+      setEditingKey(null);
+      setError(null);
+    }
+  };
+
   return (
     <section className="flex flex-col h-full w-full p-4 sm:p-6 overflow-hidden">
       <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
@@ -169,10 +230,26 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                 </button>
 
                 <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
-                  {!isEditing && field.kind === 'color' && (
-                    <span
-                      className="inline-block w-4 h-4 rounded-[3px] border border-white/20"
-                      style={{ backgroundColor: selectedNode.properties.bgPreset }}
+                  {(field.kind === 'color' || field.kind === 'border') && (
+                    <ColourPickerInput
+                      label={field.label}
+                      value={isEditing ? inputValue : value}
+                      onPick={(hex) => {
+                        if (isEditing) {
+                          setInputValue(hex);
+                          setError(null);
+                          return;
+                        }
+                        const current = selectedNode.properties;
+                        const next =
+                          field.key === 'bgPreset'
+                            ? { ...current, bgPreset: hex }
+                            : { ...current, borderPreset: hex };
+                        onUpdateProperties(selectedNode.id, next);
+                      }}
+                      onKeyDown={
+                        isEditing ? (e) => handleFieldKeyDown(e, field) : undefined
+                      }
                     />
                   )}
 
@@ -182,13 +259,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveField(field);
-                          if (e.key === 'Escape') {
-                            setEditingKey(null);
-                            setError(null);
-                          }
-                        }}
+                        onKeyDown={(e) => handleFieldKeyDown(e, field)}
                         autoFocus
                         className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-[#131322] text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-xs outline-none focus:border-[#8DC63F]/50"
                       />
