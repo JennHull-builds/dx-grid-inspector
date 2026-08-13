@@ -21,6 +21,10 @@ const isolateFromRow = (event: React.SyntheticEvent) => {
   event.stopPropagation();
 };
 
+/** Asks the user to confirm before a node is purged, to avoid accidental deletion. */
+const confirmNodePurge = (name: string): boolean =>
+  window.confirm(`Delete “${name}”? This cannot be undone.`);
+
 const CATEGORIES: Array<'All' | NodeCategory> = [
   'All',
   'Display',
@@ -171,6 +175,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                   type="button"
                   onClick={(event) => {
                     isolateFromRow(event);
+                    if (!confirmNodePurge(node.name)) return;
                     onPurgeNode(node.id);
                   }}
                   onKeyDown={isolateFromRow}
