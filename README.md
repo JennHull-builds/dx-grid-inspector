@@ -9,6 +9,10 @@
 
 **Live demo:** [dx-grid-inspector.vercel.app](https://dx-grid-inspector.vercel.app)
 
+![The live harness with the Template Grid Manager, Token Calibration Unit, and Live Token Preview](docs/harness-screenshot.png)
+
+*Desktop view of the local test harness: filter and select layout nodes, calibrate spatial tokens, and preview the sample surface. Captured from the live demo.*
+
 ---
 
 ## Overview
@@ -141,6 +145,8 @@ dx-grid-inspector/
 │   ├── App.tsx                    # Interactive local test harness
 │   ├── main.tsx                   # Application entry point
 │   └── index.css                  # Tailwind CSS v4 setup
+├── docs/
+│   └── harness-screenshot.png     # Live harness screenshot used in this README
 ├── PROJECT_CONTEXT.md             # AI agent project context
 ├── .cursorrules                   # Code style & open-source guardrails
 ├── LICENSE                        # MIT
