@@ -135,11 +135,11 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   if (!selectedNode) {
     return (
       <section className="flex flex-col h-full w-full p-4 sm:p-6 overflow-hidden">
-        <h2 className="text-sm font-semibold tracking-wide text-slate-300 uppercase mb-4">
+        <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase mb-4">
           Token Calibration Unit
         </h2>
         <div className="flex-1 flex items-center justify-center border border-dashed border-white/10 rounded-[12px]">
-          <p className="text-xs font-mono text-slate-500 text-center px-4">
+          <p className="text-sm font-mono text-slate-500 text-center px-4">
             Select a node from the Template Grid Manager to calibrate layout tokens.
           </p>
         </div>
@@ -197,10 +197,10 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   return (
     <section className="flex flex-col h-full w-full p-4 sm:p-6 overflow-hidden">
       <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
-        <h2 className="text-sm font-semibold tracking-wide text-slate-300 uppercase">
+        <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase">
           Token Calibration Unit
         </h2>
-        <p className="text-[10px] font-mono text-slate-500 mt-1 truncate">
+        <p className="text-xs font-mono text-slate-500 mt-1 truncate">
           Editing: {selectedNode.name}
         </p>
       </div>
@@ -215,7 +215,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
               key={field.key}
               className={`rounded-[12px] border p-3 transition-all ${
                 isEditing
-                  ? 'bg-[#0A0A12] border-[#8DC63F]/40 shadow-[0_0_16px_rgba(141,198,63,0.12)]'
+                  ? 'bg-[#0A0A12] border-[#A78BFA]/40 shadow-[0_0_16px_rgba(167,139,250,0.12)]'
                   : 'bg-[#0A0A12] border-white/5 hover:border-white/10'
               }`}
             >
@@ -225,8 +225,8 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   onClick={() => !isEditing && startEdit(field)}
                   className="flex flex-col items-start gap-0.5 text-left flex-1 min-w-0"
                 >
-                  <span className="text-xs font-medium text-slate-200">{field.label}</span>
-                  <span className="text-[10px] font-mono text-[#8DC63F]/80">{field.key}</span>
+                  <span className="text-sm font-medium text-slate-200">{field.label}</span>
+                  <span className="text-xs font-mono text-[#A78BFA]/80">{field.key}</span>
                 </button>
 
                 <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
@@ -261,12 +261,12 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => handleFieldKeyDown(e, field)}
                         autoFocus
-                        className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-[#131322] text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-xs outline-none focus:border-[#8DC63F]/50"
+                        className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-[#131322] text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-sm outline-none focus:border-[#A78BFA]/50"
                       />
                       <button
                         type="button"
                         onClick={() => saveField(field)}
-                        className="min-h-10 px-3 text-[11px] font-semibold text-[#8DC63F] hover:text-[#a3db52]"
+                        className="min-h-10 px-3 text-xs font-semibold text-[#A78BFA] hover:text-[#C4B5FD]"
                       >
                         Save
                       </button>
@@ -275,7 +275,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                     <button
                       type="button"
                       onClick={() => startEdit(field)}
-                      className="font-mono text-xs text-slate-400 hover:text-slate-200 truncate max-w-full sm:max-w-[140px] min-h-10 px-1"
+                      className="font-mono text-sm text-slate-400 hover:text-slate-200 truncate max-w-full sm:max-w-[140px] min-h-10 px-1"
                     >
                       {value}
                     </button>
@@ -288,7 +288,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       </div>
 
       {error && (
-        <p className="mt-3 text-[11px] font-mono text-red-400 shrink-0">{error}</p>
+        <p className="mt-3 text-xs font-mono text-red-400 shrink-0">{error}</p>
       )}
     </section>
   );

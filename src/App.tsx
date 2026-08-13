@@ -35,12 +35,12 @@ function LiveTokenPreview({
   previewPadding,
 }: LiveTokenPreviewProps) {
   return (
-    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#131322] p-4 shadow-[0_0_16px_rgba(141,198,63,0.08)] sm:p-6">
+    <section className="flex h-full min-h-0 flex-col rounded-[16px] border border-white/5 bg-[#131322] p-4 shadow-[0_0_16px_rgba(167,139,250,0.08)] sm:p-6">
       <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">
+        <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
           Live Token Preview
         </h2>
-        <p className="mt-1 font-mono text-[10px] text-slate-500">
+        <p className="mt-1 font-mono text-xs text-slate-500">
           {selectedNode
             ? `Surface for ${selectedNode.name}`
             : 'Select a node to preview calibrated tokens'}
@@ -58,12 +58,12 @@ function LiveTokenPreview({
             }}
           >
             <p className="font-medium tracking-wide">{selectedNode.name}</p>
-            <p className="mt-1 font-mono text-[10px] text-slate-400">
+            <p className="mt-1 font-mono text-xs text-slate-400">
               {previewRadius}px radius · {previewPadding}px padding
             </p>
           </div>
         ) : (
-          <p className="px-4 text-center font-mono text-xs text-slate-500">
+          <p className="px-4 text-center font-mono text-sm text-slate-500">
             Choose a node from the Template Grid Manager.
           </p>
         )}
@@ -90,7 +90,7 @@ const createMockNode = (index: number): DesignNode => {
       radius: 12 + index * 2,
       padding: 16 + index * 4,
       bgPreset: '#1A1A2E',
-      borderPreset: '#8DC63F',
+      borderPreset: '#A78BFA',
     },
   }
 }
@@ -172,7 +172,7 @@ function App() {
   return (
     <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-[#0A0A12] text-slate-300">
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/5 px-4 py-2">
-        <p className="min-w-0 truncate font-mono text-[0.65rem] uppercase tracking-[0.12em] text-[#8DC63F]/80">
+        <p className="min-w-0 truncate font-mono text-xs uppercase tracking-[0.12em] text-[#A78BFA]/80">
           DX Spatial Grid &amp; Token Inspector
         </p>
         <nav
@@ -183,7 +183,7 @@ function App() {
             href="https://github.com/JennHull-builds/dx-grid-inspector"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#8DC63F]"
+            className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#A78BFA]"
           >
             GitHub
           </a>
@@ -194,7 +194,7 @@ function App() {
             href="https://github.com/JennHull-builds/dx-grid-inspector/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-[0.65rem] uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#8DC63F]"
+            className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#A78BFA]"
           >
             MIT Licence
           </a>
@@ -202,7 +202,7 @@ function App() {
       </header>
 
       <header className="shrink-0 border-b border-white/5 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 lg:hidden">
-        <h1 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-100">
+        <h1 className="mb-3 text-base font-semibold uppercase tracking-wide text-slate-100">
           Local Testing Harness
         </h1>
         <nav className="grid grid-cols-3 gap-1.5" aria-label="Inspector panels">
@@ -213,9 +213,9 @@ function App() {
                 key={tab.id}
                 type="button"
                 onClick={() => setMobilePanel(tab.id)}
-                className={`min-h-11 rounded-[12px] border font-mono text-[11px] font-semibold uppercase tracking-wider transition-all ${
+                className={`min-h-11 rounded-[12px] border font-mono text-xs font-semibold uppercase tracking-wider transition-all ${
                   isActive
-                    ? 'border-[#8DC63F]/40 bg-[#8DC63F]/15 text-[#8DC63F] shadow-[0_0_16px_rgba(141,198,63,0.15)]'
+                    ? 'border-[#A78BFA]/40 bg-[#A78BFA]/15 text-[#A78BFA] shadow-[0_0_16px_rgba(167,139,250,0.15)]'
                     : 'border-white/10 bg-[#131322] text-slate-400'
                 }`}
               >
@@ -225,7 +225,7 @@ function App() {
           })}
         </nav>
         {selectedNode && (
-          <p className="mt-2 truncate font-mono text-[10px] text-slate-500">
+          <p className="mt-2 truncate font-mono text-xs text-slate-500">
             Active: {selectedNode.name}
           </p>
         )}
@@ -248,7 +248,7 @@ function App() {
         </div>
 
         <div
-          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#131322] shadow-[0_0_16px_rgba(141,198,63,0.08)] ${
+          className={`${panelShell} rounded-[16px] border border-white/5 bg-[#131322] shadow-[0_0_16px_rgba(167,139,250,0.08)] ${
             mobilePanel === 'calibrate' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:h-full`}
         >
