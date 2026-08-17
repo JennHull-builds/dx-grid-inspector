@@ -73,16 +73,32 @@ Built as an open-source learning and portfolio project — iterating in public. 
 Embed the panels in your own React layout:
 
 ```tsx
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { TemplateGridManager } from './GridOverlay'
+import { LiveTokenPreview } from './LiveTokenPreview'
 import { TokenCalibrationUnit } from './TokenCalibrationUnit'
+import { readDesignPropertiesFromElement } from './tokenExport'
 import type { DesignNode, DesignProperties, NodeStatus } from './types'
 
 export default function InspectorHarness() {
   const [nodes, setNodes] = useState<DesignNode[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const previewSurfaceRef = useRef<HTMLDivElement>(null)
 
   const selectedNode = nodes.find((n) => n.id === selectedId) ?? null
+
+  const previewRadius =
+    selectedNode == null
+      ? 12
+      : typeof selectedNode.properties.radius === 'number'
+        ? selectedNode.properties.radius
+        : Number.parseFloat(String(selectedNode.properties.radius)) || 12
+  const previewPadding =
+    selectedNode == null
+      ? 16
+      : typeof selectedNode.properties.padding === 'number'
+        ? selectedNode.properties.padding
+        : Number.parseFloat(String(selectedNode.properties.padding)) || 16
 
   const handleUpdateProps = (id: string, newProps: DesignProperties) => {
     setNodes((prev) =>
@@ -98,8 +114,17 @@ export default function InspectorHarness() {
     )
   }
 
+  const handleReadFromPreview = () => {
+    const surface = previewSurfaceRef.current
+    if (!selectedId || !surface) return
+    handleUpdateProps(
+      selectedId,
+      readDesignPropertiesFromElement(surface),
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 bg-[#0A0A12] min-h-screen">
+    <div className="grid min-h-screen grid-cols-1 gap-6 bg-[#0A0A12] p-6 lg:grid-cols-3">
       <TemplateGridManager
         nodes={nodes}
         selectedNodeId={selectedId}
@@ -115,8 +140,14 @@ export default function InspectorHarness() {
       <TokenCalibrationUnit
         selectedNode={selectedNode}
         onUpdateProperties={handleUpdateProps}
+        onReadFromPreview={handleReadFromPreview}
       />
-      {/* Third column: Live Token Preview (see src/LiveTokenPreview.tsx in this repo). */}
+      <LiveTokenPreview
+        selectedNode={selectedNode}
+        previewRadius={previewRadius}
+        previewPadding={previewPadding}
+        surfaceRef={previewSurfaceRef}
+      />
     </div>
   )
 }
