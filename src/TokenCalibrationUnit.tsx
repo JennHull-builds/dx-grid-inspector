@@ -213,6 +213,15 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     window.setTimeout(() => setCopyStatus(null), 2000);
   };
 
+  const handleReadFromPreview = () => {
+    if (!onReadFromPreview) return;
+    setEditingKey(null);
+    setError(null);
+    onReadFromPreview();
+    setCopyStatus('Copied from preview');
+    window.setTimeout(() => setCopyStatus(null), 2000);
+  };
+
   return (
     <section className="flex flex-col h-full w-full p-4 sm:p-6 overflow-hidden">
       <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
@@ -314,7 +323,8 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         {onReadFromPreview && (
           <button
             type="button"
-            onClick={onReadFromPreview}
+            onClick={handleReadFromPreview}
+            aria-label="Copy computed border-radius, padding, background, and border-colour from the live preview into this node"
             className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
           >
             Read from preview

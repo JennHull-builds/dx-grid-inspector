@@ -125,6 +125,7 @@ function App() {
     )
   }
 
+  /** Copies computed preview styles into the selected node's DesignProperties. */
   const handleReadFromPreview = () => {
     const surface = previewSurfaceRef.current
     if (!selectedNodeId || !surface) return

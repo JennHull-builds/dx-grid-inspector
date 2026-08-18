@@ -1,11 +1,20 @@
 import type { DesignProperties } from './types'
 
 const rgbChannels = (value: string): [number, number, number] | null => {
-  const match = value.match(
+  const comma = value.match(
     /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i,
   )
-  if (!match) return null
-  return [Number(match[1]), Number(match[2]), Number(match[3])]
+  if (comma) {
+    return [Number(comma[1]), Number(comma[2]), Number(comma[3])]
+  }
+
+  // Modern CSS Colour 4 serialisation: rgb(r g b / a)
+  const space = value.match(/rgba?\(\s*(\d+)\s+(\d+)\s+(\d+)/i)
+  if (space) {
+    return [Number(space[1]), Number(space[2]), Number(space[3])]
+  }
+
+  return null
 }
 
 const toHex = (channels: [number, number, number]): string =>
@@ -14,9 +23,24 @@ const toHex = (channels: [number, number, number]): string =>
     .join('')
     .toUpperCase()}`
 
+const hexToken = (value: string): string | null => {
+  const trimmed = value.trim()
+  if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(trimmed)) {
+    return trimmed.toUpperCase()
+  }
+  return null
+}
+
+/**
+ * Normalise a computed CSS colour into a `#RRGGBB` token the HUD can edit.
+ */
 const colourToToken = (value: string): string => {
+  const hex = hexToken(value)
+  if (hex) return hex
+
   const channels = rgbChannels(value)
   if (channels) return toHex(channels)
+
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : '#000000'
 }
@@ -27,17 +51,18 @@ const parsePx = (value: string): number => {
 }
 
 /**
- * Reads computed radius, padding, fill, and border colour from a preview surface.
+ * Copies computed border-radius, padding, background, and border-colour
+ * from a preview surface into `DesignProperties`.
  */
 export const readDesignPropertiesFromElement = (
   element: HTMLElement,
 ): DesignProperties => {
   const styles = window.getComputedStyle(element)
   return {
-    radius: parsePx(styles.borderRadius),
+    radius: parsePx(styles.borderTopLeftRadius || styles.borderRadius),
     padding: parsePx(styles.paddingTop),
     bgPreset: colourToToken(styles.backgroundColor),
-    borderPreset: colourToToken(styles.borderColor),
+    borderPreset: colourToToken(styles.borderTopColor || styles.borderColor),
   }
 }
 
