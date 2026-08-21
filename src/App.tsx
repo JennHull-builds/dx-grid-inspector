@@ -356,15 +356,6 @@ function App() {
       ) : (
         <main className="flex min-h-0 flex-1 flex-col gap-3 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,22rem)] lg:gap-6 lg:p-6">
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-white/5 bg-[#0A0A10]">
-            {!overlayEnabled && (
-              <button
-                type="button"
-                onClick={() => setOverlayEnabled(true)}
-                className="absolute top-3 right-3 z-20 min-h-9 rounded-[8px] border border-white/15 bg-[#0A0A10]/90 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 backdrop-blur-sm hover:border-[#A78BFA]/40 hover:text-[#A78BFA]"
-              >
-                Enable overlay
-              </button>
-            )}
             <DxHostOverlay
               enabled={overlayEnabled}
               onEnabledChange={setOverlayEnabled}
@@ -374,7 +365,23 @@ function App() {
               targetElement={targetElement}
               className="min-h-[20rem] flex-1"
             >
-              <HostDemoSurface />
+              {(chrome) => (
+                <HostDemoSurface
+                  toolbar={
+                    chrome ?? (
+                      <div className="flex shrink-0 justify-end border-b border-white/10 bg-[#0F0F18] px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => setOverlayEnabled(true)}
+                          className="min-h-9 rounded-[8px] border border-white/15 bg-[#0A0A10]/90 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 backdrop-blur-sm hover:border-[#A78BFA]/40 hover:text-[#A78BFA]"
+                        >
+                          Enable overlay
+                        </button>
+                      </div>
+                    )
+                  }
+                />
+              )}
             </DxHostOverlay>
           </div>
 

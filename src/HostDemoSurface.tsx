@@ -1,8 +1,18 @@
+import type { ReactNode } from 'react'
+
+export interface HostDemoSurfaceProps {
+  /**
+   * Optional tool strip rendered under the host header and above main content
+   * (e.g. DxHostOverlay chrome), matching orient → arm tools → inspect flow.
+   */
+  toolbar?: ReactNode
+}
+
 /**
  * Generic in-repo host layout used to prove DxHostOverlay on real UI,
  * not only the three-panel harness sample card.
  */
-export function HostDemoSurface() {
+export function HostDemoSurface({ toolbar }: HostDemoSurfaceProps) {
   return (
     <div className="min-h-full bg-[#0A0A10] text-slate-200">
       <header
@@ -32,6 +42,8 @@ export function HostDemoSurface() {
           </button>
         </nav>
       </header>
+
+      {toolbar}
 
       <main className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
         <article

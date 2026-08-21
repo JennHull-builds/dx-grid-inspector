@@ -8,9 +8,16 @@ import {
   type ReactNode,
 } from 'react'
 
+export type DxHostOverlayChildren =
+  | ReactNode
+  | ((chrome: ReactNode | null) => ReactNode)
+
 export interface DxHostOverlayProps {
-  /** Host UI to wrap. Remains interactive when the overlay is off or inspect is off. */
-  children: ReactNode
+  /**
+   * Host UI to wrap. Remains interactive when the overlay is off or inspect is off.
+   * Pass a function to place the chrome strip yourself (e.g. under a host header).
+   */
+  children: DxHostOverlayChildren
   /**
    * When false, only children render — no chrome and no layout shift from
    * measurement UI.
@@ -37,6 +44,9 @@ export interface DxHostOverlayProps {
 }
 
 const isActivationKey = (key: string): boolean => key === 'Enter' || key === ' '
+
+const chromeStripClassName =
+  'pointer-events-auto z-20 flex shrink-0 flex-wrap items-center justify-end gap-2 border-b border-white/10 bg-[#0F0F18] px-3 py-2'
 
 /**
  * Drop-in wrapper that renders host children plus optional non-destructive overlay chrome.
@@ -127,51 +137,64 @@ export function DxHostOverlay({
     }
   }
 
+  const renderChildren = (chrome: ReactNode | null): ReactNode =>
+    typeof children === 'function' ? children(chrome) : children
+
   if (!enabled) {
-    return <div className={className || undefined}>{children}</div>
+    return (
+      <div className={className || undefined}>{renderChildren(null)}</div>
+    )
   }
+
+  const chrome = (
+    <div
+      data-dx-overlay-chrome="true"
+      id={chromeId}
+      className={chromeStripClassName}
+      role="toolbar"
+      aria-label="Overlay controls"
+    >
+      <button
+        type="button"
+        aria-pressed={enabled}
+        aria-label="Toggle overlay chrome"
+        onClick={() => onEnabledChange?.(false)}
+        className="min-h-9 rounded-[8px] border border-[#A78BFA]/40 bg-[#0A0A10]/90 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] backdrop-blur-sm hover:bg-[#A78BFA]/15"
+      >
+        Overlay on
+      </button>
+      <button
+        type="button"
+        aria-pressed={inspecting}
+        aria-label={
+          inspecting
+            ? 'Inspect mode on. Press Escape to exit.'
+            : 'Start inspect mode'
+        }
+        onClick={() => onInspectingChange?.(!inspecting)}
+        onKeyDown={(event) => {
+          if (!isActivationKey(event.key)) return
+          event.preventDefault()
+          onInspectingChange?.(!inspecting)
+        }}
+        className={`min-h-9 rounded-[8px] border px-3 font-mono text-xs font-semibold uppercase tracking-wider backdrop-blur-sm transition-colors ${
+          inspecting
+            ? 'border-[#A78BFA]/50 bg-[#A78BFA]/20 text-[#A78BFA]'
+            : 'border-white/15 bg-[#0A0A10]/90 text-slate-300 hover:border-white/25'
+        }`}
+      >
+        {inspecting ? 'Inspecting…' : 'Inspect'}
+      </button>
+    </div>
+  )
+
+  const placeChromeInline = typeof children === 'function'
 
   return (
     <div
       className={`relative flex min-h-0 flex-1 flex-col ${className}`.trim()}
     >
-      <div
-        data-dx-overlay-chrome="true"
-        id={chromeId}
-        className="pointer-events-auto absolute top-3 right-3 z-20 flex flex-wrap items-center gap-2"
-      >
-        <button
-          type="button"
-          aria-pressed={enabled}
-          aria-label="Toggle overlay chrome"
-          onClick={() => onEnabledChange?.(false)}
-          className="min-h-9 rounded-[8px] border border-[#A78BFA]/40 bg-[#0A0A10]/90 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] backdrop-blur-sm hover:bg-[#A78BFA]/15"
-        >
-          Overlay on
-        </button>
-        <button
-          type="button"
-          aria-pressed={inspecting}
-          aria-label={
-            inspecting
-              ? 'Inspect mode on. Press Escape to exit.'
-              : 'Start inspect mode'
-          }
-          onClick={() => onInspectingChange?.(!inspecting)}
-          onKeyDown={(event) => {
-            if (!isActivationKey(event.key)) return
-            event.preventDefault()
-            onInspectingChange?.(!inspecting)
-          }}
-          className={`min-h-9 rounded-[8px] border px-3 font-mono text-xs font-semibold uppercase tracking-wider backdrop-blur-sm transition-colors ${
-            inspecting
-              ? 'border-[#A78BFA]/50 bg-[#A78BFA]/20 text-[#A78BFA]'
-              : 'border-white/15 bg-[#0A0A10]/90 text-slate-300 hover:border-white/25'
-          }`}
-        >
-          {inspecting ? 'Inspecting…' : 'Inspect'}
-        </button>
-      </div>
+      {!placeChromeInline && chrome}
 
       <div
         ref={hostRef}
@@ -180,7 +203,7 @@ export function DxHostOverlay({
         }`}
         onClickCapture={handleHostClick}
       >
-        {children}
+        {renderChildren(placeChromeInline ? chrome : null)}
         {highlightBox && (
           <div
             aria-hidden="true"
