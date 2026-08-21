@@ -1,4 +1,17 @@
-import type { DesignProperties } from './types'
+import type { DesignNode, DesignProperties } from './types'
+
+type TokenNodeMeta = Pick<DesignNode, 'id' | 'name' | 'category' | 'status'>
+
+const cssLength = (value: number | string): string => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return `${value}px`
+  }
+  const trimmed = String(value).trim()
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    return `${trimmed}px`
+  }
+  return trimmed
+}
 
 const rgbChannels = (value: string): [number, number, number] | null => {
   const comma = value.match(
@@ -68,17 +81,58 @@ export const readDesignPropertiesFromElement = (
 
 /**
  * Formats node tokens as CSS custom properties for the clipboard.
+ * Optional `nodeName` is written as a leading comment so the paste is identifiable.
  */
-export const formatTokensAsCss = (properties: DesignProperties): string =>
-  [
-    `--radius: ${properties.radius}px;`,
-    `--padding: ${properties.padding}px;`,
+export const formatTokensAsCss = (
+  properties: DesignProperties,
+  nodeName?: string,
+): string => {
+  const declarations = [
+    `--radius: ${cssLength(properties.radius)};`,
+    `--padding: ${cssLength(properties.padding)};`,
     `--surface-fill: ${properties.bgPreset};`,
     `--border-preset: ${properties.borderPreset};`,
   ].join('\n')
 
+  return nodeName ? `/* ${nodeName} */\n${declarations}` : declarations
+}
+
 /**
  * Formats node tokens as JSON for the clipboard.
+ * Pass node metadata when copying a selected node so id, name, and status travel with the tokens.
  */
-export const formatTokensAsJson = (properties: DesignProperties): string =>
-  `${JSON.stringify(properties, null, 2)}\n`
+export const formatTokensAsJson = (
+  properties: DesignProperties,
+  node?: TokenNodeMeta,
+): string =>
+  `${JSON.stringify(node ? { ...node, properties } : properties, null, 2)}\n`
+
+/**
+ * Writes text to the clipboard. Falls back to a hidden textarea when the
+ * Clipboard API is missing or blocked (for example a non-secure context).
+ */
+export const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    // Fall through to the execCommand path.
+  }
+
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'fixed'
+    textarea.style.left = '-9999px'
+    document.body.appendChild(textarea)
+    textarea.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return ok
+  } catch {
+    return false
+  }
+}

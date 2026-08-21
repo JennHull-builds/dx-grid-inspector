@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
-import { formatTokensAsCss, formatTokensAsJson } from './tokenExport';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  copyTextToClipboard,
+  formatTokensAsCss,
+  formatTokensAsJson,
+} from './tokenExport';
 import type { DesignNode, DesignProperties } from './types';
+
+const FEEDBACK_MS = 2000;
 
 interface TokenCalibrationUnitProps {
   selectedNode: DesignNode | null;
@@ -126,6 +132,7 @@ const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
 /**
  * Live token calibration HUD for padding, radius, surface fills, and border presets.
  * Surface Fill and Border Preset pair a native colour picker with a hex/rgba text field.
+ * Copy writes CSS custom properties to the clipboard; JSON is a second export format.
  */
 export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   selectedNode,
@@ -135,7 +142,27 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   const [editingKey, setEditingKey] = useState<EditableField | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current != null) {
+        window.clearTimeout(feedbackTimerRef.current);
+      }
+    };
+  }, []);
+
+  const announce = (message: string) => {
+    setFeedback(message);
+    if (feedbackTimerRef.current != null) {
+      window.clearTimeout(feedbackTimerRef.current);
+    }
+    feedbackTimerRef.current = window.setTimeout(() => {
+      setFeedback(null);
+      feedbackTimerRef.current = null;
+    }, FEEDBACK_MS);
+  };
 
   if (!selectedNode) {
     return (
@@ -202,15 +229,21 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   const copyTokens = async (format: 'css' | 'json') => {
     const payload =
       format === 'css'
-        ? formatTokensAsCss(selectedNode.properties)
-        : formatTokensAsJson(selectedNode.properties);
-    try {
-      await navigator.clipboard.writeText(payload);
-      setCopyStatus(format === 'css' ? 'Copied CSS' : 'Copied JSON');
-    } catch {
-      setCopyStatus('Copy failed');
-    }
-    window.setTimeout(() => setCopyStatus(null), 2000);
+        ? formatTokensAsCss(selectedNode.properties, selectedNode.name)
+        : formatTokensAsJson(selectedNode.properties, {
+            id: selectedNode.id,
+            name: selectedNode.name,
+            category: selectedNode.category,
+            status: selectedNode.status,
+          });
+    const ok = await copyTextToClipboard(payload);
+    announce(
+      ok
+        ? format === 'css'
+          ? 'Copied CSS custom properties'
+          : 'Copied JSON'
+        : 'Copy failed',
+    );
   };
 
   const handleReadFromPreview = () => {
@@ -218,8 +251,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     setEditingKey(null);
     setError(null);
     onReadFromPreview();
-    setCopyStatus('Copied from preview');
-    window.setTimeout(() => setCopyStatus(null), 2000);
+    announce('Read tokens from preview');
   };
 
   return (
@@ -324,7 +356,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           <button
             type="button"
             onClick={handleReadFromPreview}
-            aria-label="Copy computed border-radius, padding, background, and border-colour from the live preview into this node"
+            aria-label="Read computed border-radius, padding, background, and border-colour from the live preview into this node"
             className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
           >
             Read from preview
@@ -333,20 +365,26 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         <button
           type="button"
           onClick={() => void copyTokens('css')}
-          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+          aria-label="Copy selected node tokens as CSS custom properties"
+          className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
         >
-          Copy CSS
+          Copy
         </button>
         <button
           type="button"
           onClick={() => void copyTokens('json')}
+          aria-label="Copy selected node tokens as JSON"
           className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
         >
-          Copy JSON
+          JSON
         </button>
-        {copyStatus && (
-          <span className="font-mono text-xs text-[#A78BFA]" role="status">
-            {copyStatus}
+        {feedback && (
+          <span
+            className="font-mono text-xs text-[#A78BFA]"
+            role="status"
+            aria-live="polite"
+          >
+            {feedback}
           </span>
         )}
       </div>
