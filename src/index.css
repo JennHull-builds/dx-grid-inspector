@@ -30,7 +30,8 @@
   --accent: #a78bfa;
   --accent-ink: #0a0a10;
   --secondary: #5eead4;
-  --success: #a3be5b;
+  --success: #e8c47a; /* muted amber — In Progress status */
+  --warning: #7dd3fc; /* soft sky — available for secondary emphasis */
   --danger: #f87171;
   --border-subtle: rgb(255 255 255 / 0.1);
   --text: #cbd5e1;
@@ -46,7 +47,13 @@
   --color-dx-accent-ink: var(--accent-ink);
   --color-dx-secondary: var(--secondary);
   --color-dx-success: var(--success);
+  --color-dx-warning: var(--warning);
   --color-dx-danger: var(--danger);
+  --font-dx-wordmark: "Martian Mono", ui-monospace, monospace;
+}
+
+.dx-wordmark {
+  font-family: var(--font-dx-wordmark);
 }
 
 body {

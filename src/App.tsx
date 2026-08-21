@@ -222,8 +222,12 @@ function App() {
     <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-dx-surface-0 text-slate-300">
       <Analytics />
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/5 px-4 py-2">
-        <p className="min-w-0 truncate font-mono text-xs uppercase tracking-[0.12em] text-dx-accent/80">
-          DX Spatial Grid &amp; Token Inspector
+        <p className="dx-wordmark flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
+          <span
+            className="size-2.5 shrink-0 border-l border-t border-dx-secondary"
+            aria-hidden="true"
+          />
+          <span className="truncate">DX Spatial Grid &amp; Token Inspector</span>
         </p>
         <div className="flex shrink-0 items-center gap-3">
           <nav className="dx-segment-track" aria-label="App mode">
