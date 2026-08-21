@@ -1,6 +1,6 @@
 # DX Spatial Grid & Token Inspector
 
-> A lightweight developer experience (DX) demo for React 19 and Tailwind CSS v4. Inspect design nodes, filter by category, and calibrate spatial tokens live in the browser.
+> A lightweight developer experience (DX) demo for React 19 and Tailwind CSS v4. Inspect design nodes, calibrate spatial tokens, wrap host UI with a local overlay, and leave with CSS, JSON, or an agent prompt — all in the browser.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![React](https://img.shields.io/badge/React-19-blue.svg)
@@ -11,13 +11,19 @@
 
 ![The live harness with the Template Grid Manager, Token Calibration Unit, and Live Token Preview](docs/harness-screenshot.png)
 
-*Desktop view of the local test harness: filter and select layout nodes, calibrate spatial tokens, and preview the sample surface. Captured from the live demo.*
+*Desktop view of the local test harness: filter and select layout nodes, calibrate spatial tokens, and preview the sample surface.*
+
+![Overlay demo wrapping a host surface with the calibration HUD](docs/overlay-screenshot.png)
+
+*Overlay demo: wrap host UI, inspect a surface, calibrate tokens, and copy CSS / JSON / an agent prompt. Agent assistance is clipboard-only — not in-app AI.*
 
 ---
 
 ## Overview
 
-The **DX Spatial Grid & Token Inspector** is a small, self-contained harness for exploring layout-oriented design nodes and editing spatial tokens (padding, border radius, surface colours, and border presets) on screen.
+The **DX Spatial Grid & Token Inspector** is a small, self-contained tool for exploring layout-oriented design nodes and editing spatial tokens (padding, border radius, surface colours, and border presets) on screen.
+
+Use the **Harness** tab for the three-panel playground, or **Overlay demo** to wrap a real host surface with [`DxHostOverlay`](src/DxHostOverlay.tsx), inspect an element, apply tokens, and export.
 
 Built as an open-source learning and portfolio project — iterating in public. Components are modular and easy to copy into your own React app; an installable npm package may come later.
 
@@ -28,11 +34,13 @@ Built as an open-source learning and portfolio project — iterating in public. 
 - **Template Grid Manager:** Categorise, filter, and select layout nodes (Display, Navigation, Content, Functional). Click a status chip to toggle Ready / In Progress without changing the selected row.
 - **Token Calibration Unit:** Edit corner radii, padding, surface colours, and border styles with inline validation.
 - **Live Token Preview:** Sample card and button update as you calibrate radius, padding, and colours.
-- **Read from preview / copy out:** Pull computed CSS back into the HUD, or copy tokens as CSS custom properties or JSON.
+- **DxHostOverlay:** Drop-in wrap-around chrome for host children — enable/disable and inspect mode (Escape exits).
+- **Read / apply / copy out:** Pull computed CSS into the HUD, apply tokens to a host target, or copy as CSS custom properties, JSON, or an agent prompt. Paste JSON back into the HUD.
+- **DX grid voice (clipboard):** Describe a layout in natural language and copy a paste-ready agent prompt. No in-app model and never paste API keys into the demo.
 - **Built-in Sanitisation:** Parses CSS layout units (`px`, `rem`, `%`, `vh`, `vw`) and validates hex / rgba colour input.
-- **Local Test Harness:** [`src/App.tsx`](src/App.tsx) wires the panels together with mock nodes so you can try everything immediately.
+- **Local Test Shell:** [`src/App.tsx`](src/App.tsx) switches between Harness and Overlay demo modes.
 - **Tailwind CSS v4 Ready:** Uses `@tailwindcss/vite` and native CSS variable architecture.
-- **Strict TypeScript:** Explicit prop interfaces and a shared `DesignNode` model in [`src/types.ts`](src/types.ts).
+- **Strict TypeScript:** Explicit prop interfaces and a shared `DesignNode` / `DesignProperties` model in [`src/types.ts`](src/types.ts).
 
 ---
 
@@ -64,13 +72,13 @@ Built as an open-source learning and portfolio project — iterating in public. 
    npm run dev
    ```
 
-4. Open your browser at `http://localhost:5173` to view the live harness.
+4. Open your browser at `http://localhost:5173` to view the live shell.
 
 ---
 
 ## Usage Example
 
-Embed the panels in your own React layout:
+### Harness panels
 
 ```tsx
 import { useRef, useState } from 'react'
@@ -153,6 +161,42 @@ export default function InspectorHarness() {
 }
 ```
 
+### Wrap host UI with the overlay
+
+Copy [`DxHostOverlay`](src/DxHostOverlay.tsx) and [`tokenExport.ts`](src/tokenExport.ts) into your app (npm package still optional / later):
+
+```tsx
+import { useState } from 'react'
+import { DxHostOverlay } from './DxHostOverlay'
+import {
+  applyDesignPropertiesToElement,
+  readDesignPropertiesFromElement,
+} from './tokenExport'
+import type { DesignProperties } from './types'
+
+export function OverlayExample({ children }: { children: React.ReactNode }) {
+  const [inspecting, setInspecting] = useState(false)
+  const [target, setTarget] = useState<HTMLElement | null>(null)
+  const [tokens, setTokens] = useState<DesignProperties | null>(null)
+
+  return (
+    <DxHostOverlay
+      enabled
+      inspecting={inspecting}
+      onInspectingChange={setInspecting}
+      targetElement={target}
+      onTargetSelect={(element) => {
+        setTarget(element)
+        setTokens(readDesignPropertiesFromElement(element))
+        setInspecting(false)
+      }}
+    >
+      {children}
+    </DxHostOverlay>
+  )
+}
+```
+
 ---
 
 ## Tech Stack
@@ -174,15 +218,19 @@ dx-grid-inspector/
 ├── src/
 │   ├── types.ts                   # Shared DesignNode, status, and token types
 │   ├── GridOverlay.tsx            # Template grid manager
+│   ├── DxHostOverlay.tsx          # Drop-in wrap-around overlay for host UI
+│   ├── HostDemoSurface.tsx        # In-repo host layout for the overlay demo
 │   ├── TokenCalibrationUnit.tsx   # Live spatial token calibration HUD
 │   ├── LiveTokenPreview.tsx       # Sample card + button preview
-│   ├── tokenExport.ts             # Read computed CSS and clipboard formatters
+│   ├── DxGridVoice.tsx            # Clipboard agent prompt (no in-app AI)
+│   ├── tokenExport.ts             # Read/apply CSS; CSS/JSON/prompt formatters
 │   ├── harnessStorage.ts          # localStorage snapshot for the harness
-│   ├── App.tsx                    # Interactive local test harness
+│   ├── App.tsx                    # Harness | Overlay demo shell
 │   ├── main.tsx                   # Application entry point
 │   └── index.css                  # Tailwind CSS v4 setup
 ├── docs/
-│   └── harness-screenshot.png     # Live harness screenshot used in this README
+│   ├── harness-screenshot.png     # Harness screenshot used in this README
+│   └── overlay-screenshot.png     # Overlay demo screenshot
 ├── PROJECT_CONTEXT.md             # AI agent project context
 ├── .cursorrules                   # Code style & open-source guardrails
 ├── LICENSE                        # MIT
@@ -200,6 +248,8 @@ Tracked as GitHub issues. Near-term:
 - [x] Shared `DesignNode` types across components ([#3](https://github.com/JennHull-builds/dx-grid-inspector/issues/3))
 - [x] Read live CSS from the preview into the HUD
 - [x] Copy calibrated tokens as CSS / JSON
+- [x] Drop-in `DxHostOverlay` demo on host UI (inspect, read, apply)
+- [x] Copy agent prompt + clipboard DX grid voice
 - [ ] Optional publishable npm package later ([#4](https://github.com/JennHull-builds/dx-grid-inspector/issues/4))
 
 ---

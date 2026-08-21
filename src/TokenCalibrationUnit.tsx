@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   copyTextToClipboard,
+  formatTokensAsAgentPrompt,
   formatTokensAsCss,
   formatTokensAsJson,
+  parseDesignPropertiesJson,
 } from './tokenExport';
 import type { DesignNode, DesignProperties } from './types';
 
@@ -11,8 +13,14 @@ const FEEDBACK_MS = 2000;
 interface TokenCalibrationUnitProps {
   selectedNode: DesignNode | null;
   onUpdateProperties: (id: string, properties: DesignProperties) => void;
-  /** Copies computed styles from the live preview surface into this node. */
+  /** Copies computed styles from the live preview or inspect target into this node. */
   onReadFromPreview?: () => void;
+  /** Label for the read action (defaults to “Read from preview”). */
+  readLabel?: string;
+  /** Writes the current tokens onto the active host inspect target. */
+  onApplyToTarget?: () => void;
+  /** Empty-state hint when no node is selected. */
+  emptyHint?: string;
 }
 
 type EditableField = keyof DesignProperties;
@@ -138,11 +146,16 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   selectedNode,
   onUpdateProperties,
   onReadFromPreview,
+  readLabel = 'Read from preview',
+  onApplyToTarget,
+  emptyHint = 'Select a node from the Template Grid Manager to calibrate layout tokens.',
 }) => {
   const [editingKey, setEditingKey] = useState<EditableField | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteValue, setPasteValue] = useState('');
   const feedbackTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -172,7 +185,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         </h2>
         <div className="flex-1 flex items-center justify-center border border-dashed border-white/10 rounded-[12px]">
           <p className="text-sm font-mono text-slate-500 text-center px-4">
-            Select a node from the Template Grid Manager to calibrate layout tokens.
+            {emptyHint}
           </p>
         </div>
       </section>
@@ -226,22 +239,28 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     }
   };
 
-  const copyTokens = async (format: 'css' | 'json') => {
+  const copyTokens = async (format: 'css' | 'json' | 'prompt') => {
     const payload =
       format === 'css'
         ? formatTokensAsCss(selectedNode.properties, selectedNode.name)
-        : formatTokensAsJson(selectedNode.properties, {
-            id: selectedNode.id,
-            name: selectedNode.name,
-            category: selectedNode.category,
-            status: selectedNode.status,
-          });
+        : format === 'json'
+          ? formatTokensAsJson(selectedNode.properties, {
+              id: selectedNode.id,
+              name: selectedNode.name,
+              category: selectedNode.category,
+              status: selectedNode.status,
+            })
+          : formatTokensAsAgentPrompt(selectedNode.properties, {
+              nodeName: selectedNode.name,
+            });
     const ok = await copyTextToClipboard(payload);
     announce(
       ok
         ? format === 'css'
           ? 'Copied CSS custom properties'
-          : 'Copied JSON'
+          : format === 'json'
+            ? 'Copied JSON'
+            : 'Copied agent prompt'
         : 'Copy failed',
     );
   };
@@ -251,7 +270,28 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     setEditingKey(null);
     setError(null);
     onReadFromPreview();
-    announce('Read tokens from preview');
+    announce('Read tokens from target');
+  };
+
+  const handleApplyToTarget = () => {
+    if (!onApplyToTarget) return;
+    setEditingKey(null);
+    setError(null);
+    onApplyToTarget();
+    announce('Applied tokens to target');
+  };
+
+  const handlePasteTokens = () => {
+    const parsed = parseDesignPropertiesJson(pasteValue);
+    if (parsed === null) {
+      setError('Invalid token JSON. Paste DesignProperties or a full node.');
+      return;
+    }
+    onUpdateProperties(selectedNode.id, parsed);
+    setPasteValue('');
+    setPasteOpen(false);
+    setError(null);
+    announce('Applied pasted tokens');
   };
 
   return (
@@ -351,15 +391,61 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         <p className="mt-3 text-xs font-mono text-red-400 shrink-0">{error}</p>
       )}
 
+      {pasteOpen && (
+        <div className="mt-3 shrink-0 rounded-[12px] border border-white/10 bg-[#0A0A10] p-3">
+          <label className="block font-mono text-xs uppercase tracking-wider text-slate-500">
+            Paste DesignProperties JSON
+            <textarea
+              value={pasteValue}
+              onChange={(event) => setPasteValue(event.target.value)}
+              rows={5}
+              spellCheck={false}
+              className="mt-2 w-full resize-y rounded-[8px] border border-white/10 bg-[#13131F] px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-[#A78BFA]/50"
+              placeholder='{ "radius": 12, "padding": 16, "bgPreset": "#1A1A2B", "borderPreset": "#A78BFA" }'
+            />
+          </label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handlePasteTokens}
+              className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+            >
+              Apply paste
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPasteOpen(false);
+                setPasteValue('');
+                setError(null);
+              }}
+              className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mt-3 flex shrink-0 flex-wrap items-center gap-2 border-t border-white/5 pt-3">
         {onReadFromPreview && (
           <button
             type="button"
             onClick={handleReadFromPreview}
-            aria-label="Read computed border-radius, padding, background, and border-colour from the live preview into this node"
+            aria-label="Read computed border-radius, padding, background, and border-colour from the active target into this node"
             className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
           >
-            Read from preview
+            {readLabel}
+          </button>
+        )}
+        {onApplyToTarget && (
+          <button
+            type="button"
+            onClick={handleApplyToTarget}
+            aria-label="Apply calibrated tokens to the selected host target"
+            className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+          >
+            Apply to target
           </button>
         )}
         <button
@@ -377,6 +463,26 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
         >
           JSON
+        </button>
+        <button
+          type="button"
+          onClick={() => void copyTokens('prompt')}
+          aria-label="Copy an agent prompt that asks for DesignProperties JSON"
+          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+        >
+          Prompt
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setPasteOpen((open) => !open);
+            setError(null);
+          }}
+          aria-label="Paste DesignProperties JSON into this node"
+          aria-expanded={pasteOpen}
+          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+        >
+          Paste
         </button>
         {feedback && (
           <span

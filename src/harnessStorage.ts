@@ -1,6 +1,6 @@
+import { parseDesignProperties } from './tokenExport'
 import type {
   DesignNode,
-  DesignProperties,
   NodeCategory,
   NodeStatus,
 } from './types'
@@ -33,36 +33,6 @@ const isNodeCategory = (value: unknown): value is NodeCategory =>
 const isNodeStatus = (value: unknown): value is NodeStatus =>
   typeof value === 'string' &&
   (NODE_STATUSES as readonly string[]).includes(value)
-
-const isFiniteNumberOrString = (value: unknown): value is number | string =>
-  typeof value === 'string' ||
-  (typeof value === 'number' && Number.isFinite(value))
-
-/**
- * Rebuilds design properties from unknown JSON so extra or hostile keys are dropped.
- */
-const parseDesignProperties = (value: unknown): DesignProperties | null => {
-  if (value === null || typeof value !== 'object') {
-    return null
-  }
-
-  const record = value as Record<string, unknown>
-  if (
-    !isFiniteNumberOrString(record.radius) ||
-    !isFiniteNumberOrString(record.padding) ||
-    typeof record.bgPreset !== 'string' ||
-    typeof record.borderPreset !== 'string'
-  ) {
-    return null
-  }
-
-  return {
-    radius: record.radius,
-    padding: record.padding,
-    bgPreset: record.bgPreset,
-    borderPreset: record.borderPreset,
-  }
-}
 
 /**
  * Rebuilds a design node from unknown JSON. Returns null when the shape is invalid.

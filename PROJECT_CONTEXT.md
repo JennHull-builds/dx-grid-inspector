@@ -2,31 +2,47 @@
 
 ## Overview
 
-A lightweight, zero-dependency open-source **local testing harness** built with React 19, TypeScript, Vite, and Tailwind CSS v4. It lets you pick layout nodes, calibrate spatial tokens (padding, radius, fill, border), and preview those tokens on a sample surface in the browser.
+A lightweight, zero-dependency open-source **local testing harness** and **drop-in host overlay** built with React 19, TypeScript, Vite, and Tailwind CSS v4. It lets you pick layout nodes, calibrate spatial tokens (padding, radius, fill, border), preview those tokens on a sample surface, or wrap real host UI, inspect a surface, and leave with CSS, token JSON, or an agent prompt snippet.
 
-This is **not** yet a drop-in grid overlay for other apps. A visual grid overlay you wrap around host UI remains a **future goal** — once the harness reliably reads live CSS from a preview surface and copies tokens out for reuse elsewhere.
+**Phase 3 goal:** Ship a local drop-in `DxHostOverlay` that wraps host UI in this repo (then copyable elsewhere), so engineers can inspect a real surface, calibrate `DesignProperties`, and leave with CSS, token JSON, or an agent prompt — with optional Phase 3.5 clipboard “DX grid voice”; npm stays parked until the overlay is proven; no backend or API keys unless we explicitly decide otherwise.
 
-## Current Harness (what ships today)
+This is **not** an installable npm package yet, and it does **not** run an in-app LLM. Voice is clipboard-assisted only.
 
-Three co-ordinated panels wired together in `src/App.tsx`:
+## Current product (what ships today)
+
+### Mode A — Local testing harness
+
+Three co-ordinated panels wired together in `src/App.tsx` (Harness tab):
 
 1. **Template Grid Manager** (`src/GridOverlay.tsx`) — node list with category filters (Display, Navigation, Content, Functional), status chips (Ready / In Progress), add/purge actions, and keyboard-accessible row selection.
-2. **Token Calibration Unit** (`src/TokenCalibrationUnit.tsx`) — live spatial token HUD for the selected node: corner radius, padding, surface fill, and border presets, with inline CSS unit and colour sanitisation. Includes **Read from preview** (pull computed CSS back into the HUD) and **Copy CSS / JSON** export.
-3. **Live Token Preview** (`src/LiveTokenPreview.tsx`) — sample card and button that apply the selected node's tokens in real time; the card surface is the measurement target for read-back and export.
+2. **Token Calibration Unit** (`src/TokenCalibrationUnit.tsx`) — live spatial token HUD: corner radius, padding, surface fill, and border presets, with inline CSS unit and colour sanitisation. Includes **Read from preview**, **Copy CSS / JSON / Prompt**, and **Paste** JSON.
+3. **Live Token Preview** (`src/LiveTokenPreview.tsx`) — sample card and button that apply the selected node's tokens; the card surface is the measurement target for read-back and export.
+
+### Mode B — Overlay demo
+
+1. **DxHostOverlay** (`src/DxHostOverlay.tsx`) — wrap-around chrome with enable/disable and inspect mode (Escape exits inspect).
+2. **HostDemoSurface** (`src/HostDemoSurface.tsx`) — generic in-repo host layout (header + content card + secondary panel) used to prove the overlay on real UI.
+3. **Apply to target** — writes the four `DesignProperties` fields as inline styles on the selected host element only.
+4. **DX grid voice** (`src/DxGridVoice.tsx`) — natural-language textarea → copy a paste-ready agent prompt (no API keys, no model calls). Paste the returned JSON in the HUD.
 
 ### Layout & persistence
 
-- **Desktop (≥1024px):** three equal columns — nodes | calibrate | preview.
-- **Mobile:** tabbed panels (Nodes · Calibrate · Preview); selecting a node on mobile switches to the Calibrate tab.
-- **Persistence:** node list, selection, and mock-node counter are saved to `localStorage` via `src/harnessStorage.ts`.
+- **Desktop (≥1024px):** harness uses three equal columns — nodes | calibrate | preview. Overlay demo uses host | HUD + voice.
+- **Mobile:** harness uses tabbed panels (Nodes · Calibrate · Preview).
+- **Persistence:** harness node list, selection, and mock-node counter are saved to `localStorage` via `src/harnessStorage.ts`.
 
 ### Data flow
 
 ```
-Select node → edit tokens in HUD → preview updates live
-                    ↑                      │
-                    └── Read from preview ←┘
-                    └── Copy CSS / JSON → clipboard
+Harness:  Select node → edit tokens in HUD → preview updates live
+                     ↑                      │
+                     └── Read from preview ←┘
+                     └── Copy CSS / JSON / Prompt → clipboard
+                     └── Paste JSON → HUD
+
+Overlay:  Inspect host element → read DesignProperties → HUD
+                     └── Apply to target → host element
+                     └── Copy / Paste / Voice prompt (clipboard agent workflow)
 ```
 
 ## Tech Stack & Tooling
@@ -40,18 +56,18 @@ Select node → edit tokens in HUD → preview updates live
 
 - `src/types.ts` — canonical shared model (`NodeCategory`, `NodeStatus`, `DesignProperties`, `DesignNode`).
 - `src/GridOverlay.tsx` — Template Grid Manager (node list UI; filename retained for history).
+- `src/DxHostOverlay.tsx` — drop-in wrap-around overlay for host children.
+- `src/HostDemoSurface.tsx` — in-repo host UI for the overlay demo.
 - `src/TokenCalibrationUnit.tsx` — spatial token calibration HUD.
-- `src/LiveTokenPreview.tsx` — sample preview surface.
-- `src/tokenExport.ts` — read computed CSS from the preview; format CSS/JSON for the clipboard.
+- `src/LiveTokenPreview.tsx` — sample preview surface (harness mode).
+- `src/DxGridVoice.tsx` — clipboard agent-assisted layout description (no in-app AI).
+- `src/tokenExport.ts` — read/apply computed CSS; format CSS/JSON/agent prompt; parse pasted JSON.
 - `src/harnessStorage.ts` — `localStorage` persistence for the harness snapshot.
-- `src/App.tsx` — local testing harness shell (header, responsive layout, panel wiring).
-
-## Future Goal: Drop-in Grid Overlay
-
-After the harness stabilises token read-back and export, the Template Grid Manager could evolve into a **wrap-around overlay** for inspecting layout nodes in arbitrary host applications. That overlay mode is **not implemented** — the current deliverable is the self-contained harness only.
+- `src/App.tsx` — shell with Harness | Overlay demo modes.
 
 ## Safety & Security Constraints
 
 - Zero external API integrations or database connections.
 - Purely local component state (plus optional `localStorage`).
 - Strictly no private credentials, internal client assets, or hardcoded API keys.
+- DX grid voice is clipboard-only — never paste API keys into the demo.

@@ -107,6 +107,118 @@ export const formatTokensAsJson = (
 ): string =>
   `${JSON.stringify(node ? { ...node, properties } : properties, null, 2)}\n`
 
+const isFiniteNumberOrString = (value: unknown): value is number | string =>
+  typeof value === 'string' ||
+  (typeof value === 'number' && Number.isFinite(value))
+
+/**
+ * Rebuilds `DesignProperties` from unknown JSON. Extra keys are dropped;
+ * invalid shapes return null.
+ */
+export const parseDesignProperties = (
+  value: unknown,
+): DesignProperties | null => {
+  if (value === null || typeof value !== 'object') {
+    return null
+  }
+
+  const record = value as Record<string, unknown>
+  const source =
+    record.properties !== undefined &&
+    record.properties !== null &&
+    typeof record.properties === 'object'
+      ? (record.properties as Record<string, unknown>)
+      : record
+
+  if (
+    !isFiniteNumberOrString(source.radius) ||
+    !isFiniteNumberOrString(source.padding) ||
+    typeof source.bgPreset !== 'string' ||
+    typeof source.borderPreset !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    radius: source.radius,
+    padding: source.padding,
+    bgPreset: source.bgPreset,
+    borderPreset: source.borderPreset,
+  }
+}
+
+/**
+ * Parses a JSON string into `DesignProperties` (bare tokens or a full node with `properties`).
+ */
+export const parseDesignPropertiesJson = (
+  raw: string,
+): DesignProperties | null => {
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    return parseDesignProperties(parsed)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Writes the four spatial tokens onto a host element as inline styles.
+ * Does not inject global CSS — only the selected target is updated.
+ */
+export const applyDesignPropertiesToElement = (
+  element: HTMLElement,
+  properties: DesignProperties,
+): void => {
+  element.style.borderRadius = cssLength(properties.radius)
+  element.style.padding = cssLength(properties.padding)
+  element.style.backgroundColor = properties.bgPreset
+  element.style.borderColor = properties.borderPreset
+  if (!element.style.borderStyle || element.style.borderStyle === 'none') {
+    element.style.borderStyle = 'solid'
+  }
+  if (!element.style.borderWidth) {
+    element.style.borderWidth = '2px'
+  }
+}
+
+/**
+ * Builds a paste-ready agent prompt that asks for `DesignProperties` JSON first.
+ * Optional natural-language context is included when provided.
+ */
+export const formatTokensAsAgentPrompt = (
+  properties: DesignProperties,
+  options?: {
+    nodeName?: string
+    layoutDescription?: string
+  },
+): string => {
+  const current = JSON.stringify(properties, null, 2)
+  const contextLines = [
+    options?.nodeName ? `Node label: ${options.nodeName}` : null,
+    options?.layoutDescription?.trim()
+      ? `Layout description:\n${options.layoutDescription.trim()}`
+      : null,
+  ].filter((line): line is string => line !== null)
+
+  return [
+    'You are helping calibrate spatial design tokens for a DX grid inspector.',
+    'Return ONLY a JSON object matching this DesignProperties shape (no markdown fences):',
+    '{',
+    '  "radius": number | string,',
+    '  "padding": number | string,',
+    '  "bgPreset": string,',
+    '  "borderPreset": string',
+    '}',
+    'Field meanings: radius = corner radius, padding = internal padding, bgPreset = surface fill colour (hex preferred), borderPreset = border colour (hex or rgba).',
+    'After the JSON you may add at most one short layout suggestion sentence.',
+    contextLines.length > 0 ? `\n${contextLines.join('\n\n')}` : '',
+    '\nCurrent tokens:',
+    current,
+  ]
+    .filter((part) => part !== '')
+    .join('\n')
+}
+
 /**
  * Writes text to the clipboard. Falls back to a hidden textarea when the
  * Clipboard API is missing or blocked (for example a non-secure context).

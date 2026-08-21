@@ -10,8 +10,8 @@ export type NodeStatus = 'Ready' | 'In Progress';
 
 /**
  * Editable layout and surface tokens for a design node.
- * “Read from preview” copies computed border-radius, padding, background,
- * and border-colour into these fields.
+ * “Read from preview/target” copies computed border-radius, padding, background,
+ * and border-colour into these fields. Overlay apply writes them back as inline styles.
  */
 export interface DesignProperties {
   radius: number | string;
