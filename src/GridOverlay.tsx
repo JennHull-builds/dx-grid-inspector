@@ -61,26 +61,26 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
   );
 
   return (
-    <section className="flex flex-col h-full w-full bg-[#13131F] border border-white/5 rounded-[16px] p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 border-b border-white/5 pb-3 shrink-0 gap-3">
+    <section className="flex h-full w-full flex-col rounded-[16px] border border-white/5 bg-dx-surface-2 p-4 sm:p-6">
+      <div className="mb-4 flex shrink-0 flex-col gap-3 border-b border-white/5 pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase">
+          <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
             Template Grid Manager
           </h2>
-          <p className="text-xs font-mono text-slate-500 mt-1">
+          <p className="mt-1 font-mono text-xs text-slate-500">
             {filteredNodes.length} of {nodes.length} Nodes Displayed
           </p>
         </div>
         <button
           type="button"
           onClick={onAddNode}
-          className="inline-flex items-center justify-center shrink-0 min-h-10 px-3 py-2 rounded-[8px] font-mono text-xs font-semibold uppercase tracking-wider bg-[#A78BFA]/15 text-[#A78BFA] border border-[#A78BFA]/40 hover:bg-[#A78BFA]/25 transition-all w-full sm:w-auto"
+          className="dx-btn-primary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
         >
           + Add Node
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 mb-4 shrink-0">
+      <div className="mb-4 flex shrink-0 flex-wrap items-center gap-1.5">
         {CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat;
           return (
@@ -88,10 +88,8 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`inline-flex items-center justify-center min-h-9 px-3 py-1.5 rounded-[6px] font-mono text-xs uppercase tracking-wide transition-all border ${
-                isActive
-                  ? 'bg-[#A78BFA]/15 text-[#A78BFA] border-[#A78BFA]/50'
-                  : 'bg-transparent text-slate-500 border-white/10 hover:border-white/20 hover:text-slate-300'
+              className={`dx-pill min-h-9 px-3 py-1.5 ${
+                isActive ? 'dx-pill-active' : ''
               }`}
             >
               {cat} ({categoryCounts[cat]})
@@ -100,37 +98,37 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
         })}
       </div>
 
-      <div className="flex flex-col gap-3 overflow-y-auto overscroll-contain pr-1 flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain pr-1">
         {nodes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 text-center p-8 border border-dashed border-white/10 rounded-[12px]">
-            <p className="text-sm font-medium text-slate-300 tracking-wide">
+          <div className="flex flex-col items-center justify-center gap-3 rounded-[12px] border border-dashed border-white/10 p-8 text-center">
+            <p className="text-sm font-medium tracking-wide text-slate-300">
               No nodes in the grid
             </p>
-            <p className="text-xs font-mono text-slate-500 max-w-xs">
+            <p className="max-w-xs font-mono text-xs text-slate-500">
               All nodes have been purged. Add a node to start inspecting spatial tokens.
             </p>
             <button
               type="button"
               onClick={onAddNode}
-              className="inline-flex items-center justify-center min-h-10 px-3 py-2 rounded-[8px] font-mono text-xs font-semibold uppercase tracking-wider bg-[#A78BFA]/15 text-[#A78BFA] border border-[#A78BFA]/40 hover:bg-[#A78BFA]/25 transition-all"
+              className="dx-btn-primary inline-flex min-h-10 items-center justify-center px-3 py-2"
             >
               + Add Node
             </button>
           </div>
         ) : filteredNodes.length === 0 ? (
-          <div className="text-center p-6 border border-dashed border-white/10 rounded-[12px]">
-            <p className="text-sm font-mono text-slate-500">
+          <div className="rounded-[12px] border border-dashed border-white/10 p-6 text-center">
+            <p className="font-mono text-sm text-slate-500">
               No framework components matching the "{activeCategory}" scope.
             </p>
           </div>
         ) : (
           filteredNodes.map((node) => {
             const isSelected = selectedNodeId === node.id;
-            const statusColor =
+            const statusTone =
               node.status === 'Ready'
-                ? 'text-[#A78BFA]'
+                ? 'dx-status-ready'
                 : node.status === 'In Progress'
-                  ? 'text-[#A3BE5B]'
+                  ? 'dx-status-progress'
                   : 'text-slate-500';
 
             return (
@@ -146,28 +144,24 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                   event.preventDefault();
                   onSelectNode(node.id);
                 }}
-                className={`group flex items-center justify-between p-3 sm:p-4 rounded-[12px] cursor-pointer transition-all border active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${
-                  isSelected
-                    ? 'bg-[#1A1A2B] border-[#A78BFA]/30 shadow-[0_0_6px_#A78BFA59]'
-                    : 'bg-[#0A0A10] border-white/5 hover:border-white/10'
+                className={`group flex cursor-pointer items-center justify-between p-3 sm:p-4 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dx-accent ${
+                  isSelected ? 'dx-selection' : 'dx-selection-idle'
                 }`}
               >
-                <div className="flex flex-col gap-1.5 flex-1 pr-2 min-w-0">
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5 pr-2">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                        isSelected ? 'bg-[#A78BFA]' : 'bg-slate-600'
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                        isSelected ? 'bg-dx-accent' : 'bg-slate-600'
                       }`}
                     />
-                    <span className="text-sm font-medium text-slate-200 tracking-wide truncate">
+                    <span className="truncate text-sm font-medium tracking-wide text-slate-200">
                       {node.name}
                     </span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="inline-flex items-center text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0A0A10] text-slate-400 border border-white/5">
-                      {node.category}
-                    </span>
+                    <span className="dx-chip">{node.category}</span>
                     <button
                       type="button"
                       onClick={(event) => {
@@ -177,11 +171,11 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                       onKeyDown={isolateFromRow}
                       title={`Toggle status for ${node.name}`}
                       aria-label={`Toggle status for ${node.name}. Currently ${node.status}.`}
-                      className={`inline-flex items-center justify-center text-xs font-mono px-2 py-0.5 min-h-8 rounded bg-[#0A0A10] border border-white/5 hover:border-white/20 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] ${statusColor}`}
+                      className={`dx-status-chip focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dx-accent ${statusTone}`}
                     >
                       {node.status}
                     </button>
-                    <span className="inline-flex items-center text-xs font-mono px-1.5 py-0.5 min-h-8 rounded bg-[#1A1A2B] text-[#A78BFA]">
+                    <span className="dx-chip-accent">
                       {node.properties.radius}px / {node.properties.padding}px
                     </span>
                   </div>
@@ -197,7 +191,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                   onKeyDown={isolateFromRow}
                   title={`Delete ${node.name}`}
                   aria-label={`Delete ${node.name}`}
-                  className="min-h-10 min-w-10 flex items-center justify-center rounded-md bg-white/0 hover:bg-white/5 text-slate-500 hover:text-red-400 font-mono text-xl leading-none transition-all opacity-100 lg:opacity-60 lg:group-hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A78BFA] focus-visible:opacity-100"
+                  className="dx-btn-danger flex min-h-10 min-w-10 items-center justify-center font-mono text-xl leading-none opacity-100 lg:opacity-60 lg:group-hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dx-accent focus-visible:opacity-100"
                 >
                   ×
                 </button>

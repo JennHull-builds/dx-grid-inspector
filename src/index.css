@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/*
+  Control taxonomy (when to use what)
+  -----------------------------------
+  Primary button   — one main commit action per region (Add, Apply, Continue, Copy prompt)
+  Secondary button — supporting actions (JSON, Paste, Library, Cancel)
+  Ghost / text     — low-emphasis inline (Save next to a field)
+  Danger           — destructive (delete); neutral idle → red hover; never accent
+  Segmented        — mutually exclusive navigation (Harness/Overlay, mobile panels)
+  Filter pill      — multi-option filters (category pills); teal active, not violet
+  Toggle           — on/off (Inspect, Overlay on); primary outline when active, not solid
+  Chip / badge     — non-navigational labels; quiet, not clickable
+  Status chip      — clickable status only; semantic colour, chip shape
+  Selection        — selectable rows / editing cards; surface fill + accent border
+*/
+
 :root {
   color-scheme: dark;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -7,15 +22,267 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --surface-0: #0a0a10;
+  --surface-1: #0f0f18;
+  --surface-2: #13131f;
+  --surface-3: #1a1a2b;
+  --accent: #a78bfa;
+  --accent-ink: #0a0a10;
+  --secondary: #5eead4;
+  --success: #a3be5b;
+  --danger: #f87171;
+  --border-subtle: rgb(255 255 255 / 0.1);
+  --text: #cbd5e1;
+  --text-muted: #64748b;
+}
+
+@theme {
+  --color-dx-surface-0: var(--surface-0);
+  --color-dx-surface-1: var(--surface-1);
+  --color-dx-surface-2: var(--surface-2);
+  --color-dx-surface-3: var(--surface-3);
+  --color-dx-accent: var(--accent);
+  --color-dx-accent-ink: var(--accent-ink);
+  --color-dx-secondary: var(--secondary);
+  --color-dx-success: var(--success);
+  --color-dx-danger: var(--danger);
 }
 
 body {
   margin: 0;
   min-height: 100svh;
-  background: #0a0a10;
-  color: #cbd5e1;
+  background: var(--surface-0);
+  color: var(--text);
 }
 
 #root {
   height: 100dvh;
+}
+
+/* --- Role utilities (colour, border, radius, hover; layout stays at call site) --- */
+
+.dx-btn-primary {
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.dx-btn-primary:hover {
+  background: color-mix(in srgb, var(--accent) 85%, white);
+  border-color: color-mix(in srgb, var(--accent) 85%, white);
+}
+
+.dx-btn-secondary {
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: #cbd5e1;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.dx-btn-secondary:hover {
+  border-color: rgb(255 255 255 / 0.2);
+  color: #f1f5f9;
+}
+
+.dx-btn-ghost {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.dx-btn-ghost:hover {
+  color: #c4b5fd;
+}
+
+.dx-btn-danger {
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.dx-btn-danger:hover {
+  background: rgb(255 255 255 / 0.05);
+  color: var(--danger);
+}
+
+.dx-segment-track {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+  padding: 0.125rem;
+}
+
+.dx-segment {
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dx-segment:hover {
+  color: #cbd5e1;
+}
+
+.dx-segment-active {
+  background: color-mix(in srgb, var(--secondary) 18%, transparent);
+  color: var(--secondary);
+}
+
+.dx-segment-active:hover {
+  color: var(--secondary);
+}
+
+.dx-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.dx-pill:hover {
+  border-color: rgb(255 255 255 / 0.2);
+  color: #cbd5e1;
+}
+
+.dx-pill-active {
+  border-color: color-mix(in srgb, var(--secondary) 50%, transparent);
+  background: color-mix(in srgb, var(--secondary) 15%, transparent);
+  color: var(--secondary);
+}
+
+.dx-pill-active:hover {
+  border-color: color-mix(in srgb, var(--secondary) 50%, transparent);
+  color: var(--secondary);
+}
+
+.dx-toggle {
+  border-radius: 8px;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  background: color-mix(in srgb, var(--surface-0) 90%, transparent);
+  color: #cbd5e1;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.dx-toggle:hover {
+  border-color: rgb(255 255 255 / 0.25);
+}
+
+.dx-toggle-active {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
+}
+
+.dx-toggle-active:hover {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.dx-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border-radius: 4px;
+  border: 1px solid rgb(255 255 255 / 0.05);
+  background: var(--surface-0);
+  padding: 0.125rem 0.5rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.dx-chip-accent {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border-radius: 4px;
+  border: none;
+  background: var(--surface-3);
+  padding: 0.125rem 0.375rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.dx-status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border-radius: 4px;
+  border: 1px solid rgb(255 255 255 / 0.05);
+  background: var(--surface-0);
+  padding: 0.125rem 0.5rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  transition: border-color 0.15s ease;
+}
+
+.dx-status-chip:hover {
+  border-color: rgb(255 255 255 / 0.2);
+}
+
+.dx-status-ready {
+  color: var(--accent);
+}
+
+.dx-status-progress {
+  color: var(--success);
+}
+
+.dx-selection {
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  background: var(--surface-3);
+}
+
+.dx-selection-idle {
+  border-radius: 12px;
+  border: 1px solid rgb(255 255 255 / 0.05);
+  background: var(--surface-0);
+  transition: border-color 0.15s ease;
+}
+
+.dx-selection-idle:hover {
+  border-color: rgb(255 255 255 / 0.1);
 }

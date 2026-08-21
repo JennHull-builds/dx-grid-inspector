@@ -132,7 +132,7 @@ const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
       value={pickerValue}
       onChange={(e) => onPick(e.target.value.toUpperCase())}
       onKeyDown={onKeyDown}
-      className="h-10 w-10 min-h-10 min-w-10 shrink-0 cursor-pointer rounded-[8px] border border-white/10 bg-[#13131F] p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[5px] [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-[5px] [&::-moz-color-swatch]:border-none"
+      className="h-10 w-10 min-h-10 min-w-10 shrink-0 cursor-pointer rounded-[8px] border border-white/10 bg-dx-surface-2 p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[5px] [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-[5px] [&::-moz-color-swatch]:border-none"
     />
   );
 };
@@ -315,8 +315,8 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
               key={field.key}
               className={`rounded-[12px] border p-3 transition-all ${
                 isEditing
-                  ? 'bg-[#0A0A10] border-[#A78BFA]/40 shadow-[0_0_6px_#A78BFA59]'
-                  : 'bg-[#0A0A10] border-white/5 hover:border-white/10'
+                  ? 'dx-selection bg-dx-surface-0'
+                  : 'dx-selection-idle'
               }`}
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -326,7 +326,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   className="flex flex-col items-start gap-0.5 text-left flex-1 min-w-0"
                 >
                   <span className="text-sm font-medium text-slate-200">{field.label}</span>
-                  <span className="text-xs font-mono text-[#A78BFA]/80">{field.key}</span>
+                  <span className="text-xs font-mono text-dx-accent/80">{field.key}</span>
                 </button>
 
                 <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
@@ -361,12 +361,12 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => handleFieldKeyDown(e, field)}
                         autoFocus
-                        className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-[#13131F] text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-sm outline-none focus:border-[#A78BFA]/50"
+                        className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-dx-surface-2 text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-sm outline-none focus:border-dx-accent/50"
                       />
                       <button
                         type="button"
                         onClick={() => saveField(field)}
-                        className="min-h-10 px-3 text-xs font-semibold text-[#A78BFA] hover:text-[#C4B5FD]"
+                        className="dx-btn-ghost min-h-10 px-3"
                       >
                         Save
                       </button>
@@ -392,7 +392,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       )}
 
       {pasteOpen && (
-        <div className="mt-3 shrink-0 rounded-[12px] border border-white/10 bg-[#0A0A10] p-3">
+        <div className="mt-3 shrink-0 rounded-[12px] border border-white/10 bg-dx-surface-0 p-3">
           <label className="block font-mono text-xs uppercase tracking-wider text-slate-500">
             Paste DesignProperties JSON
             <textarea
@@ -400,7 +400,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
               onChange={(event) => setPasteValue(event.target.value)}
               rows={5}
               spellCheck={false}
-              className="mt-2 w-full resize-y rounded-[8px] border border-white/10 bg-[#13131F] px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-[#A78BFA]/50"
+              className="mt-2 w-full resize-y rounded-[8px] border border-white/10 bg-dx-surface-2 px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-dx-accent/50"
               placeholder='{ "radius": 12, "padding": 16, "bgPreset": "#1A1A2B", "borderPreset": "#A78BFA" }'
             />
           </label>
@@ -408,7 +408,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
             <button
               type="button"
               onClick={handlePasteTokens}
-              className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+              className="dx-btn-primary min-h-10 px-3"
             >
               Apply paste
             </button>
@@ -419,7 +419,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                 setPasteValue('');
                 setError(null);
               }}
-              className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20"
+              className="dx-btn-secondary min-h-10 px-3"
             >
               Cancel
             </button>
@@ -433,7 +433,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
             type="button"
             onClick={handleReadFromPreview}
             aria-label="Read computed border-radius, padding, background, and border-colour from the active target into this node"
-            className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+            className="dx-btn-secondary min-h-10 px-3"
           >
             {readLabel}
           </button>
@@ -443,7 +443,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
             type="button"
             onClick={handleApplyToTarget}
             aria-label="Apply calibrated tokens to the selected host target"
-            className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+            className="dx-btn-primary min-h-10 px-3"
           >
             Apply to target
           </button>
@@ -452,7 +452,9 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           type="button"
           onClick={() => void copyTokens('css')}
           aria-label="Copy selected node tokens as CSS custom properties"
-          className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+          className={`${
+            onApplyToTarget ? 'dx-btn-secondary' : 'dx-btn-primary'
+          } min-h-10 px-3`}
         >
           Copy
         </button>
@@ -460,7 +462,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           type="button"
           onClick={() => void copyTokens('json')}
           aria-label="Copy selected node tokens as JSON"
-          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+          className="dx-btn-secondary min-h-10 px-3"
         >
           JSON
         </button>
@@ -468,7 +470,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           type="button"
           onClick={() => void copyTokens('prompt')}
           aria-label="Copy an agent prompt that asks for DesignProperties JSON"
-          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+          className="dx-btn-secondary min-h-10 px-3"
         >
           Prompt
         </button>
@@ -480,13 +482,13 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           }}
           aria-label="Paste DesignProperties JSON into this node"
           aria-expanded={pasteOpen}
-          className="min-h-10 rounded-[8px] border border-white/10 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/20 hover:text-slate-100"
+          className="dx-btn-secondary min-h-10 px-3"
         >
           Paste
         </button>
         {feedback && (
           <span
-            className="font-mono text-xs text-[#A78BFA]"
+            className="font-mono text-xs text-dx-accent"
             role="status"
             aria-live="polite"
           >

@@ -46,7 +46,7 @@ export interface DxHostOverlayProps {
 const isActivationKey = (key: string): boolean => key === 'Enter' || key === ' '
 
 const chromeStripClassName =
-  'pointer-events-auto z-20 flex shrink-0 flex-wrap items-center justify-end gap-2 border-b border-white/10 bg-[#0F0F18] px-3 py-2'
+  'pointer-events-auto z-20 flex shrink-0 flex-wrap items-center justify-end gap-2 border-b border-white/10 bg-dx-surface-1 px-3 py-2'
 
 /**
  * Drop-in wrapper that renders host children plus optional non-destructive overlay chrome.
@@ -159,7 +159,7 @@ export function DxHostOverlay({
         aria-pressed={enabled}
         aria-label="Toggle overlay chrome"
         onClick={() => onEnabledChange?.(false)}
-        className="min-h-9 rounded-[8px] border border-[#A78BFA]/40 bg-[#0A0A10]/90 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] backdrop-blur-sm hover:bg-[#A78BFA]/15"
+        className="dx-toggle dx-toggle-active min-h-9 px-3"
       >
         Overlay on
       </button>
@@ -177,10 +177,8 @@ export function DxHostOverlay({
           event.preventDefault()
           onInspectingChange?.(!inspecting)
         }}
-        className={`min-h-9 rounded-[8px] border px-3 font-mono text-xs font-semibold uppercase tracking-wider backdrop-blur-sm transition-colors ${
-          inspecting
-            ? 'border-[#A78BFA]/50 bg-[#A78BFA]/20 text-[#A78BFA]'
-            : 'border-white/15 bg-[#0A0A10]/90 text-slate-300 hover:border-white/25'
+        className={`dx-toggle min-h-9 px-3 ${
+          inspecting ? 'dx-toggle-active' : ''
         }`}
       >
         {inspecting ? 'Inspecting…' : 'Inspect'}
@@ -208,7 +206,7 @@ export function DxHostOverlay({
           <div
             aria-hidden="true"
             data-dx-overlay-chrome="true"
-            className="pointer-events-none fixed z-10 rounded-[4px] border-2 border-[#A78BFA] shadow-[0_0_0_1px_#A78BFA40]"
+            className="pointer-events-none fixed z-10 rounded-[4px] border-2 border-dx-accent shadow-[0_0_0_1px_#A78BFA40]"
             style={{
               top: highlightBox.top,
               left: highlightBox.left,
@@ -222,7 +220,7 @@ export function DxHostOverlay({
       {inspecting && (
         <p
           data-dx-overlay-chrome="true"
-          className="pointer-events-none absolute bottom-3 left-3 z-20 max-w-[min(100%,20rem)] rounded-[8px] border border-white/10 bg-[#0A0A10]/90 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-slate-400 backdrop-blur-sm"
+          className="pointer-events-none absolute bottom-3 left-3 z-20 max-w-[min(100%,20rem)] rounded-[8px] border border-white/10 bg-dx-surface-0/90 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-slate-400 backdrop-blur-sm"
         >
           Click a host surface to calibrate. Escape exits inspect.
         </p>

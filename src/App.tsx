@@ -219,17 +219,14 @@ function App() {
   const panelShell = 'min-h-0 flex-col overflow-visible'
 
   return (
-    <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-[#0A0A10] text-slate-300">
+    <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-dx-surface-0 text-slate-300">
       <Analytics />
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/5 px-4 py-2">
-        <p className="min-w-0 truncate font-mono text-xs uppercase tracking-[0.12em] text-[#A78BFA]/80">
+        <p className="min-w-0 truncate font-mono text-xs uppercase tracking-[0.12em] text-dx-accent/80">
           DX Spatial Grid &amp; Token Inspector
         </p>
         <div className="flex shrink-0 items-center gap-3">
-          <nav
-            className="flex items-center gap-1 rounded-[10px] border border-white/10 bg-[#13131F] p-0.5"
-            aria-label="App mode"
-          >
+          <nav className="dx-segment-track" aria-label="App mode">
             {MODE_TABS.map((tab) => {
               const isActive = appMode === tab.id
               return (
@@ -237,10 +234,8 @@ function App() {
                   key={tab.id}
                   type="button"
                   onClick={() => handleSetAppMode(tab.id)}
-                  className={`min-h-8 rounded-[8px] px-2.5 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors sm:px-3 sm:text-xs ${
-                    isActive
-                      ? 'bg-[#A78BFA]/20 text-[#A78BFA]'
-                      : 'text-slate-500 hover:text-slate-300'
+                  className={`dx-segment min-h-8 px-2.5 text-[10px] sm:px-3 sm:text-xs ${
+                    isActive ? 'dx-segment-active' : ''
                   }`}
                 >
                   {tab.label}
@@ -256,7 +251,7 @@ function App() {
               href="https://github.com/JennHull-builds/dx-grid-inspector"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#A78BFA]"
+              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-dx-accent"
             >
               GitHub
             </a>
@@ -267,7 +262,7 @@ function App() {
               href="https://github.com/JennHull-builds/dx-grid-inspector/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-[#A78BFA]"
+              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-dx-accent"
             >
               MIT Licence
             </a>
@@ -282,7 +277,7 @@ function App() {
               Local Testing Harness
             </h1>
             <nav
-              className="grid grid-cols-3 gap-1.5"
+              className="grid grid-cols-3 gap-0.5 rounded-[10px] border border-white/10 bg-dx-surface-2 p-0.5"
               aria-label="Inspector panels"
             >
               {MOBILE_TABS.map((tab) => {
@@ -292,10 +287,8 @@ function App() {
                     key={tab.id}
                     type="button"
                     onClick={() => setMobilePanel(tab.id)}
-                    className={`min-h-11 rounded-[12px] border font-mono text-xs font-semibold uppercase tracking-wider transition-all ${
-                      isActive
-                        ? 'border-[#A78BFA]/40 bg-[#A78BFA]/15 text-[#A78BFA] shadow-[0_0_6px_#A78BFA59]'
-                        : 'border-white/10 bg-[#13131F] text-slate-400'
+                    className={`dx-segment min-h-11 text-xs ${
+                      isActive ? 'dx-segment-active' : ''
                     }`}
                   >
                     {tab.label}
@@ -327,7 +320,7 @@ function App() {
             </div>
 
             <div
-              className={`${panelShell} rounded-[16px] border border-white/5 bg-[#13131F] ${
+              className={`${panelShell} rounded-[16px] border border-white/5 bg-dx-surface-2 ${
                 mobilePanel === 'calibrate' ? 'flex flex-1' : 'hidden'
               } lg:flex lg:h-full`}
             >
@@ -355,7 +348,7 @@ function App() {
         </>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col gap-3 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,22rem)] lg:gap-6 lg:p-6">
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-white/5 bg-[#0A0A10]">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-white/5 bg-dx-surface-0">
             <DxHostOverlay
               enabled={overlayEnabled}
               onEnabledChange={setOverlayEnabled}
@@ -369,11 +362,11 @@ function App() {
                 <HostDemoSurface
                   toolbar={
                     chrome ?? (
-                      <div className="flex shrink-0 justify-end border-b border-white/10 bg-[#0F0F18] px-3 py-2">
+                      <div className="flex shrink-0 justify-end border-b border-white/10 bg-dx-surface-1 px-3 py-2">
                         <button
                           type="button"
                           onClick={() => setOverlayEnabled(true)}
-                          className="min-h-9 rounded-[8px] border border-white/15 bg-[#0A0A10]/90 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-slate-300 backdrop-blur-sm hover:border-[#A78BFA]/40 hover:text-[#A78BFA]"
+                          className="dx-toggle min-h-9 px-3"
                         >
                           Enable overlay
                         </button>
@@ -386,7 +379,7 @@ function App() {
           </div>
 
           <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto lg:max-h-full">
-            <div className="rounded-[16px] border border-white/5 bg-[#13131F]">
+            <div className="rounded-[16px] border border-white/5 bg-dx-surface-2">
               <TokenCalibrationUnit
                 key={targetElement ? 'target' : 'idle'}
                 selectedNode={targetElement ? overlayNode : null}

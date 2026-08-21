@@ -63,7 +63,7 @@ export function DxGridVoice({
   }
 
   return (
-    <section className="flex shrink-0 flex-col gap-3 rounded-[16px] border border-white/5 bg-[#13131F] p-4">
+    <section className="flex shrink-0 flex-col gap-3 rounded-[16px] border border-white/5 bg-dx-surface-2 p-4">
       <div className="border-b border-white/5 pb-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">
           DX grid voice
@@ -80,7 +80,7 @@ export function DxGridVoice({
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={3}
-          className="mt-2 w-full resize-y rounded-[8px] border border-white/10 bg-[#0A0A10] px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-[#A78BFA]/50"
+          className="mt-2 w-full resize-y rounded-[8px] border border-white/10 bg-dx-surface-0 px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-dx-accent/50"
           placeholder="Soft card, generous padding, violet border on a dark fill…"
         />
       </label>
@@ -89,13 +89,13 @@ export function DxGridVoice({
         <button
           type="button"
           onClick={() => void handleCopyPrompt()}
-          className="min-h-10 rounded-[8px] border border-[#A78BFA]/40 bg-[#A78BFA]/15 px-3 font-mono text-xs font-semibold uppercase tracking-wider text-[#A78BFA] hover:bg-[#A78BFA]/25"
+          className="dx-btn-primary min-h-10 px-3"
         >
           Copy prompt for agent
         </button>
         {feedback && (
           <span
-            className="font-mono text-xs text-[#A78BFA]"
+            className="font-mono text-xs text-dx-accent"
             role="status"
             aria-live="polite"
           >
