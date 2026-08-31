@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { DesignNode, NodeCategory, NodeStatus } from './types';
 
 interface TemplateGridManagerProps {
@@ -9,6 +9,8 @@ interface TemplateGridManagerProps {
   onAddNode: () => void;
   /** Updates a node's workflow status without changing selection. */
   onUpdateStatus: (id: string, status: NodeStatus) => void;
+  /** Resets the harness to the default demo nodes. */
+  onResetDemo?: () => void;
 }
 
 const toggleNodeStatus = (status: NodeStatus): NodeStatus =>
@@ -43,6 +45,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
   onPurgeNode,
   onAddNode,
   onUpdateStatus,
+  onResetDemo,
 }) => {
   const [activeCategory, setActiveCategory] = useState<'All' | NodeCategory>('All');
 
@@ -50,6 +53,16 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
     if (activeCategory === 'All') return true;
     return node.category === activeCategory;
   });
+
+  useEffect(() => {
+    if (activeCategory === 'All') return;
+    if (
+      selectedNodeId !== null &&
+      !filteredNodes.some((node) => node.id === selectedNodeId)
+    ) {
+      onSelectNode(filteredNodes[0]?.id ?? null);
+    }
+  }, [activeCategory, filteredNodes, onSelectNode, selectedNodeId]);
 
   const categoryCounts = nodes.reduce<Record<'All' | NodeCategory, number>>(
     (acc, node) => {
@@ -71,13 +84,24 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
             {filteredNodes.length} of {nodes.length} Nodes Displayed
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onAddNode}
-          className="dx-btn-primary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
-        >
-          + Add Node
-        </button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <button
+            type="button"
+            onClick={onAddNode}
+            className="dx-btn-primary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
+          >
+            + Add Node
+          </button>
+          {onResetDemo && (
+            <button
+              type="button"
+              onClick={onResetDemo}
+              className="dx-btn-secondary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
+            >
+              Reset demo
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex shrink-0 flex-wrap items-center gap-1.5">

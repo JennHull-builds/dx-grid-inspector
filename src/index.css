@@ -82,9 +82,16 @@ body {
   transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
-.dx-btn-primary:hover {
+.dx-btn-primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--accent) 85%, white);
   border-color: color-mix(in srgb, var(--accent) 85%, white);
+}
+
+.dx-btn-primary:disabled,
+.dx-btn-secondary:disabled {
+  cursor: default;
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .dx-btn-secondary {
@@ -100,7 +107,7 @@ body {
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.dx-btn-secondary:hover {
+.dx-btn-secondary:hover:not(:disabled) {
   border-color: rgb(255 255 255 / 0.2);
   color: #f1f5f9;
 }

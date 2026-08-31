@@ -28,10 +28,10 @@ export function HostDemoSurface({ toolbar }: HostDemoSurfaceProps) {
           </h1>
         </div>
         <nav className="flex items-center gap-2" aria-label="Host demo navigation">
-          <button type="button" className="dx-btn-secondary min-h-10 px-3">
+          <button type="button" className="dx-btn-secondary min-h-10 px-3" disabled aria-hidden="true" tabIndex={-1}>
             Library
           </button>
-          <button type="button" className="dx-btn-primary min-h-10 px-3">
+          <button type="button" className="dx-btn-primary min-h-10 px-3" disabled aria-hidden="true" tabIndex={-1}>
             New board
           </button>
         </nav>
@@ -55,11 +55,11 @@ export function HostDemoSurface({ toolbar }: HostDemoSurfaceProps) {
             padding, fill, and border in the HUD. Apply writes tokens back onto
             the selected host element only.
           </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" className="dx-btn-primary min-h-10 px-4">
+          <div className="mt-5 flex flex-wrap gap-2" aria-hidden="true">
+            <button type="button" className="dx-btn-primary min-h-10 px-4" disabled tabIndex={-1}>
               Continue
             </button>
-            <button type="button" className="dx-btn-secondary min-h-10 px-4">
+            <button type="button" className="dx-btn-secondary min-h-10 px-4" disabled tabIndex={-1}>
               Dismiss
             </button>
           </div>

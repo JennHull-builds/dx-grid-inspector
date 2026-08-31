@@ -4,6 +4,7 @@ import { DxGridVoice } from './DxGridVoice'
 import { DxHostOverlay } from './DxHostOverlay'
 import { TemplateGridManager } from './GridOverlay'
 import {
+  clearHarnessState,
   loadHarnessState,
   saveHarnessState,
   type HarnessState,
@@ -145,6 +146,16 @@ function App() {
     }
   }
 
+  const handleResetHarness = () => {
+    clearHarnessState()
+    setNodes(FALLBACK_HARNESS.nodes)
+    setSelectedNodeId(FALLBACK_HARNESS.selectedNodeId)
+    setNextIndex(FALLBACK_HARNESS.nextIndex)
+    if (isMobileViewport()) {
+      setMobilePanel('nodes')
+    }
+  }
+
   const handlePurgeNode = (id: string) => {
     setNodes((prev) => prev.filter((node) => node.id !== id))
     setSelectedNodeId((prev) => (prev === id ? null : prev))
@@ -221,15 +232,22 @@ function App() {
   return (
     <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-dx-surface-0 text-slate-300">
       <Analytics />
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/5 px-4 py-2">
-        <p className="dx-wordmark flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
-          <span
-            className="size-2.5 shrink-0 border-l border-t border-dx-secondary"
-            aria-hidden="true"
-          />
-          <span className="truncate">DX Spatial Grid &amp; Token Inspector</span>
-        </p>
-        <div className="flex shrink-0 items-center gap-3">
+      <header className="flex shrink-0 flex-col gap-2 border-b border-white/5 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="min-w-0">
+          <p className="dx-wordmark flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
+            <span
+              className="size-2.5 shrink-0 border-l border-t border-dx-secondary"
+              aria-hidden="true"
+            />
+            <span className="truncate">DX Spatial Grid &amp; Token Inspector</span>
+          </p>
+          <p className="mt-1 font-mono text-[10px] leading-snug text-slate-500 sm:max-w-md">
+            Spatial token harness — start in{' '}
+            <span className="text-dx-secondary">Overlay demo</span> to inspect host UI, or use
+            Harness to calibrate mock nodes.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
           <nav className="dx-segment-track" aria-label="App mode">
             {MODE_TABS.map((tab) => {
               const isActive = appMode === tab.id
@@ -248,7 +266,7 @@ function App() {
             })}
           </nav>
           <nav
-            className="hidden items-center gap-2 sm:flex"
+            className="flex items-center gap-2"
             aria-label="Project links"
           >
             <a
@@ -263,12 +281,12 @@ function App() {
               ·
             </span>
             <a
-              href="https://github.com/JennHull-builds/dx-grid-inspector/blob/main/LICENSE"
+              href="https://github.com/JennHull-builds/dx-grid-inspector/blob/main/README.md"
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-dx-accent"
             >
-              MIT Licence
+              README
             </a>
           </nav>
         </div>
@@ -320,6 +338,7 @@ function App() {
                 onPurgeNode={handlePurgeNode}
                 onAddNode={handleAddNode}
                 onUpdateStatus={handleUpdateStatus}
+                onResetDemo={handleResetHarness}
               />
             </div>
 

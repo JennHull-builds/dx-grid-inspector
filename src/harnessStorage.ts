@@ -159,3 +159,16 @@ export const saveHarnessState = (state: HarnessState): void => {
     // Persistence is best-effort for the local harness.
   }
 }
+
+/** Clears persisted harness data so the next load uses the app fallback. */
+export const clearHarnessState = (): void => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.removeItem(HARNESS_STORAGE_KEY)
+  } catch {
+    // Best-effort for the local harness.
+  }
+}

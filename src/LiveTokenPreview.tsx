@@ -111,17 +111,21 @@ export function LiveTokenPreview({
                 Review this surface, then apply the calibrated chrome to the
                 selected node.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2" aria-hidden="true">
                 <button
                   type="button"
-                  className="border font-mono text-xs font-semibold uppercase tracking-wider transition-all duration-200"
+                  disabled
+                  tabIndex={-1}
+                  className="border font-mono text-xs font-semibold uppercase tracking-wider transition-all duration-200 opacity-90"
                   style={primaryButtonStyle(chrome)}
                 >
                   Continue
                 </button>
                 <button
                   type="button"
-                  className="border font-mono text-xs font-semibold uppercase tracking-wider transition-all duration-200"
+                  disabled
+                  tabIndex={-1}
+                  className="border font-mono text-xs font-semibold uppercase tracking-wider transition-all duration-200 opacity-90"
                   style={ghostButtonStyle(chrome)}
                 >
                   Dismiss
