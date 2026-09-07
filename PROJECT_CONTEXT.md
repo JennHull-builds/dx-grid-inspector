@@ -71,3 +71,19 @@ Overlay:  Inspect host element → read DesignProperties → HUD
 - Purely local component state (plus optional `localStorage`).
 - Strictly no private credentials, internal client assets, or hardcoded API keys.
 - DX grid voice is clipboard-only — never paste API keys into the demo.
+
+## Future Roadmap & Distribution Strategy
+
+Aligning with the **Google Cloud Professional Agentic Architect** track, the future development and distribution of the DX Grid Inspector will follow a low-cost, high-reach strategy:
+
+1. **GCP Sandbox Deployment (Cloud Run)**
+   - **Plan:** Containerize the Vite SPA (multi-stage Dockerfile with an Nginx server) and deploy it to a Google Cloud Run sandbox project.
+   - **Why:** Scales to zero instances (costs $0/month when unused), serves static assets efficiently, and sets the foundation for integrating containerized backend AI agents later if needed.
+
+2. **NPM Package Distribution**
+   - **Plan:** Publish `DxHostOverlay` and its dependencies as a standalone npm package.
+   - **Why:** Allows developers to seamlessly install the tool into their own React codebase for local development without manual copy-pasting.
+
+3. **Chrome Web Store Extension**
+   - **Plan:** Refactor the calibration HUD and inspection tool to run as a browser extension using content scripts and Injectable UI (shadow DOMs).
+   - **Why:** The ultimate developer experience — allows users to inject the tool into any staging site or localhost environment directly from the browser without modifying the host application's codebase.

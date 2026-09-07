@@ -1,0 +1,14 @@
+server {
+    # Nginx will listen on the port provided by Cloud Run via the PORT environment variable
+    listen       ${PORT};
+    server_name  localhost;
+
+    # Serve the static files built by Vite
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        
+        # Fallback to index.html for React SPA routing
+        try_files $uri $uri/ /index.html;
+    }
+}
