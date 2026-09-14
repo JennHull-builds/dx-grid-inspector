@@ -269,3 +269,7 @@ Contributions, issues, and feature requests are welcome. Check the [issues page]
 ## License
 
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
+
+## Architecture
+
+How the two modes share one engine, and why there is no in-app LLM: [`ARCHITECTURE.md`](ARCHITECTURE.md).
