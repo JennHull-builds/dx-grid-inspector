@@ -1,6 +1,5 @@
 {
   "name": "dx-grid-inspector",
-  "private": true,
   "version": "0.1.0",
   "description": "Inspect a real React UI in development, calibrate its radius, padding and colour tokens, and copy them out as CSS, JSON or an agent prompt. No backend and no AI calls.",
   "license": "MIT",
