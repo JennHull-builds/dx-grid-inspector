@@ -7,8 +7,6 @@ DX Grid Inspector wraps your React app while you develop: an **Inspect** toolbar
 
 ## Install
 
-> **Not on npm yet.** Until it is, build the package from this repo with `npm pack`, then run `npm install -D ./dx-grid-inspector-0.1.0.tgz` in your app.
-
 ```bash
 npm install -D dx-grid-inspector
 ```
