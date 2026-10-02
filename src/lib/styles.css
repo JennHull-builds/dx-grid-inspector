@@ -1,0 +1,209 @@
+/*
+  DX Grid Inspector stylesheet. The library build compiles this into the one CSS file the
+  package ships (dist-lib/style.css); the demo imports it too.
+
+  - Every utility is prefixed `dx:`, so nothing here can collide with the host's classes.
+  - The reset only reaches the inspector's own UI, marked with [data-dx-ui]. The host's
+    elements are never touched, even when they render inside the overlay.
+  - Rules are unlayered on purpose, so a host's own unlayered CSS (a global `button {}`
+    rule, say) cannot restyle the inspector.
+*/
+@import "tailwindcss/theme.css" prefix(dx);
+@import "tailwindcss/utilities.css" source(none);
+
+@source "../DxHostOverlay.tsx";
+@source "../TokenCalibrationUnit.tsx";
+@source "../DxGridVoice.tsx";
+@source "../DxInspector.tsx";
+
+@theme {
+  --color-dx-surface-0: #0a0a10;
+  --color-dx-surface-1: #0f0f18;
+  --color-dx-surface-2: #13131f;
+  --color-dx-surface-3: #1a1a2b;
+  --color-dx-accent: #a78bfa;
+  --color-dx-accent-ink: #0a0a10;
+}
+
+:root {
+  --dx-ui-surface-0: #0a0a10;
+  --dx-ui-surface-1: #0f0f18;
+  --dx-ui-surface-2: #13131f;
+  --dx-ui-surface-3: #1a1a2b;
+  --dx-ui-accent: #a78bfa;
+  --dx-ui-accent-ink: #0a0a10;
+  --dx-ui-secondary: #5eead4;
+  --dx-ui-success: #e8c47a; /* muted amber — In Progress status */
+  --dx-ui-warning: #7dd3fc; /* soft sky — available for secondary emphasis */
+  --dx-ui-danger: #f87171;
+  --dx-ui-border-subtle: rgb(255 255 255 / 0.1);
+  --dx-ui-text: #cbd5e1;
+  --dx-ui-text-muted: #64748b;
+}
+
+/* --- Reset, scoped to the inspector's UI (same values as Tailwind's preflight) --- */
+
+/* Roots are always one of these elements; :is() gives element weight, so a host rule such as
+   `section { color: … }` cannot win, while the inspector's own utilities (class weight) still do. */
+:where([data-dx-ui]):is(div, section, aside, p) {
+  color-scheme: dark;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-synthesis: none;
+  line-height: 1.5;
+  color: #cbd5e1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:where([data-dx-ui]),
+:where([data-dx-ui]) *,
+:where([data-dx-ui]) ::before,
+:where([data-dx-ui]) ::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+}
+
+/* The same reset again at element weight, so it also beats a host's own element rules
+   (a global `button { padding }` or `h2 { margin }`) that load before it. */
+:where([data-dx-ui]):is(div, section, aside, p),
+:where([data-dx-ui]) :is(div, section, aside, header, footer, nav, article, p, span, h1, h2, h3, label, button, input, textarea, select, ul, ol, li, a) {
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+}
+
+:where([data-dx-ui]) button,
+:where([data-dx-ui]) input,
+:where([data-dx-ui]) textarea,
+:where([data-dx-ui]) select {
+  font: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  border-radius: 0;
+  background-color: transparent;
+  opacity: 1;
+}
+
+:where([data-dx-ui]) h1,
+:where([data-dx-ui]) h2,
+:where([data-dx-ui]) h3 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+:where([data-dx-ui]) textarea {
+  resize: vertical;
+}
+
+:where([data-dx-ui]) ::placeholder {
+  opacity: 1;
+  color: color-mix(in oklab, currentcolor 50%, transparent);
+}
+
+/* --- Component rules (the same .dx-* rules as the demo's src/index.css) --- */
+
+.dx-btn-primary {
+  border-radius: 8px;
+  border: 1px solid var(--dx-ui-accent);
+  background: var(--dx-ui-accent);
+  color: var(--dx-ui-accent-ink);
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.dx-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dx-ui-accent) 85%, white);
+  border-color: color-mix(in srgb, var(--dx-ui-accent) 85%, white);
+}
+
+.dx-btn-primary:disabled,
+.dx-btn-secondary:disabled {
+  cursor: default;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.dx-btn-secondary {
+  border-radius: 8px;
+  border: 1px solid var(--dx-ui-border-subtle);
+  background: transparent;
+  color: #cbd5e1;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.dx-btn-secondary:hover:not(:disabled) {
+  border-color: rgb(255 255 255 / 0.2);
+  color: #f1f5f9;
+}
+
+.dx-btn-ghost {
+  border: none;
+  background: transparent;
+  color: var(--dx-ui-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.dx-btn-ghost:hover {
+  color: #c4b5fd;
+}
+
+.dx-toggle {
+  border-radius: 8px;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  background: color-mix(in srgb, var(--dx-ui-surface-0) 90%, transparent);
+  color: #cbd5e1;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.dx-toggle:hover {
+  border-color: rgb(255 255 255 / 0.25);
+}
+
+.dx-toggle-active {
+  border-color: color-mix(in srgb, var(--dx-ui-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--dx-ui-accent) 20%, transparent);
+  color: var(--dx-ui-accent);
+}
+
+.dx-toggle-active:hover {
+  background: color-mix(in srgb, var(--dx-ui-accent) 25%, transparent);
+}
+
+.dx-selection {
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--dx-ui-accent) 30%, transparent);
+  background: var(--dx-ui-surface-3);
+}
+
+.dx-selection-idle {
+  border-radius: 12px;
+  border: 1px solid rgb(255 255 255 / 0.05);
+  background: var(--dx-ui-surface-0);
+  transition: border-color 0.15s ease;
+}
+
+.dx-selection-idle:hover {
+  border-color: rgb(255 255 255 / 0.1);
+}

@@ -10,8 +10,10 @@ import type { DesignNode, DesignProperties } from './types';
 
 const FEEDBACK_MS = 2000;
 
-interface TokenCalibrationUnitProps {
+export interface TokenCalibrationUnitProps {
+  /** The node whose tokens are shown and edited; null shows the empty hint. */
   selectedNode: DesignNode | null;
+  /** Called with the node id and the full new token set after every edit. */
   onUpdateProperties: (id: string, properties: DesignProperties) => void;
   /** Copies computed styles from the live preview or inspect target into this node. */
   onReadFromPreview?: () => void;
@@ -70,7 +72,8 @@ const sanitizeHex = (val: string): string | null => {
   return null;
 };
 
-const sanitizeBorder = (val: string): string | null => {
+/** Accepts hex or `rgb()` / `rgba()`, the two forms the HUD reads colours back as. */
+const sanitizeColour = (val: string): string | null => {
   const cleanVal = val.trim();
   if (!cleanVal) return null;
 
@@ -82,10 +85,18 @@ const sanitizeBorder = (val: string): string | null => {
 };
 
 /**
- * Convert a valid hex colour to the `#rrggbb` form required by native colour inputs.
- * Returns null for rgba and other non-hex values so the picker is not forced to overwrite them.
+ * Convert a colour to the `#rrggbb` form required by native colour inputs.
+ * For `rgb()` / `rgba()` the swatch shows the colour without its transparency, since the
+ * native picker cannot show alpha. Returns null for anything else.
  */
 const hexForColourInput = (val: string): string | null => {
+  const rgb = val.trim().match(/^rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})/i);
+  if (rgb) {
+    return `#${[rgb[1], rgb[2], rgb[3]]
+      .map((n) => Math.min(255, Number(n)).toString(16).padStart(2, '0'))
+      .join('')}`;
+  }
+
   const sanitized = sanitizeHex(val);
   if (!sanitized) return null;
 
@@ -132,7 +143,7 @@ const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
       value={pickerValue}
       onChange={(e) => onPick(e.target.value.toUpperCase())}
       onKeyDown={onKeyDown}
-      className="h-10 w-10 min-h-10 min-w-10 shrink-0 cursor-pointer rounded-[8px] border border-white/10 bg-dx-surface-2 p-0.5 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-[5px] [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-[5px] [&::-moz-color-swatch]:border-none"
+      className="dx:h-10 dx:w-10 dx:min-h-10 dx:min-w-10 dx:shrink-0 dx:cursor-pointer dx:rounded-[8px] dx:border dx:border-white/10 dx:bg-dx-surface-2 dx:p-0.5 dx:[&::-webkit-color-swatch-wrapper]:p-0 dx:[&::-webkit-color-swatch]:rounded-[5px] dx:[&::-webkit-color-swatch]:border-none dx:[&::-moz-color-swatch]:rounded-[5px] dx:[&::-moz-color-swatch]:border-none"
     />
   );
 };
@@ -179,12 +190,12 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
   if (!selectedNode) {
     return (
-      <section className="flex flex-col h-full w-full p-4 sm:p-6 overflow-hidden">
-        <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase mb-4">
+      <section data-dx-ui="" className="dx:flex dx:flex-col dx:h-full dx:w-full dx:p-4 dx:sm:p-6 dx:overflow-hidden">
+        <h2 className="dx:text-base dx:font-semibold dx:tracking-wide dx:text-slate-300 dx:uppercase dx:mb-4">
           Token Calibration Unit
         </h2>
-        <div className="flex-1 flex items-center justify-center border border-dashed border-white/10 rounded-[12px]">
-          <p className="text-sm font-mono text-slate-500 text-center px-4">
+        <div className="dx:flex-1 dx:flex dx:items-center dx:justify-center dx:border dx:border-dashed dx:border-white/10 dx:rounded-[12px]">
+          <p className="dx:text-sm dx:font-mono dx:text-slate-500 dx:text-center dx:px-4">
             {emptyHint}
           </p>
         </div>
@@ -208,20 +219,18 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         return;
       }
       onUpdateProperties(selectedNode.id, { ...current, [field.key]: parsed });
-    } else if (field.kind === 'color') {
-      const sanitized = sanitizeHex(inputValue);
-      if (!sanitized) {
-        setError('Invalid hex colour. Use #RGB or #RRGGBB.');
-        return;
-      }
-      onUpdateProperties(selectedNode.id, { ...current, bgPreset: sanitized });
     } else {
-      const sanitized = sanitizeBorder(inputValue);
+      const sanitized = sanitizeColour(inputValue);
       if (!sanitized) {
-        setError('Invalid border value. Use hex or rgba(...).');
+        setError('Invalid colour. Use hex (#RGB or #RRGGBB) or rgba(...).');
         return;
       }
-      onUpdateProperties(selectedNode.id, { ...current, borderPreset: sanitized });
+      onUpdateProperties(
+        selectedNode.id,
+        field.kind === 'color'
+          ? { ...current, bgPreset: sanitized }
+          : { ...current, borderPreset: sanitized },
+      );
     }
 
     setEditingKey(null);
@@ -295,17 +304,17 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   };
 
   return (
-    <section className="flex flex-col h-full w-full p-4 sm:p-6 overflow-hidden">
-      <div className="mb-4 shrink-0 border-b border-white/5 pb-3">
-        <h2 className="text-base font-semibold tracking-wide text-slate-300 uppercase">
+    <section data-dx-ui="" className="dx:flex dx:flex-col dx:h-full dx:w-full dx:p-4 dx:sm:p-6 dx:overflow-hidden">
+      <div className="dx:mb-4 dx:shrink-0 dx:border-b dx:border-white/5 dx:pb-3">
+        <h2 className="dx:text-base dx:font-semibold dx:tracking-wide dx:text-slate-300 dx:uppercase">
           Token Calibration Unit
         </h2>
-        <p className="text-xs font-mono text-slate-500 mt-1 truncate">
+        <p className="dx:text-xs dx:font-mono dx:text-slate-500 dx:mt-1 dx:truncate">
           Editing: {selectedNode.name}
         </p>
       </div>
 
-      <div className="flex flex-col gap-2.5 overflow-y-auto overscroll-contain flex-1 pr-1 min-h-0">
+      <div className="dx:flex dx:flex-col dx:gap-2.5 dx:overflow-y-auto dx:overscroll-contain dx:flex-1 dx:pr-1 dx:min-h-0">
         {FIELDS.map((field) => {
           const isEditing = editingKey === field.key;
           const value = displayValue(field.key, selectedNode.properties);
@@ -313,23 +322,23 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           return (
             <div
               key={field.key}
-              className={`rounded-[12px] border p-3 transition-all ${
+              className={`dx:rounded-[12px] dx:border dx:p-3 dx:transition-all ${
                 isEditing
-                  ? 'dx-selection bg-dx-surface-0'
+                  ? 'dx-selection dx:bg-dx-surface-0'
                   : 'dx-selection-idle'
               }`}
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="dx:flex dx:flex-col dx:gap-3 dx:sm:flex-row dx:sm:items-center dx:sm:justify-between">
                 <button
                   type="button"
                   onClick={() => !isEditing && startEdit(field)}
-                  className="flex flex-col items-start gap-0.5 text-left flex-1 min-w-0"
+                  className="dx:flex dx:flex-col dx:items-start dx:gap-0.5 dx:text-left dx:flex-1 dx:min-w-0"
                 >
-                  <span className="text-sm font-medium text-slate-200">{field.label}</span>
-                  <span className="text-xs font-mono text-dx-accent/80">{field.key}</span>
+                  <span className="dx:text-sm dx:font-medium dx:text-slate-200">{field.label}</span>
+                  <span className="dx:text-xs dx:font-mono dx:text-dx-accent/80">{field.key}</span>
                 </button>
 
-                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="dx:flex dx:items-center dx:gap-2 dx:shrink-0 dx:w-full dx:sm:w-auto dx:justify-between dx:sm:justify-end">
                   {(field.kind === 'color' || field.kind === 'border') && (
                     <ColourPickerInput
                       label={field.label}
@@ -354,19 +363,19 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   )}
 
                   {isEditing ? (
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="dx:flex dx:items-center dx:gap-2 dx:w-full dx:sm:w-auto">
                       <input
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => handleFieldKeyDown(e, field)}
                         autoFocus
-                        className="flex-1 sm:flex-none sm:w-[120px] min-h-10 bg-dx-surface-2 text-slate-200 border border-white/10 rounded-[8px] px-3 py-2 font-mono text-sm outline-none focus:border-dx-accent/50"
+                        className="dx:flex-1 dx:sm:flex-none dx:sm:w-[120px] dx:min-h-10 dx:bg-dx-surface-2 dx:text-slate-200 dx:border dx:border-white/10 dx:rounded-[8px] dx:px-3 dx:py-2 dx:font-mono dx:text-sm dx:outline-none dx:focus:border-dx-accent/50"
                       />
                       <button
                         type="button"
                         onClick={() => saveField(field)}
-                        className="dx-btn-ghost min-h-10 px-3"
+                        className="dx-btn-ghost dx:min-h-10 dx:px-3"
                       >
                         Save
                       </button>
@@ -375,7 +384,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                     <button
                       type="button"
                       onClick={() => startEdit(field)}
-                      className="font-mono text-sm text-slate-400 hover:text-slate-200 truncate max-w-full sm:max-w-[140px] min-h-10 px-1"
+                      className="dx:font-mono dx:text-sm dx:text-slate-400 dx:hover:text-slate-200 dx:truncate dx:max-w-full dx:sm:max-w-[140px] dx:min-h-10 dx:px-1"
                     >
                       {value}
                     </button>
@@ -388,27 +397,27 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       </div>
 
       {error && (
-        <p className="mt-3 text-xs font-mono text-red-400 shrink-0">{error}</p>
+        <p className="dx:mt-3 dx:text-xs dx:font-mono dx:text-red-400 dx:shrink-0">{error}</p>
       )}
 
       {pasteOpen && (
-        <div className="mt-3 shrink-0 rounded-[12px] border border-white/10 bg-dx-surface-0 p-3">
-          <label className="block font-mono text-xs uppercase tracking-wider text-slate-500">
+        <div className="dx:mt-3 dx:shrink-0 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3">
+          <label className="dx:block dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
             Paste DesignProperties JSON
             <textarea
               value={pasteValue}
               onChange={(event) => setPasteValue(event.target.value)}
               rows={5}
               spellCheck={false}
-              className="mt-2 w-full resize-y rounded-[8px] border border-white/10 bg-dx-surface-2 px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-dx-accent/50"
+              className="dx:mt-2 dx:w-full dx:resize-y dx:rounded-[8px] dx:border dx:border-white/10 dx:bg-dx-surface-2 dx:px-3 dx:py-2 dx:font-mono dx:text-xs dx:text-slate-200 dx:outline-none dx:focus:border-dx-accent/50"
               placeholder='{ "radius": 12, "padding": 16, "bgPreset": "#1A1A2B", "borderPreset": "#A78BFA" }'
             />
           </label>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="dx:mt-2 dx:flex dx:flex-wrap dx:gap-2">
             <button
               type="button"
               onClick={handlePasteTokens}
-              className="dx-btn-primary min-h-10 px-3"
+              className="dx-btn-primary dx:min-h-10 dx:px-3"
             >
               Apply paste
             </button>
@@ -419,7 +428,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                 setPasteValue('');
                 setError(null);
               }}
-              className="dx-btn-secondary min-h-10 px-3"
+              className="dx-btn-secondary dx:min-h-10 dx:px-3"
             >
               Cancel
             </button>
@@ -427,13 +436,13 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         </div>
       )}
 
-      <div className="mt-3 flex shrink-0 flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+      <div className="dx:mt-3 dx:flex dx:shrink-0 dx:flex-wrap dx:items-center dx:gap-2 dx:border-t dx:border-white/5 dx:pt-3">
         {onReadFromPreview && (
           <button
             type="button"
             onClick={handleReadFromPreview}
-            aria-label="Read computed border-radius, padding, background, and border-colour from the active target into this node"
-            className="dx-btn-secondary min-h-10 px-3"
+            title="Read computed border-radius, padding, background, and border-colour from the active target into this node"
+            className="dx-btn-secondary dx:min-h-10 dx:px-3"
           >
             {readLabel}
           </button>
@@ -442,8 +451,8 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           <button
             type="button"
             onClick={handleApplyToTarget}
-            aria-label="Apply calibrated tokens to the selected host target"
-            className="dx-btn-primary min-h-10 px-3"
+            title="Apply calibrated tokens to the selected host target"
+            className="dx-btn-primary dx:min-h-10 dx:px-3"
           >
             Apply to target
           </button>
@@ -451,26 +460,26 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         <button
           type="button"
           onClick={() => void copyTokens('css')}
-          aria-label="Copy selected node tokens as CSS custom properties"
+          title="Copy selected node tokens as CSS custom properties"
           className={`${
             onApplyToTarget ? 'dx-btn-secondary' : 'dx-btn-primary'
-          } min-h-10 px-3`}
+          } dx:min-h-10 dx:px-3`}
         >
           Copy
         </button>
         <button
           type="button"
           onClick={() => void copyTokens('json')}
-          aria-label="Copy selected node tokens as JSON"
-          className="dx-btn-secondary min-h-10 px-3"
+          title="Copy selected node tokens as JSON"
+          className="dx-btn-secondary dx:min-h-10 dx:px-3"
         >
           JSON
         </button>
         <button
           type="button"
           onClick={() => void copyTokens('prompt')}
-          aria-label="Copy an agent prompt that asks for DesignProperties JSON"
-          className="dx-btn-secondary min-h-10 px-3"
+          title="Copy an agent prompt that asks for DesignProperties JSON"
+          className="dx-btn-secondary dx:min-h-10 dx:px-3"
         >
           Prompt
         </button>
@@ -480,15 +489,15 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
             setPasteOpen((open) => !open);
             setError(null);
           }}
-          aria-label="Paste DesignProperties JSON into this node"
+          title="Paste DesignProperties JSON into this node"
           aria-expanded={pasteOpen}
-          className="dx-btn-secondary min-h-10 px-3"
+          className="dx-btn-secondary dx:min-h-10 dx:px-3"
         >
           Paste
         </button>
         {feedback && (
           <span
-            className="font-mono text-xs text-dx-accent"
+            className="dx:font-mono dx:text-xs dx:text-dx-accent"
             role="status"
             aria-live="polite"
           >

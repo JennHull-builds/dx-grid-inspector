@@ -1,18 +1,49 @@
 {
   "name": "dx-grid-inspector",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Inspect a real React UI in development, calibrate its radius, padding and colour tokens, and copy them out as CSS, JSON or an agent prompt. No backend and no AI calls.",
+  "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JennHull-builds/dx-grid-inspector.git"
+  },
+  "homepage": "https://dx-grid-inspector.vercel.app",
+  "bugs": "https://github.com/JennHull-builds/dx-grid-inspector/issues",
+  "keywords": [
+    "design-tokens",
+    "design-system",
+    "react",
+    "devtools",
+    "inspector"
+  ],
+  "files": [
+    "dist-lib"
+  ],
+  "module": "./dist-lib/index.js",
+  "types": "./dist-lib/types/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist-lib/types/lib/index.d.ts",
+      "default": "./dist-lib/index.js"
+    },
+    "./style.css": "./dist-lib/style.css",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:lib": "node scripts/check-dx-prefix.mjs && vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
+    "prepack": "npm run build:lib"
   },
-  "dependencies": {
-    "@vercel/analytics": "^2.0.1",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -20,11 +51,14 @@
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@vercel/analytics": "^2.0.1",
     "@vitejs/plugin-react": "^6.0.4",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",

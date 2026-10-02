@@ -30,3 +30,7 @@ dist-ssr
 .vercel
 .vercel-deploy-files.json
 .vercel-deploy-args.jsonl
+
+# npm package build output
+dist-lib
+*.tgz

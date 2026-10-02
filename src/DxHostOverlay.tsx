@@ -45,8 +45,16 @@ export interface DxHostOverlayProps {
 
 const isActivationKey = (key: string): boolean => key === 'Enter' || key === ' '
 
+/** Viewport box of the inspect highlight, already clipped to the visible host area. */
+interface HighlightBox {
+  top: number
+  left: number
+  width: number
+  height: number
+}
+
 const chromeStripClassName =
-  'pointer-events-auto z-20 flex shrink-0 flex-wrap items-center justify-end gap-2 border-b border-white/10 bg-dx-surface-1 px-3 py-2'
+  'dx:pointer-events-auto dx:z-20 dx:flex dx:shrink-0 dx:flex-wrap dx:items-center dx:justify-end dx:gap-2 dx:border-b dx:border-white/10 dx:bg-dx-surface-1 dx:px-3 dx:py-2'
 
 /**
  * Drop-in wrapper that renders host children plus optional non-destructive overlay chrome.
@@ -64,7 +72,7 @@ export function DxHostOverlay({
 }: DxHostOverlayProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const chromeId = useId()
-  const [highlightBox, setHighlightBox] = useState<DOMRect | null>(null)
+  const [highlightBox, setHighlightBox] = useState<HighlightBox | null>(null)
 
   const syncHighlight = useCallback(() => {
     if (!targetElement || !hostRef.current) {
@@ -75,7 +83,18 @@ export function DxHostOverlay({
       setHighlightBox(null)
       return
     }
-    setHighlightBox(targetElement.getBoundingClientRect())
+    // Clip to the host's visible area so a tall target never draws over UI outside it.
+    const target = targetElement.getBoundingClientRect()
+    const host = hostRef.current.getBoundingClientRect()
+    const top = Math.max(target.top, host.top)
+    const left = Math.max(target.left, host.left)
+    const bottom = Math.min(target.bottom, host.bottom)
+    const right = Math.min(target.right, host.right)
+    setHighlightBox(
+      bottom > top && right > left
+        ? { top, left, width: right - left, height: bottom - top }
+        : null,
+    )
   }, [targetElement])
 
   useEffect(() => {
@@ -149,6 +168,7 @@ export function DxHostOverlay({
   const chrome = (
     <div
       data-dx-overlay-chrome="true"
+      data-dx-ui=""
       id={chromeId}
       className={chromeStripClassName}
       role="toolbar"
@@ -157,19 +177,19 @@ export function DxHostOverlay({
       <button
         type="button"
         aria-pressed={enabled}
-        aria-label="Toggle overlay chrome"
+        title="Hide the overlay toolbar"
         onClick={() => onEnabledChange?.(false)}
-        className="dx-toggle dx-toggle-active min-h-9 px-3"
+        className="dx-toggle dx-toggle-active dx:min-h-9 dx:px-3"
       >
         Overlay on
       </button>
       <button
         type="button"
         aria-pressed={inspecting}
-        aria-label={
+        title={
           inspecting
-            ? 'Inspect mode on. Press Escape to exit.'
-            : 'Start inspect mode'
+            ? 'Inspect mode is on. Press Escape to exit.'
+            : 'Click a host element to inspect it'
         }
         onClick={() => onInspectingChange?.(!inspecting)}
         onKeyDown={(event) => {
@@ -177,7 +197,7 @@ export function DxHostOverlay({
           event.preventDefault()
           onInspectingChange?.(!inspecting)
         }}
-        className={`dx-toggle min-h-9 px-3 ${
+        className={`dx-toggle dx:min-h-9 dx:px-3 ${
           inspecting ? 'dx-toggle-active' : ''
         }`}
       >
@@ -190,14 +210,14 @@ export function DxHostOverlay({
 
   return (
     <div
-      className={`relative flex min-h-0 flex-1 flex-col ${className}`.trim()}
+      className={`dx:relative dx:flex dx:min-h-0 dx:flex-1 dx:flex-col ${className}`.trim()}
     >
       {!placeChromeInline && chrome}
 
       <div
         ref={hostRef}
-        className={`relative min-h-0 flex-1 overflow-auto ${
-          inspecting ? 'cursor-crosshair' : ''
+        className={`dx:relative dx:min-h-0 dx:flex-1 dx:overflow-auto ${
+          inspecting ? 'dx:cursor-crosshair' : ''
         }`}
         onClickCapture={handleHostClick}
       >
@@ -206,7 +226,8 @@ export function DxHostOverlay({
           <div
             aria-hidden="true"
             data-dx-overlay-chrome="true"
-            className="pointer-events-none fixed z-10 rounded-[4px] border-2 border-dx-accent shadow-[0_0_0_1px_#A78BFA40]"
+            data-dx-ui=""
+            className="dx:pointer-events-none dx:fixed dx:z-10 dx:rounded-[4px] dx:border-2 dx:border-dx-accent dx:shadow-[0_0_0_1px_#A78BFA40]"
             style={{
               top: highlightBox.top,
               left: highlightBox.left,
@@ -220,7 +241,8 @@ export function DxHostOverlay({
       {inspecting && (
         <p
           data-dx-overlay-chrome="true"
-          className="pointer-events-none absolute bottom-3 left-3 z-20 max-w-[min(100%,20rem)] rounded-[8px] border border-white/10 bg-dx-surface-0/90 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-slate-400 backdrop-blur-sm"
+          data-dx-ui=""
+          className="dx:pointer-events-none dx:absolute dx:bottom-3 dx:left-3 dx:z-20 dx:max-w-[min(100%,20rem)] dx:rounded-[8px] dx:border dx:border-white/10 dx:bg-dx-surface-0/90 dx:px-3 dx:py-2 dx:font-mono dx:text-[10px] dx:uppercase dx:tracking-wider dx:text-slate-400 dx:backdrop-blur-sm"
         >
           Click a host surface to calibrate. Escape exits inspect.
         </p>

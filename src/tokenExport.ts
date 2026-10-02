@@ -13,21 +13,88 @@ const cssLength = (value: number | string): string => {
   return trimmed
 }
 
-const rgbChannels = (value: string): [number, number, number] | null => {
-  const comma = value.match(
-    /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i,
-  )
-  if (comma) {
-    return [Number(comma[1]), Number(comma[2]), Number(comma[3])]
+/** sRGB channels 0–255 plus alpha 0–1. */
+type Rgba = [number, number, number, number]
+
+const clamp01 = (n: number): number => Math.min(1, Math.max(0, n))
+
+/** Parses one colour component; `%` maps to `percentScale`, `none` to 0. */
+const parseComponent = (raw: string, percentScale = 1): number => {
+  const trimmed = raw.trim()
+  if (trimmed === 'none') return 0
+  const n = Number.parseFloat(trimmed)
+  if (!Number.isFinite(n)) return Number.NaN
+  return trimmed.endsWith('%') ? (n / 100) * percentScale : n
+}
+
+/** Splits `a b c / alpha` or `a, b, c, alpha` into components and an alpha (default 1). */
+const splitComponents = (inner: string): { parts: string[]; alpha: number } => {
+  const [main, slashAlpha] = inner.split('/')
+  const parts = main.split(/[\s,]+/).filter(Boolean)
+  const rawAlpha = slashAlpha ?? (parts.length === 4 ? parts.pop() : undefined)
+  const alpha = rawAlpha === undefined ? 1 : clamp01(parseComponent(rawAlpha))
+  return { parts, alpha: Number.isNaN(alpha) ? 1 : alpha }
+}
+
+const linearToSrgbByte = (linear: number): number => {
+  const gamma =
+    linear <= 0.0031308 ? 12.92 * linear : 1.055 * linear ** (1 / 2.4) - 0.055
+  return Math.round(clamp01(gamma) * 255)
+}
+
+/** OKLab to sRGB bytes (Björn Ottosson's reference matrices), clipped to gamut. */
+const oklabToRgb = (l: number, a: number, b: number): [number, number, number] => {
+  const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const s_ = (l - 0.0894841775 * a - 1.291485548 * b) ** 3
+  return [
+    linearToSrgbByte(4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_),
+    linearToSrgbByte(-1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_),
+    linearToSrgbByte(-0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_),
+  ]
+}
+
+/**
+ * Parses the colour forms browsers return from `getComputedStyle`: `rgb()` / `rgba()`,
+ * `oklab()`, `oklch()` (what Tailwind v4 colours compute to) and `color(srgb …)`.
+ * Returns null for anything else.
+ */
+const parseCssColour = (value: string): Rgba | null => {
+  const match = value.trim().match(/^([a-z]+)\(\s*([^)]*)\)$/i)
+  if (!match) return null
+  const fn = match[1].toLowerCase()
+  let inner = match[2]
+
+  if (fn === 'color') {
+    const space = inner.trim().split(/\s+/)[0]
+    if (space !== 'srgb') return null
+    inner = inner.trim().slice(space.length)
   }
 
-  // Modern CSS Colour 4 serialisation: rgb(r g b / a)
-  const space = value.match(/rgba?\(\s*(\d+)\s+(\d+)\s+(\d+)/i)
-  if (space) {
-    return [Number(space[1]), Number(space[2]), Number(space[3])]
+  const { parts, alpha } = splitComponents(inner)
+  if (parts.length !== 3) return null
+
+  let rgb: [number, number, number]
+  if (fn === 'rgb' || fn === 'rgba') {
+    rgb = parts.map((p) => Math.round(Math.min(255, Math.max(0, parseComponent(p, 255))))) as [
+      number,
+      number,
+      number,
+    ]
+  } else if (fn === 'color') {
+    rgb = parts.map((p) => Math.round(clamp01(parseComponent(p)) * 255)) as [number, number, number]
+  } else if (fn === 'oklab') {
+    rgb = oklabToRgb(parseComponent(parts[0]), parseComponent(parts[1], 0.4), parseComponent(parts[2], 0.4))
+  } else if (fn === 'oklch') {
+    const chroma = parseComponent(parts[1], 0.4)
+    const hue = (parseComponent(parts[2].replace(/deg$/i, '')) * Math.PI) / 180
+    rgb = oklabToRgb(parseComponent(parts[0]), chroma * Math.cos(hue), chroma * Math.sin(hue))
+  } else {
+    return null
   }
 
-  return null
+  if (rgb.some((n) => Number.isNaN(n))) return null
+  return [rgb[0], rgb[1], rgb[2], alpha]
 }
 
 const toHex = (channels: [number, number, number]): string =>
@@ -45,14 +112,18 @@ const hexToken = (value: string): string | null => {
 }
 
 /**
- * Normalise a computed CSS colour into a `#RRGGBB` token the HUD can edit.
+ * Normalise a computed CSS colour into a token the HUD can edit: `#RRGGBB` when opaque,
+ * `rgba(r, g, b, a)` when translucent, so transparency is never silently dropped.
  */
 const colourToToken = (value: string): string => {
   const hex = hexToken(value)
   if (hex) return hex
 
-  const channels = rgbChannels(value)
-  if (channels) return toHex(channels)
+  const rgba = parseCssColour(value)
+  if (rgba) {
+    const [r, g, b, a] = rgba
+    return a >= 1 ? toHex([r, g, b]) : `rgba(${r}, ${g}, ${b}, ${Math.round(a * 1000) / 1000})`
+  }
 
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : '#000000'
@@ -164,19 +235,24 @@ export const parseDesignPropertiesJson = (
 /**
  * Writes the four spatial tokens onto a host element as inline styles.
  * Does not inject global CSS — only the selected target is updated.
+ * An element that already has a visible border keeps its width and style; one with no
+ * border gets a 2px solid border so the border colour can be seen.
  */
 export const applyDesignPropertiesToElement = (
   element: HTMLElement,
   properties: DesignProperties,
 ): void => {
+  const computed = window.getComputedStyle(element)
+  const hasVisibleBorder =
+    computed.borderTopStyle !== 'none' &&
+    Number.parseFloat(computed.borderTopWidth) > 0
+
   element.style.borderRadius = cssLength(properties.radius)
   element.style.padding = cssLength(properties.padding)
   element.style.backgroundColor = properties.bgPreset
   element.style.borderColor = properties.borderPreset
-  if (!element.style.borderStyle || element.style.borderStyle === 'none') {
+  if (!hasVisibleBorder) {
     element.style.borderStyle = 'solid'
-  }
-  if (!element.style.borderWidth) {
     element.style.borderWidth = '2px'
   }
 }
