@@ -34,21 +34,16 @@ Vercel is live. There is also a Cloud Run path — `Dockerfile`, `nginx.conf.tem
 `deploy.sh` targeting project `dx-grid-sandbox-1`. Per `DEPLOYMENT_TODO.md` that GCP
 project was never created and the deploy has never run. Treat it as untested.
 
-## npm package work (issue #4): phase gates
+## Releasing to npm
 
-Three phases, with a stop after each: **A** prove the overlay in one real host app,
-**B** package it and test the tarball in that host, **C** `npm publish`.
+Published as `dx-grid-inspector` (0.1.0, 2026-10-02). A published version cannot be
+changed, so a release only happens when Jen asks for one.
 
-- Phase A is done (2026-10-02). Phase B is done (2026-10-02) on branch `npm-package`, not
-  merged. Both are written up in `docs/phase-a-friction-log.md` (Phase B is section E).
-- **Phase C starts only on the word "publish"**, because `npm publish` is permanent. It
-  needs the owner to pick the package name and log in to npm first. `"private": true` in
-  `package.json` makes `npm publish` refuse until then; removing it is part of Phase C.
-- After publishing: rewrite the README's integration section around the install (it still
-  says to copy files, and "npm package later"), drop the "Not on npm yet" note from
-  `INTEGRATION.md`, merge `npm-package`, close issue #4.
-
-Delete this section once Phase C ships.
+- **`npm publish` needs a one-time code from Jen.** Run `npm publish --dry-run` yourself,
+  then ask her to run `npm publish` in her own terminal. `prepack` runs `build:lib`, so the
+  `dx:` check and the build happen on every publish.
+- **The npm page shows the README as it was published.** README edits on `main` reach
+  npm only with the next version.
 
 ## Gotchas
 

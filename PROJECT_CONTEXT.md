@@ -6,13 +6,13 @@ A lightweight, zero-dependency open-source **local testing harness** and **drop-
 
 **Phase 3 goal (done):** Ship a local drop-in `DxHostOverlay` that wraps host UI in this repo (then copyable elsewhere), so engineers can inspect a real surface, calibrate `DesignProperties`, and leave with CSS, token JSON, or an agent prompt — with optional Phase 3.5 clipboard “DX grid voice”; npm stays parked until the overlay is proven; no backend or API keys unless we explicitly decide otherwise. The overlay was added 2026-08-21 and its integration guide 2026-08-31. It was used in a second app on 2026-10-02, where it worked, with known issues (see Phase 4).
 
-**Phase 4 goal (in progress):** Turn the overlay into an npm package others can install (issue #4), in three stops, each ending in a review before the next starts:
+**Phase 4 goal (done 2026-10-02):** Turn the overlay into an npm package others can install (issue #4), in three stops, each ending in a review before the next starts:
 
 - **A. Prove it in one real app — done 2026-10-02.** Wired into a second Vite + React 19 + Tailwind v4 app as a dev-only tool and used on its real screens at 1280px and 390px. `INTEGRATION.md` was corrected from what broke. Findings: [`docs/phase-a-friction-log.md`](docs/phase-a-friction-log.md).
-- **B. Package it and test the tarball — done 2026-10-02** on branch `npm-package`. One compiled, `dx:`-prefixed stylesheet; React 18.2+ and 19; tested in the Phase A app, a React 18 app with no Tailwind, and Next.js 16. Section E of the friction log.
-- **C. `npm publish`.**
+- **B. Package it and test the tarball — done 2026-10-02.** One compiled, `dx:`-prefixed stylesheet; React 18.2+ and 19; tested in the Phase A app, a React 18 app with no Tailwind, and Next.js 16. Section E of the friction log.
+- **C. `npm publish` — done 2026-10-02.** Published as [`dx-grid-inspector`](https://www.npmjs.com/package/dx-grid-inspector) 0.1.0. The registry build was reinstalled in the Phase A app and passed the same checks.
 
-This is **not** an installable npm package yet, and it does **not** run an in-app LLM. Voice is clipboard-assisted only.
+Install it with `npm install -D dx-grid-inspector`. It does **not** run an in-app LLM. Voice is clipboard-assisted only.
 
 ## Current product (what ships today)
 
@@ -86,8 +86,8 @@ Aligning with the **Google Cloud Professional Agentic Architect** track, the fut
    - **Plan:** Containerize the Vite SPA (multi-stage Dockerfile with an Nginx server) and deploy it to a Google Cloud Run sandbox project.
    - **Why:** Scales to zero instances (costs $0/month when unused), serves static assets efficiently, and sets the foundation for integrating containerized backend AI agents later if needed.
 
-2. **NPM Package Distribution** — in progress (Phase 4 above; stops A and B done)
-   - **Plan:** Publish `DxHostOverlay` and its dependencies as a standalone npm package.
+2. **NPM Package Distribution** — done 2026-10-02 (Phase 4 above)
+   - **Shipped:** [`dx-grid-inspector`](https://www.npmjs.com/package/dx-grid-inspector) on npm. It exports `DxInspector` (the drop-in wrapper), `DxHostOverlay`, `TokenCalibrationUnit`, `DxGridVoice` and the token helpers, with one compiled stylesheet.
    - **Why:** Allows developers to seamlessly install the tool into their own React codebase for local development without manual copy-pasting.
 
 3. **Chrome Web Store Extension**
