@@ -2,6 +2,7 @@
 
 A design-token inspector that runs in the browser and leaves with your work. Two modes:
 a standalone harness, and a drop-in overlay that wraps real host UI. MIT, no backend.
+The overlay is published to npm as `dx-grid-inspector`.
 
 ## The loop
 
@@ -29,12 +30,14 @@ graph TD
 ```
 
 The overlay is the interesting one: it wraps a host application's own UI rather than a
-demo, which is what makes this a tool rather than a showcase. `INTEGRATION.md` is the
-copy-paste setup for that.
+demo, which is what makes this a tool rather than a showcase. A host installs it from
+npm and wraps its app in `DxInspector`, in development only. `INTEGRATION.md` is the setup.
 
 ## Stack
 
-- React 19 + Vite + Tailwind v4, TypeScript
+- Demo: React 19 + Vite + Tailwind v4, TypeScript
+- Package: `vite.lib.config.ts` builds `src/lib/entry.ts` into one ES module and one
+  `dx:`-prefixed stylesheet in `dist-lib/`. A host needs React 18.2+ or 19, and no Tailwind
 - `localStorage` via `harnessStorage.ts` — per-browser, never leaves the machine
 - No backend, no accounts, no telemetry beyond `@vercel/analytics` on the demo
 
@@ -43,6 +46,7 @@ copy-paste setup for that.
 | Path | Job |
 |------|-----|
 | `src/App.tsx` | Harness shell — three-panel layout |
+| `src/DxInspector.tsx` | The package's main export: overlay, HUD and voice in one wrapper |
 | `src/DxHostOverlay.tsx` | The drop-in. Wraps host UI rather than a demo surface |
 | `src/TokenCalibrationUnit.tsx` | The HUD — editing tokens on the selected node |
 | `src/GridOverlay.tsx` | Spatial grid |
@@ -51,6 +55,8 @@ copy-paste setup for that.
 | `src/tokenExport.ts` | CSS / JSON / prompt compilation |
 | `src/harnessStorage.ts` | localStorage persistence |
 | `src/types.ts` | `DesignNode`, `DesignProperties` |
+| `src/lib/index.ts` | The package's public exports and types |
+| `src/lib/styles.css` | The package's stylesheet, `dx:` utilities only |
 
 ## The rule that is not negotiable
 
