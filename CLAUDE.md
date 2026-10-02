@@ -62,6 +62,9 @@ Delete this section once Phase C ships.
 - **The package CSS is unlayered and its reset is scoped to `[data-dx-ui]`.** Unlayered so a
   host's element rules (`button {}`, `h2 {}`) cannot restyle the inspector; scoped so the inspector never restyles the
   host. Any new root element of the inspector's own UI needs `data-dx-ui=""`.
+- **`DxInspector` paints only the HUD column.** A background on its root covers a light
+  host's own page: it did once, and only a light host shows it (the demo and the Phase A
+  app are dark). Test layout changes in a light host too.
 - **Colours: `tokenExport.ts` converts `oklab()` / `oklch()` / `color(srgb)` itself**, because
   Tailwind v4 colours compute to those. It matched Chrome's own conversion exactly on 12
   samples. If you change it, check it against Chrome again rather than by eye.

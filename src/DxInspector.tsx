@@ -57,7 +57,7 @@ export function DxInspector({
   }
 
   return (
-    <div className="dx:flex dx:h-dvh dx:flex-col dx:bg-dx-surface-0 dx:lg:flex-row">
+    <div className="dx:flex dx:h-dvh dx:flex-col dx:lg:flex-row">
       <DxHostOverlay
         enabled={enabled}
         onEnabledChange={setEnabled}
@@ -90,7 +90,7 @@ export function DxInspector({
       <aside
         data-dx-ui=""
         aria-label="DX Grid Inspector"
-        className="dx:flex dx:max-h-[45dvh] dx:shrink-0 dx:flex-col dx:gap-3 dx:overflow-y-auto dx:border-t dx:border-white/10 dx:p-3 dx:lg:max-h-full dx:lg:w-[22rem] dx:lg:border-l dx:lg:border-t-0"
+        className="dx:flex dx:max-h-[45dvh] dx:shrink-0 dx:flex-col dx:gap-3 dx:overflow-y-auto dx:border-t dx:border-white/10 dx:bg-dx-surface-0 dx:p-3 dx:lg:max-h-full dx:lg:w-[22rem] dx:lg:border-l dx:lg:border-t-0"
       >
         <div className="dx:rounded-[16px] dx:border dx:border-white/5 dx:bg-dx-surface-2">
           <TokenCalibrationUnit

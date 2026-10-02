@@ -67,4 +67,6 @@ Branch `npm-package`. The package builds with `npm run build:lib`, and its tarba
 | S6 | **Gone.** The host's Tailwind no longer sees the inspector's source. |
 | S7 | **Avoided.** The package ships one stylesheet whose utilities are all prefixed `dx:`, so it has no `.hidden` or other plain class to collide with. |
 
+**Found and fixed during Phase B:** `DxInspector` first painted its dark background behind the whole wrapper, so a light host's page turned near-black and its heading became unreadable. Every DOM check passed; the screenshot of the light React 18 host caught it. The background now sits on the HUD column only. The app's own reset was also too weak at first: a host's global `button` and `h2` rules leaked into the HUD until the reset got element weight.
+
 **The demo still looks the same.** Seven fixed states, pixel-diffed against a baseline taken before any change (two baseline runs matched exactly): five are identical. The other two differ only where S1 and S3 were fixed in the demo itself. A remaining 5-pixel difference at 390px is anti-aliasing on the demo's mode switch, and it also appears between two runs of the same code.
