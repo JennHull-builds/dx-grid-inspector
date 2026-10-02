@@ -39,31 +39,35 @@ project was never created and the deploy has never run. Treat it as untested.
 Three phases, with a stop after each: **A** prove the overlay in one real host app,
 **B** package it and test the tarball in that host, **C** `npm publish`.
 
-- **Phase B runs on Opus.** Phase A runs on Sonnet 5.5. Before starting B, check the
-  model name in your system prompt. If it is not Opus, do not start: tell the owner to
-  switch (in the Claude Code chat box, type `/model` and pick Opus), then wait.
-- Do not start the next phase until the owner says go. Phase C starts only on the word
-  "publish", because `npm publish` is permanent.
-- Phase A is done (2026-10-02). Its findings, the input to Phase B, are in
-  `docs/phase-a-friction-log.md`.
+- Phase A is done (2026-10-02). Phase B is done (2026-10-02) on branch `npm-package`, not
+  merged. Both are written up in `docs/phase-a-friction-log.md` (Phase B is section E).
+- **Phase C starts only on the word "publish"**, because `npm publish` is permanent. It
+  needs the owner to pick the package name and log in to npm first. `"private": true` in
+  `package.json` makes `npm publish` refuse until then; removing it is part of Phase C.
+- After publishing: rewrite the README's integration section around the install (it still
+  says to copy files, and "npm package later"), drop the "Not on npm yet" note from
+  `INTEGRATION.md`, merge `npm-package`, close issue #4.
 
 Delete this section once Phase C ships.
 
 ## Gotchas
 
-- **A Tailwind v4 host gets colours back as `oklab(...)`.** `tokenExport.ts` normalises
-  only hex and `rgb()`, so a translucent colour (`border-white/5`) passes through raw.
-  The HUD's border field then rejects its own value and the swatch renders black. The
-  demo never shows it because its colours are solid. Unfixed.
-- **`applyDesignPropertiesToElement` sets `border-width: 2px`** when the element has no
-  inline border width, so a 1px stylesheet border thickens to 2px. Unfixed.
-- **Never give the overlay a second Tailwind stylesheet.** In a host it breaks the host's
-  layout (the second sheet's `.hidden` beat `lg:flex`). One Tailwind root, and plain CSS
-  for the `.dx-*` rules.
-- **`INTEGRATION.md` lists the `.dx-*` rules the components need, and it was wrong once.**
-  After changing classes in `DxHostOverlay`, `TokenCalibrationUnit` or `DxGridVoice`, run
-  `grep -ohE 'dx-[a-z-]+' src/DxHostOverlay.tsx src/TokenCalibrationUnit.tsx src/DxGridVoice.tsx | sort -u`
-  and compare it with that list.
+- **Every class in the library components must be `dx:`-prefixed.** `DxHostOverlay`,
+  `TokenCalibrationUnit`, `DxGridVoice` and `DxInspector` are styled by
+  `src/lib/styles.css`, which only generates `dx:` classes. An unprefixed class still looks
+  right in the demo, because the demo's own Tailwind generates it, and renders unstyled in
+  every host. `npm run build:lib` runs `scripts/check-dx-prefix.mjs` first and fails on one.
+- **The `.dx-*` component rules live in two places**: `src/index.css` (the demo) and
+  `src/lib/styles.css` (the package, using `--dx-ui-*` variables). Change both.
+- **The package CSS is unlayered and its reset is scoped to `[data-dx-ui]`.** Unlayered so a
+  host's element rules (`button {}`, `h2 {}`) cannot restyle the inspector; scoped so the inspector never restyles the
+  host. Any new root element of the inspector's own UI needs `data-dx-ui=""`.
+- **Colours: `tokenExport.ts` converts `oklab()` / `oklch()` / `color(srgb)` itself**, because
+  Tailwind v4 colours compute to those. It matched Chrome's own conversion exactly on 12
+  samples. If you change it, check it against Chrome again rather than by eye.
+- **Testing a tarball:** when the tarball is unchanged, npm skips reinstalling it even if
+  the installed copy was edited (seen with `'use client'` stripped by hand). Delete
+  `node_modules/<package>` before reinstalling, and restart Vite, which caches package CSS.
 
 ## Code standards
 

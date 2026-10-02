@@ -27,7 +27,7 @@ All fixed in `INTEGRATION.md` by the commit that added this file.
 
 | # | Issue | Evidence |
 |---|-------|----------|
-| S1 | **Translucent Tailwind v4 colours come back as `oklab(...)`.** `colourToToken` in `tokenExport.ts` handles hex and `rgb()` only. The HUD's border field then rejects the value it just read, the border swatch renders black, and the CSS / JSON exports contain `oklab(...)`. The demo never hits it because its colours are solid. | Re-saving the read border gives "Invalid border value". Swatch is black in the 1280px screenshot. |
+| S1 | **Translucent Tailwind v4 colours come back as `oklab(...)`.** `colourToToken` in `tokenExport.ts` handles hex and `rgb()` only. The HUD's border field then rejects the value it just read, the border swatch renders black, and the CSS / JSON exports contain `oklab(...)`. (Corrected in Phase B: the live demo hits it too, on the overlay demo's Border Preset.) | Re-saving the read border gives "Invalid border value". Swatch is black in the 1280px screenshot. |
 | S2 | **Apply to target can thicken a border.** `applyDesignPropertiesToElement` sets `border-width: 2px` when the element has no inline border width. | A 1px border became 2px after Apply with no edit. |
 | S3 | **The inspect ring is not clipped to the host.** `position: fixed` from `getBoundingClientRect`, so a target taller than the visible host area draws over the HUD. | 390px screenshot. |
 | S4 | The visible label "Apply to target" and its `aria-label` ("Apply calibrated tokens to the selected host target") differ, which fails WCAG 2.5.3 Label in Name. Same for the other HUD buttons. | Found because a text-based lookup failed. **Not checked with a screen reader.** |
@@ -45,3 +45,26 @@ All fixed in `INTEGRATION.md` by the commit that added this file.
 ## D. Not tested
 
 React 18, Next.js, Firefox, Safari, touch devices, the Escape key leaving inspect mode, a screen reader, and following the rewritten `INTEGRATION.md` from a blank app (it was written from what was run, not re-run from scratch).
+
+## E. Phase B, 2026-10-02: what changed
+
+Branch `npm-package`. The package builds with `npm run build:lib`, and its tarball was installed and tested in three hosts:
+
+| Host | Result |
+|------|--------|
+| The Phase A app (Vite 8, React 19.2, Tailwind 4.3) | Every Phase A step passes at 1280px and 390px, no console errors. Production JS and CSS are **byte-identical** to a build without the inspector. |
+| A scratch app with React 18.3, **no Tailwind**, and deliberately hostile global CSS (`button`, `h2`, `p`, `*` rules, a serif font, `box-sizing: content-box`) | Works at both widths. Its types pass with `skipLibCheck: false` against React 18 types. The host's own styles are untouched, and the inspector keeps its look. |
+| A scratch Next.js 16.3 app (React 19.3, App Router) | Builds and works with the package rendered from a Server Component. Control: with `'use client'` removed, the build fails. The dev-only pattern in `INTEGRATION.md` shows the inspector in `next dev` and leaves no trace in the production build. |
+
+| Finding | Phase B |
+|---------|---------|
+| A1–A10 | The copy-in path is replaced by the package and `DxInspector`; `INTEGRATION.md` is rewritten around it. |
+| S1 | **Fixed.** `oklab()`, `oklch()` and `color(srgb)` are converted to sRGB; translucent colours keep their alpha as `rgba()`. Matched Chrome's own conversion exactly on 12 samples. The fix also covers a related bug: translucent `rgb()` colours lost their alpha (`rgba(255,255,255,0.08)` became `#FFFFFF`). |
+| S2 | **Fixed.** An element with a visible border keeps its width; a 1px border stays 1px. |
+| S3 | **Fixed.** The ring is clipped to the host's visible area. In the Phase A repro it now ends at 464px, where the HUD starts, instead of 884px. |
+| S4 | **Fixed.** Visible text is the accessible name; the longer explanations moved to `title`. Not checked with a screen reader. |
+| S5 | Open. Still documented as a limitation. |
+| S6 | **Gone.** The host's Tailwind no longer sees the inspector's source. |
+| S7 | **Avoided.** The package ships one stylesheet whose utilities are all prefixed `dx:`, so it has no `.hidden` or other plain class to collide with. |
+
+**The demo still looks the same.** Seven fixed states, pixel-diffed against a baseline taken before any change (two baseline runs matched exactly): five are identical. The other two differ only where S1 and S3 were fixed in the demo itself. A remaining 5-pixel difference at 390px is anti-aliasing on the demo's mode switch, and it also appears between two runs of the same code.
