@@ -2,6 +2,8 @@
 
 > Inspect a real React UI while you develop. Click an element, calibrate its radius, padding and colours on the live page, and leave with CSS, JSON or an agent prompt. No backend and no AI calls.
 
+It doesn't replace DevTools. It's for the step after, when you've found the right values and need them in your tokens.
+
 [![npm](https://img.shields.io/npm/v/dx-grid-inspector.svg)](https://www.npmjs.com/package/dx-grid-inspector)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![React](https://img.shields.io/badge/React-18_%7C_19-blue.svg)
@@ -270,7 +272,9 @@ Tracked as GitHub issues. Near-term:
 
 ## Contributing
 
-Contributions, issues, and feature requests are welcome. Check the [issues page](https://github.com/JennHull-builds/dx-grid-inspector/issues).
+This is an early 0.1 release. If something breaks or the setup guide trips you up, [open an issue](https://github.com/JennHull-builds/dx-grid-inspector/issues). That's the most useful thing you can do.
+
+Contributions and feature requests are welcome too:
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
