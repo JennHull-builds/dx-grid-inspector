@@ -36,7 +36,7 @@ project was never created and the deploy has never run. Treat it as untested.
 
 ## Releasing to npm
 
-Published as `dx-grid-inspector` (0.1.0, 2026-10-02). A published version cannot be
+Published as `dx-grid-inspector` (0.1.0 on 2026-10-02; 0.1.1, docs only, on 2026-10-03). A published version cannot be
 changed, so a release only happens when Jen asks for one.
 
 - **`npm publish` needs a one-time code from Jen.** Run `npm publish --dry-run` yourself,
@@ -44,6 +44,14 @@ changed, so a release only happens when Jen asks for one.
   `dx:` check and the build happen on every publish.
 - **The npm page shows the README as it was published.** README edits on `main` reach
   npm only with the next version.
+- **A publish failing with `E404 Not Found - PUT` means logged out, not a missing
+  package.** The npm login in `~/.npmrc` expires; npm answers an unauthenticated publish
+  with 404. Confirm with `npm whoami` (401 = logged out), then Jen runs `npm login` and
+  `npm publish` again. Seen 2026-10-03 on 0.1.1, one day after 0.1.0 published fine.
+- **A successful publish ends `PUT 202` and "being processed"**, and the registry can
+  take a few minutes to show it. Check `dist-tags.latest` before calling it live.
+- **Tag each release `vX.Y.Z` and push the tag** (`v0.1.0`, `v0.1.1` exist). Docs-only
+  changes ship as a patch.
 
 ## Gotchas
 
