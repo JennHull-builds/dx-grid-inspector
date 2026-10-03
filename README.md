@@ -29,7 +29,7 @@ The **DX Spatial Grid & Token Inspector** is a small, self-contained tool for ex
 
 Use the **Harness** tab for the three-panel playground, or **Overlay demo** to wrap a real host surface with [`DxHostOverlay`](https://github.com/JennHull-builds/dx-grid-inspector/blob/main/src/DxHostOverlay.tsx), inspect an element, apply tokens, and export.
 
-Built as an open-source learning and portfolio project, iterating in public. Install it into your own React app from npm (see [Use it in your app](#use-it-in-your-app)).
+Built by [Jennifer Hull](https://jenniferhull.co.za) as an open-source learning and portfolio project, iterating in public. Install it into your own React app from npm (see [Use it in your app](#use-it-in-your-app)).
 
 ---
 

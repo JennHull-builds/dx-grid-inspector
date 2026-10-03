@@ -288,6 +288,18 @@ function App() {
             >
               README
             </a>
+            <span className="text-white/20" aria-hidden="true">
+              ·
+            </span>
+            {/* No noreferrer here, so the portfolio's analytics can see the visit came from this demo. */}
+            <a
+              href="https://jenniferhull.co.za"
+              target="_blank"
+              rel="noopener"
+              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-dx-accent"
+            >
+              By Jennifer Hull
+            </a>
           </nav>
         </div>
       </header>

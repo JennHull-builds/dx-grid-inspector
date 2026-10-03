@@ -9,6 +9,10 @@
     "url": "git+https://github.com/JennHull-builds/dx-grid-inspector.git"
   },
   "homepage": "https://dx-grid-inspector.vercel.app",
+  "author": {
+    "name": "Jennifer Hull",
+    "url": "https://jenniferhull.co.za"
+  },
   "bugs": "https://github.com/JennHull-builds/dx-grid-inspector/issues",
   "keywords": [
     "design-tokens",
