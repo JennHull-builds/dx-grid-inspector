@@ -78,6 +78,25 @@ changed, so a release only happens when Jen asks for one.
 - **Testing a tarball:** when the tarball is unchanged, npm skips reinstalling it even if
   the installed copy was edited (seen with `'use client'` stripped by hand). Delete
   `node_modules/<package>` before reinstalling, and restart Vite, which caches package CSS.
+- **Apply keeps no baseline.** `applyDesignPropertiesToElement` compares the HUD with the
+  element's computed values and writes only the fields that differ, so a value set back
+  to what it was is still written. Do not add a "last read" copy to decide what changed;
+  it goes stale the moment something else writes the element.
+- **Escape after a nudge restores the target's whole `style` attribute**, taken when the
+  field edit began (`useOverlayTarget`). A new way of writing to the target during an
+  edit would be wiped by it, so write through `onFieldEdit`.
+- **The selection ring follows the target through a `MutationObserver` on its `style`
+  attribute.** A change that arrives any other way (a class swap, a sibling resizing)
+  is not followed until a scroll or resize.
+- **`rem` survives a save as the string `"1.5rem"`; `%`, `vh`, `vw` and `em` still reduce to
+  their number and read as px.** That is how it was before 0.2 and is unfixed.
+- **The agent prompt's shape text still lists four fields**, while its "Current tokens"
+  JSON now carries `gap` and `margin`. The prompt wording was left alone on purpose.
+- **At 390px the demo's Overlay tab collapses the host area to about 2px once an element
+  is selected** (the taller HUD takes the space; also true of the 0.1.1 code). Check
+  nudging at 390px in a `DxInspector` host, whose HUD is capped at 45dvh, not in the demo.
+- **The Harness preview card animates for 200ms.** A computed style read straight after a
+  nudge is mid-transition (12.05px for 14px). Wait before measuring it.
 
 ## Code standards
 
