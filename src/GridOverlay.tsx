@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { cssLength } from './tokenExport';
 import type { DesignNode, NodeCategory, NodeStatus } from './types';
 
 interface TemplateGridManagerProps {
@@ -200,7 +201,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                       {node.status}
                     </button>
                     <span className="dx-chip-accent">
-                      {node.properties.radius}px / {node.properties.padding}px
+                      {cssLength(node.properties.radius)} / {cssLength(node.properties.padding)}
                     </span>
                   </div>
                 </div>

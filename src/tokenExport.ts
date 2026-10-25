@@ -1,8 +1,12 @@
-import type { DesignNode, DesignProperties } from './types'
+import type { DesignField, DesignNode, DesignProperties } from './types'
 
 type TokenNodeMeta = Pick<DesignNode, 'id' | 'name' | 'category' | 'status'>
 
-const cssLength = (value: number | string): string => {
+/**
+ * A token length as CSS: numbers and bare numeric strings are pixels, anything else
+ * (`1.5rem`) is passed through as written.
+ */
+export const cssLength = (value: number | string): string => {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return `${value}px`
   }
@@ -11,6 +15,23 @@ const cssLength = (value: number | string): string => {
     return `${trimmed}px`
   }
   return trimmed
+}
+
+const rootFontSizePx = (): number =>
+  typeof window === 'undefined'
+    ? 16
+    : Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 16
+
+/**
+ * A token length in pixels: numbers, `16`, `16px`, and `rem` against the page's root font
+ * size. Null for any other unit.
+ */
+export const lengthToPx = (value: number | string): number | null => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)(px|rem)?$/i)
+  if (!match) return null
+  const amount = Number(match[1])
+  return match[2]?.toLowerCase() === 'rem' ? amount * rootFontSizePx() : amount
 }
 
 /** sRGB channels 0–255 plus alpha 0–1. */
@@ -245,11 +266,53 @@ const canonicalColour = (value: string): string => {
   return colourToToken(trimmed)
 }
 
-const sameLength = (a: number | string, b: number | string): boolean =>
-  cssLength(a) === cssLength(b)
+const sameLength = (a: number | string, b: number | string): boolean => {
+  const pxA = lengthToPx(a)
+  const pxB = lengthToPx(b)
+  return pxA !== null && pxB !== null
+    ? Math.abs(pxA - pxB) < 0.01
+    : cssLength(a) === cssLength(b)
+}
 
 const sameColour = (a: string, b: string): boolean =>
   canonicalColour(a) === canonicalColour(b)
+
+/**
+ * Writes one token onto a host element as an inline style, leaving every other style
+ * alone. This is what live nudging uses. For `borderPreset` the 2px solid border is added
+ * only when the element has no visible border to carry the colour; an element that
+ * already has one keeps its width and style.
+ */
+export const applyDesignFieldToElement = (
+  element: HTMLElement,
+  field: DesignField,
+  properties: DesignProperties,
+): void => {
+  switch (field) {
+    case 'radius':
+      element.style.borderRadius = cssLength(properties.radius)
+      break
+    case 'padding':
+      element.style.padding = cssLength(properties.padding)
+      break
+    case 'bgPreset':
+      element.style.backgroundColor = properties.bgPreset
+      break
+    case 'borderPreset': {
+      const computed = window.getComputedStyle(element)
+      const hasVisibleBorder =
+        computed.borderTopStyle !== 'none' &&
+        Number.parseFloat(computed.borderTopWidth) > 0
+
+      element.style.borderColor = properties.borderPreset
+      if (!hasVisibleBorder) {
+        element.style.borderStyle = 'solid'
+        element.style.borderWidth = '2px'
+      }
+      break
+    }
+  }
+}
 
 /**
  * Writes the token fields that differ from what the element has right now, as inline
@@ -267,25 +330,16 @@ export const applyDesignPropertiesToElement = (
   const current = readDesignPropertiesFromElement(element)
 
   if (!sameLength(properties.radius, current.radius)) {
-    element.style.borderRadius = cssLength(properties.radius)
+    applyDesignFieldToElement(element, 'radius', properties)
   }
   if (!sameLength(properties.padding, current.padding)) {
-    element.style.padding = cssLength(properties.padding)
+    applyDesignFieldToElement(element, 'padding', properties)
   }
   if (!sameColour(properties.bgPreset, current.bgPreset)) {
-    element.style.backgroundColor = properties.bgPreset
+    applyDesignFieldToElement(element, 'bgPreset', properties)
   }
   if (!sameColour(properties.borderPreset, current.borderPreset)) {
-    const computed = window.getComputedStyle(element)
-    const hasVisibleBorder =
-      computed.borderTopStyle !== 'none' &&
-      Number.parseFloat(computed.borderTopWidth) > 0
-
-    element.style.borderColor = properties.borderPreset
-    if (!hasVisibleBorder) {
-      element.style.borderStyle = 'solid'
-      element.style.borderWidth = '2px'
-    }
+    applyDesignFieldToElement(element, 'borderPreset', properties)
   }
 }
 

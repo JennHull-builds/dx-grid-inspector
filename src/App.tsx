@@ -12,16 +12,14 @@ import {
 import { HostDemoSurface } from './HostDemoSurface'
 import { LiveTokenPreview } from './LiveTokenPreview'
 import { TokenCalibrationUnit } from './TokenCalibrationUnit'
-import {
-  applyDesignPropertiesToElement,
-  readDesignPropertiesFromElement,
-} from './tokenExport'
+import { lengthToPx, readDesignPropertiesFromElement } from './tokenExport'
 import type {
   DesignNode,
   DesignProperties,
   NodeCategory,
   NodeStatus,
 } from './types'
+import { useOverlayTarget } from './useOverlayTarget'
 
 type AppMode = 'harness' | 'overlay'
 type MobilePanel = 'nodes' | 'calibrate' | 'preview'
@@ -76,16 +74,6 @@ const FALLBACK_HARNESS: HarnessState = {
   nextIndex: INITIAL_NODES.length,
 }
 
-const OVERLAY_NODE_ID = 'overlay-target'
-
-const createOverlayNode = (properties: DesignProperties): DesignNode => ({
-  id: OVERLAY_NODE_ID,
-  name: 'Host inspect target',
-  category: 'Content',
-  status: 'In Progress',
-  properties,
-})
-
 /**
  * Local testing shell: three-panel harness, or overlay demo wrapping host UI.
  * Node list, selection, and next mock index are persisted in localStorage.
@@ -105,15 +93,8 @@ function App() {
 
   const [overlayEnabled, setOverlayEnabled] = useState(true)
   const [inspecting, setInspecting] = useState(false)
-  const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
-  const [overlayNode, setOverlayNode] = useState<DesignNode>(() =>
-    createOverlayNode({
-      radius: 16,
-      padding: 24,
-      bgPreset: '#1A1A2B',
-      borderPreset: '#A78BFA',
-    }),
-  )
+  const overlay = useOverlayTarget()
+  const { target: targetElement, node: overlayNode } = overlay
 
   useEffect(() => {
     saveHarnessState({ nodes, selectedNodeId, nextIndex })
@@ -189,43 +170,17 @@ function App() {
   }
 
   const handleOverlayTargetSelect = (element: HTMLElement) => {
-    const properties = readDesignPropertiesFromElement(element)
-    setTargetElement(element)
-    setOverlayNode(createOverlayNode(properties))
+    overlay.select(element)
     setInspecting(false)
   }
 
-  const handleOverlayUpdateProperties = (
-    _id: string,
-    properties: DesignProperties,
-  ) => {
-    setOverlayNode((prev) => ({ ...prev, properties }))
-  }
+  /** A token length as pixels for the sample card; `rem` is resolved, other units fall back. */
+  const previewPx = (value: DesignProperties['radius'], fallback: number): number =>
+    lengthToPx(value) ?? (Number.parseFloat(String(value)) || fallback)
 
-  const handleReadFromTarget = () => {
-    if (!targetElement) return
-    setOverlayNode(
-      createOverlayNode(readDesignPropertiesFromElement(targetElement)),
-    )
-  }
-
-  const handleApplyToTarget = () => {
-    if (!targetElement) return
-    applyDesignPropertiesToElement(targetElement, overlayNode.properties)
-  }
-
-  const previewRadius =
-    selectedNode == null
-      ? 12
-      : typeof selectedNode.properties.radius === 'number'
-        ? selectedNode.properties.radius
-        : Number.parseFloat(String(selectedNode.properties.radius)) || 12
+  const previewRadius = selectedNode == null ? 12 : previewPx(selectedNode.properties.radius, 12)
   const previewPadding =
-    selectedNode == null
-      ? 16
-      : typeof selectedNode.properties.padding === 'number'
-        ? selectedNode.properties.padding
-        : Number.parseFloat(String(selectedNode.properties.padding)) || 16
+    selectedNode == null ? 16 : previewPx(selectedNode.properties.padding, 16)
 
   const panelShell = 'min-h-0 flex-col overflow-visible'
 
@@ -416,16 +371,13 @@ function App() {
           <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto lg:max-h-full">
             <div className="rounded-[16px] border border-white/5 bg-dx-surface-2">
               <TokenCalibrationUnit
-                key={targetElement ? 'target' : 'idle'}
+                key={targetElement ? `target-${overlay.selection}` : 'idle'}
                 selectedNode={targetElement ? overlayNode : null}
-                onUpdateProperties={handleOverlayUpdateProperties}
-                onReadFromPreview={
-                  targetElement ? handleReadFromTarget : undefined
-                }
+                onUpdateProperties={overlay.update}
+                onReadFromPreview={targetElement ? overlay.read : undefined}
                 readLabel="Read from target"
-                onApplyToTarget={
-                  targetElement ? handleApplyToTarget : undefined
-                }
+                onApplyToTarget={targetElement ? overlay.apply : undefined}
+                onFieldEdit={overlay.onFieldEdit}
                 emptyHint="Turn on Inspect and click a host surface to calibrate tokens."
               />
             </div>

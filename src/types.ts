@@ -21,6 +21,11 @@ export interface DesignProperties {
 }
 
 /**
+ * The name of one editable token in `DesignProperties`.
+ */
+export type DesignField = keyof DesignProperties;
+
+/**
  * Canonical design node used across the grid overlay, calibration HUD, and harness.
  */
 export interface DesignNode {

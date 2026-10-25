@@ -1,14 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   copyTextToClipboard,
+  cssLength,
   formatTokensAsAgentPrompt,
   formatTokensAsCss,
   formatTokensAsJson,
   parseDesignPropertiesJson,
 } from './tokenExport';
-import type { DesignNode, DesignProperties } from './types';
+import type { DesignField, DesignNode, DesignProperties } from './types';
 
 const FEEDBACK_MS = 2000;
+
+/**
+ * Where a length field is in an edit. `start` when editing begins; `nudge` after each
+ * arrow-key press; `commit` when Enter keeps the value; `revert` when Escape puts back
+ * the value from before editing started.
+ */
+export type FieldEditPhase = 'start' | 'nudge' | 'commit' | 'revert';
+
+/**
+ * Reported by the HUD as a length field is edited, so a host can show the change on its
+ * target live. `properties` already carries the new value (for `revert`, the old one).
+ */
+export interface FieldEditEvent {
+  phase: FieldEditPhase;
+  field: DesignField;
+  properties: DesignProperties;
+}
 
 export interface TokenCalibrationUnitProps {
   /** The node whose tokens are shown and edited; null shows the empty hint. */
@@ -23,9 +41,14 @@ export interface TokenCalibrationUnitProps {
   onApplyToTarget?: () => void;
   /** Empty-state hint when no node is selected. */
   emptyHint?: string;
+  /**
+   * Called as a length field is edited, so the target can follow arrow-key nudges live.
+   * Optional: without it, arrow keys still change the value in the HUD.
+   */
+  onFieldEdit?: (event: FieldEditEvent) => void;
 }
 
-type EditableField = keyof DesignProperties;
+type EditableField = DesignField;
 type FieldKind = 'color' | 'layout' | 'border';
 
 interface FieldConfig {
@@ -41,16 +64,50 @@ const FIELDS: FieldConfig[] = [
   { key: 'borderPreset', label: 'Border Preset', kind: 'border' },
 ];
 
-const parseLayoutNumber = (val: string): number | null => {
+/**
+ * Reads a typed length. `rem` is kept as written (`"1.5rem"`); the other units still reduce
+ * to their number, which the HUD treats as px.
+ */
+const parseLayoutValue = (val: string): number | string | null => {
   const trimmed = val.trim();
   if (/^\d+(\.\d+)?$/.test(trimmed)) {
     return Number(trimmed);
   }
   const withUnit = trimmed.match(/^(\d+(?:\.\d+)?)(px|rem|%|vh|vw|em)$/i);
-  if (withUnit) {
-    return Number(withUnit[1]);
+  if (!withUnit) {
+    return null;
   }
-  return null;
+  return withUnit[2].toLowerCase() === 'rem'
+    ? `${Number(withUnit[1])}rem`
+    : Number(withUnit[1]);
+};
+
+/**
+ * The text after one arrow-key press on a px, unitless or rem value: 1 (Shift 10) for px,
+ * 0.125 (Shift 1) for rem, never below 0. Null for any other text, so nothing happens.
+ */
+const nudgeLayoutText = (text: string, direction: 1 | -1, large: boolean): string | null => {
+  const match = text.trim().match(/^(\d+(?:\.\d+)?)(px|rem)?$/i);
+  if (!match) return null;
+  const unit = (match[2] ?? '').toLowerCase();
+  const step = unit === 'rem' ? (large ? 1 : 0.125) : large ? 10 : 1;
+  const next = Math.max(0, Math.round((Number(match[1]) + direction * step) * 1000) / 1000);
+  return `${next}${unit}`;
+};
+
+/** A copy of `properties` with one field set, or removed when `value` is undefined. */
+const withField = (
+  properties: DesignProperties,
+  key: EditableField,
+  value: DesignProperties[EditableField],
+): DesignProperties => {
+  const next: Record<string, unknown> = { ...properties };
+  if (value === undefined) {
+    delete next[key];
+  } else {
+    next[key] = value;
+  }
+  return next as unknown as DesignProperties;
 };
 
 const sanitizeHex = (val: string): string | null => {
@@ -110,11 +167,12 @@ const hexForColourInput = (val: string): string | null => {
   return sanitized.toLowerCase();
 };
 
-const displayValue = (key: EditableField, properties: DesignProperties): string => {
-  if (key === 'radius' || key === 'padding') {
-    return `${properties[key]}px`;
+const displayValue = (field: FieldConfig, properties: DesignProperties): string => {
+  const value = properties[field.key];
+  if (field.kind === 'layout') {
+    return cssLength(value ?? 0);
   }
-  return String(properties[key]);
+  return String(value);
 };
 
 interface ColourPickerInputProps {
@@ -160,6 +218,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   readLabel = 'Read from preview',
   onApplyToTarget,
   emptyHint = 'Select a node from the Template Grid Manager to calibrate layout tokens.',
+  onFieldEdit,
 }) => {
   const [editingKey, setEditingKey] = useState<EditableField | null>(null);
   const [inputValue, setInputValue] = useState('');
@@ -168,6 +227,12 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteValue, setPasteValue] = useState('');
   const feedbackTimerRef = useRef<number | null>(null);
+  /** The field being edited, the value it had before, and whether arrow keys have moved it. */
+  const editStartRef = useRef<{
+    key: EditableField;
+    value: DesignProperties[EditableField];
+    nudged: boolean;
+  } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -205,20 +270,31 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
   const startEdit = (field: FieldConfig) => {
     setEditingKey(field.key);
-    setInputValue(displayValue(field.key, selectedNode.properties));
+    setInputValue(displayValue(field, selectedNode.properties));
     setError(null);
+    if (field.kind === 'layout') {
+      editStartRef.current = {
+        key: field.key,
+        value: selectedNode.properties[field.key],
+        nudged: false,
+      };
+      onFieldEdit?.({ phase: 'start', field: field.key, properties: selectedNode.properties });
+    }
   };
 
   const saveField = (field: FieldConfig) => {
     const current = selectedNode.properties;
 
     if (field.kind === 'layout') {
-      const parsed = parseLayoutNumber(inputValue);
-      if (parsed === null || Number.isNaN(parsed)) {
+      const parsed = parseLayoutValue(inputValue);
+      if (parsed === null) {
         setError('Invalid layout size. Use a number or units like px, rem, %.');
         return;
       }
-      onUpdateProperties(selectedNode.id, { ...current, [field.key]: parsed });
+      const next = withField(current, field.key, parsed);
+      onUpdateProperties(selectedNode.id, next);
+      editStartRef.current = null;
+      onFieldEdit?.({ phase: 'commit', field: field.key, properties: next });
     } else {
       const sanitized = sanitizeColour(inputValue);
       if (!sanitized) {
@@ -237,14 +313,51 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     setError(null);
   };
 
+  /** Escape: leave the field and put back what it held before editing started. */
+  const cancelEdit = (field: FieldConfig) => {
+    const start = editStartRef.current;
+    editStartRef.current = null;
+    if (field.kind === 'layout' && start?.key === field.key && start.nudged) {
+      const restored = withField(selectedNode.properties, field.key, start.value);
+      onUpdateProperties(selectedNode.id, restored);
+      onFieldEdit?.({ phase: 'revert', field: field.key, properties: restored });
+    }
+    setEditingKey(null);
+    setError(null);
+  };
+
+  /** ArrowUp / ArrowDown while editing a length: change the value and show it at once. */
+  const nudgeField = (field: FieldConfig, direction: 1 | -1, large: boolean) => {
+    const text = nudgeLayoutText(inputValue, direction, large);
+    const value = text === null ? null : parseLayoutValue(text);
+    if (text === null || value === null) return;
+
+    const next = withField(selectedNode.properties, field.key, value);
+    if (editStartRef.current?.key === field.key) {
+      editStartRef.current.nudged = true;
+    }
+    setInputValue(text);
+    setError(null);
+    onUpdateProperties(selectedNode.id, next);
+    onFieldEdit?.({ phase: 'nudge', field: field.key, properties: next });
+    announce(`${field.label} ${cssLength(value)}`);
+  };
+
   const handleFieldKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     field: FieldConfig,
   ) => {
     if (e.key === 'Enter') saveField(field);
-    if (e.key === 'Escape') {
-      setEditingKey(null);
-      setError(null);
+    if (e.key === 'Escape') cancelEdit(field);
+    if (
+      (e.key === 'ArrowUp' || e.key === 'ArrowDown') &&
+      field.kind === 'layout' &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey
+    ) {
+      e.preventDefault();
+      nudgeField(field, e.key === 'ArrowUp' ? 1 : -1, e.shiftKey);
     }
   };
 
@@ -317,7 +430,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       <div className="dx:flex dx:flex-col dx:gap-2.5 dx:overflow-y-auto dx:overscroll-contain dx:flex-1 dx:pr-1 dx:min-h-0">
         {FIELDS.map((field) => {
           const isEditing = editingKey === field.key;
-          const value = displayValue(field.key, selectedNode.properties);
+          const value = displayValue(field, selectedNode.properties);
 
           return (
             <div

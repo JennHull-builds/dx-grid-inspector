@@ -8,10 +8,15 @@ export type { DxInspectorProps } from '../DxInspector'
 export { DxHostOverlay } from '../DxHostOverlay'
 export type { DxHostOverlayChildren, DxHostOverlayProps } from '../DxHostOverlay'
 export { TokenCalibrationUnit } from '../TokenCalibrationUnit'
-export type { TokenCalibrationUnitProps } from '../TokenCalibrationUnit'
+export type {
+  FieldEditEvent,
+  FieldEditPhase,
+  TokenCalibrationUnitProps,
+} from '../TokenCalibrationUnit'
 export { DxGridVoice } from '../DxGridVoice'
 export type { DxGridVoiceProps } from '../DxGridVoice'
 export {
+  applyDesignFieldToElement,
   applyDesignPropertiesToElement,
   copyTextToClipboard,
   formatTokensAsAgentPrompt,
@@ -22,6 +27,7 @@ export {
   readDesignPropertiesFromElement,
 } from '../tokenExport'
 export type {
+  DesignField,
   DesignNode,
   DesignProperties,
   NodeCategory,
