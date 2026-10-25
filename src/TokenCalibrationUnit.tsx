@@ -3,11 +3,18 @@ import {
   copyTextToClipboard,
   cssLength,
   formatTokensAsAgentPrompt,
+  formatSessionAsCss,
+  formatSessionAsJson,
   formatTokensAsCss,
   formatTokensAsJson,
   parseDesignPropertiesJson,
 } from './tokenExport';
-import type { DesignField, DesignNode, DesignProperties } from './types';
+import type {
+  DesignField,
+  DesignNode,
+  DesignProperties,
+  TokenSessionEntry,
+} from './types';
 
 const FEEDBACK_MS = 2000;
 
@@ -46,7 +53,17 @@ export interface TokenCalibrationUnitProps {
    * Optional: without it, arrow keys still change the value in the HUD.
    */
   onFieldEdit?: (event: FieldEditEvent) => void;
+  /**
+   * Elements for the “Copy all” control: a label, the values each was read with, and its
+   * current values. Omit it and the control is not shown.
+   */
+  sessionEntries?: TokenSessionEntry[];
+  /** Tooltip for “Copy all”; says where the list is kept. Defaults to the in-memory note. */
+  copyAllTitle?: string;
 }
+
+const DEFAULT_COPY_ALL_TITLE =
+  'Copy every element you have tweaked this session as CSS or JSON. The list is kept in memory only and clears when you reload the page.';
 
 type EditableField = DesignField;
 type FieldKind = 'color' | 'layout' | 'border';
@@ -221,6 +238,8 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   onApplyToTarget,
   emptyHint = 'Select a node from the Template Grid Manager to calibrate layout tokens.',
   onFieldEdit,
+  sessionEntries,
+  copyAllTitle = DEFAULT_COPY_ALL_TITLE,
 }) => {
   const [editingKey, setEditingKey] = useState<EditableField | null>(null);
   const [inputValue, setInputValue] = useState('');
@@ -228,6 +247,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteValue, setPasteValue] = useState('');
+  const [copyAllOpen, setCopyAllOpen] = useState(false);
   const feedbackTimerRef = useRef<number | null>(null);
   /** The field being edited, the value it had before, and whether arrow keys have moved it. */
   const editStartRef = useRef<{
@@ -389,6 +409,21 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     );
   };
 
+  const copyAll = async (format: 'css' | 'json') => {
+    const entries = sessionEntries ?? [];
+    const ok = await copyTextToClipboard(
+      format === 'css' ? formatSessionAsCss(entries) : formatSessionAsJson(entries),
+    );
+    if (ok) setCopyAllOpen(false);
+    announce(
+      ok
+        ? `Copied ${entries.length} ${entries.length === 1 ? 'element' : 'elements'} as ${
+            format === 'css' ? 'CSS' : 'JSON'
+          }`
+        : 'Copy failed',
+    );
+  };
+
   const handleReadFromPreview = () => {
     if (!onReadFromPreview) return;
     setEditingKey(null);
@@ -515,6 +550,46 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         <p className="dx:mt-3 dx:text-xs dx:font-mono dx:text-red-400 dx:shrink-0">{error}</p>
       )}
 
+      {copyAllOpen && sessionEntries && (
+        <div className="dx:mt-3 dx:shrink-0 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3">
+          <p className="dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
+            Copy {sessionEntries.length} {sessionEntries.length === 1 ? 'element' : 'elements'} as
+          </p>
+          <ul className="dx:mt-2 dx:max-h-24 dx:overflow-y-auto dx:font-mono dx:text-xs dx:text-slate-400">
+            {sessionEntries.map((entry) => (
+              <li key={entry.label} className="dx:truncate">
+                {entry.label}
+              </li>
+            ))}
+          </ul>
+          <div className="dx:mt-2 dx:flex dx:flex-wrap dx:gap-2">
+            <button
+              type="button"
+              onClick={() => void copyAll('css')}
+              title="Copy every listed element as CSS custom properties, one block each"
+              className="dx-btn-primary dx:min-h-10 dx:px-3"
+            >
+              CSS
+            </button>
+            <button
+              type="button"
+              onClick={() => void copyAll('json')}
+              title="Copy every listed element as a JSON array of label, before and after"
+              className="dx-btn-primary dx:min-h-10 dx:px-3"
+            >
+              JSON
+            </button>
+            <button
+              type="button"
+              onClick={() => setCopyAllOpen(false)}
+              className="dx-btn-secondary dx:min-h-10 dx:px-3"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {pasteOpen && (
         <div className="dx:mt-3 dx:shrink-0 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3">
           <label className="dx:block dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
@@ -598,10 +673,29 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         >
           Prompt
         </button>
+        {sessionEntries && (
+          <button
+            type="button"
+            onClick={() => {
+              setCopyAllOpen((open) => !open);
+              setPasteOpen(false);
+              setError(null);
+            }}
+            disabled={sessionEntries.length === 0}
+            aria-expanded={copyAllOpen}
+            title={
+              sessionEntries.length === 0 ? `Nothing to copy yet. ${copyAllTitle}` : copyAllTitle
+            }
+            className="dx-btn-secondary dx:min-h-10 dx:px-3"
+          >
+            Copy all ({sessionEntries.length})
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {
             setPasteOpen((open) => !open);
+            setCopyAllOpen(false);
             setError(null);
           }}
           title="Paste DesignProperties JSON into this node"

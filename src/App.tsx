@@ -18,6 +18,7 @@ import type {
   DesignProperties,
   NodeCategory,
   NodeStatus,
+  TokenSessionEntry,
 } from './types'
 import { useOverlayTarget } from './useOverlayTarget'
 
@@ -88,6 +89,10 @@ function App() {
     initialHarness.selectedNodeId,
   )
   const [nextIndex, setNextIndex] = useState(initialHarness.nextIndex)
+  /** Each node's tokens when the page loaded or the node was added, for “Copy all”. */
+  const [baseline, setBaseline] = useState<Record<string, DesignProperties>>(() =>
+    Object.fromEntries(initialHarness.nodes.map((node) => [node.id, node.properties])),
+  )
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('nodes')
   const previewSurfaceRef = useRef<HTMLDivElement>(null)
 
@@ -120,6 +125,7 @@ function App() {
   const handleAddNode = () => {
     const node = createMockNode(nextIndex)
     setNodes((prev) => [...prev, node])
+    setBaseline((prev) => ({ ...prev, [node.id]: node.properties }))
     setSelectedNodeId(node.id)
     setNextIndex((prev) => prev + 1)
     if (isMobileViewport()) {
@@ -130,6 +136,9 @@ function App() {
   const handleResetHarness = () => {
     clearHarnessState()
     setNodes(FALLBACK_HARNESS.nodes)
+    setBaseline(
+      Object.fromEntries(FALLBACK_HARNESS.nodes.map((node) => [node.id, node.properties])),
+    )
     setSelectedNodeId(FALLBACK_HARNESS.selectedNodeId)
     setNextIndex(FALLBACK_HARNESS.nextIndex)
     if (isMobileViewport()) {
@@ -177,6 +186,12 @@ function App() {
   /** A token length as pixels for the sample card; `rem` is resolved, other units fall back. */
   const previewPx = (value: DesignProperties['radius'], fallback: number): number =>
     lengthToPx(value) ?? (Number.parseFloat(String(value)) || fallback)
+
+  const harnessEntries: TokenSessionEntry[] = nodes.map((node) => ({
+    label: node.name,
+    before: baseline[node.id] ?? node.properties,
+    after: node.properties,
+  }))
 
   const previewRadius = selectedNode == null ? 12 : previewPx(selectedNode.properties.radius, 12)
   const previewPadding =
@@ -322,6 +337,8 @@ function App() {
                 selectedNode={selectedNode}
                 onUpdateProperties={handleUpdateProperties}
                 onReadFromPreview={handleReadFromPreview}
+                sessionEntries={harnessEntries}
+                copyAllTitle="Copy every node in the Template Grid Manager as CSS or JSON. Before is each node's tokens when the page loaded."
               />
             </div>
 
@@ -383,6 +400,7 @@ function App() {
                 readLabel="Read from target"
                 onApplyToTarget={targetElement ? overlay.apply : undefined}
                 onFieldEdit={overlay.onFieldEdit}
+                sessionEntries={overlay.sessionEntries}
                 emptyHint="Turn on Inspect and click a host surface to calibrate tokens."
               />
             </div>

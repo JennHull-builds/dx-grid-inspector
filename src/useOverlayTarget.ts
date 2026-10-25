@@ -6,6 +6,7 @@ import {
   readDesignPropertiesFromElement,
 } from './tokenExport'
 import type { DesignNode, DesignProperties } from './types'
+import { useTweakSession } from './useTweakSession'
 
 const DEFAULT_PROPERTIES: DesignProperties = {
   radius: 16,
@@ -34,20 +35,26 @@ export function useOverlayTarget() {
   const [selection, setSelection] = useState(0)
   /** The target's `style` attribute as it was when the current field edit began. */
   const styleBeforeEdit = useRef<{ element: HTMLElement; style: string | null } | null>(null)
+  const session = useTweakSession()
 
   const select = (element: HTMLElement) => {
+    const properties = readDesignPropertiesFromElement(element)
     setTarget(element)
-    setNode(createTargetNode(readDesignPropertiesFromElement(element)))
+    setNode(createTargetNode(properties))
     setSelection((previous) => previous + 1)
+    session.begin(element, properties)
   }
 
   const update = (_id: string, properties: DesignProperties) => {
     setNode((previous) => ({ ...previous, properties }))
+    if (target) session.update(target, properties)
   }
 
   const read = () => {
     if (!target) return
-    setNode(createTargetNode(readDesignPropertiesFromElement(target)))
+    const properties = readDesignPropertiesFromElement(target)
+    setNode(createTargetNode(properties))
+    session.update(target, properties)
   }
 
   const apply = () => {
@@ -83,5 +90,16 @@ export function useOverlayTarget() {
     }
   }
 
-  return { target, node, selection, select, update, read, apply, onFieldEdit }
+  return {
+    target,
+    node,
+    selection,
+    /** Every element tweaked this session, for “Copy all”. */
+    sessionEntries: session.entries,
+    select,
+    update,
+    read,
+    apply,
+    onFieldEdit,
+  }
 }

@@ -19,6 +19,8 @@ export {
   applyDesignFieldToElement,
   applyDesignPropertiesToElement,
   copyTextToClipboard,
+  formatSessionAsCss,
+  formatSessionAsJson,
   formatTokensAsAgentPrompt,
   formatTokensAsCss,
   formatTokensAsJson,
@@ -32,4 +34,5 @@ export type {
   DesignProperties,
   NodeCategory,
   NodeStatus,
+  TokenSessionEntry,
 } from '../types'

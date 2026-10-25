@@ -1,4 +1,9 @@
-import type { DesignField, DesignNode, DesignProperties } from './types'
+import type {
+  DesignField,
+  DesignNode,
+  DesignProperties,
+  TokenSessionEntry,
+} from './types'
 
 type TokenNodeMeta = Pick<DesignNode, 'id' | 'name' | 'category' | 'status'>
 
@@ -203,6 +208,25 @@ export const formatTokensAsJson = (
 ): string =>
   `${JSON.stringify(node ? { ...node, properties } : properties, null, 2)}\n`
 
+/**
+ * Formats every entry's current tokens as CSS custom properties, one block per element,
+ * each led by a comment with its label.
+ */
+export const formatSessionAsCss = (entries: TokenSessionEntry[]): string =>
+  entries
+    .map((entry) => formatTokensAsCss(entry.after, entry.label.replaceAll('*/', '* /')))
+    .join('\n\n')
+
+/**
+ * Formats the entries as a JSON array of `{ label, before, after }`.
+ */
+export const formatSessionAsJson = (entries: TokenSessionEntry[]): string =>
+  `${JSON.stringify(
+    entries.map(({ label, before, after }) => ({ label, before, after })),
+    null,
+    2,
+  )}\n`
+
 const isFiniteNumberOrString = (value: unknown): value is number | string =>
   typeof value === 'string' ||
   (typeof value === 'number' && Number.isFinite(value))
@@ -283,6 +307,18 @@ const sameLength = (a: number | string, b: number | string): boolean => {
 
 const sameColour = (a: string, b: string): boolean =>
   canonicalColour(a) === canonicalColour(b)
+
+/**
+ * Whether two token sets differ in any field. An absent `gap` or `margin` counts as 0, and
+ * colours are compared by value (`#fff` equals `#FFFFFF`).
+ */
+export const designPropertiesDiffer = (a: DesignProperties, b: DesignProperties): boolean =>
+  !sameLength(a.radius, b.radius) ||
+  !sameLength(a.padding, b.padding) ||
+  !sameLength(a.gap ?? 0, b.gap ?? 0) ||
+  !sameLength(a.margin ?? 0, b.margin ?? 0) ||
+  !sameColour(a.bgPreset, b.bgPreset) ||
+  !sameColour(a.borderPreset, b.borderPreset)
 
 /**
  * Writes one token onto a host element as an inline style, leaving every other style

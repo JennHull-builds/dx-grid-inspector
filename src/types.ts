@@ -32,6 +32,16 @@ export interface DesignProperties {
 }
 
 /**
+ * One element's tokens for “Copy all”: a short label, the values it was read with, and
+ * its current values.
+ */
+export interface TokenSessionEntry {
+  label: string;
+  before: DesignProperties;
+  after: DesignProperties;
+}
+
+/**
  * The name of one editable token in `DesignProperties`.
  */
 export type DesignField = keyof DesignProperties;
