@@ -124,7 +124,7 @@ Clicking while Inspect is on selects the innermost element under the cursor. To 
 
 ## Nudging with the keyboard
 
-Click a length field in the HUD (radius, padding, gap or margin) and press ArrowUp or ArrowDown. The value changes by 1 (Shift: 10) when it is in px or has no unit, and by 0.125 (Shift: 1) when it is in rem, and never goes below 0. Each press updates the field and writes **only that field** to the inspected element, so you watch it change. Enter keeps the value. Escape puts back the value from before you started, on the element too, restoring the element's earlier inline styles exactly. Keyboard focus stays in the field, and the new value is announced in the HUD's status line. Other units (`%`, `vh`, `vw`, `em`) and the colour fields ignore the arrow keys.
+Click a length field in the HUD (radius, padding, gap or margin) and press ArrowUp or ArrowDown. The value changes by 1 (Shift: 10) when it is in px or has no unit, and by 0.125 (Shift: 1) when it is in rem, and never goes below 0. Each press updates the field and writes **only that field** to the inspected element, so you watch it change. Enter keeps the value. Escape puts back the value from before you started, on the element too, restoring the element's earlier inline styles exactly. Keyboard focus stays in the field, and each new value is announced in the HUD's status line, including the one Enter keeps after a nudge and the one Escape puts back. Other units (`%`, `vh`, `vw`, `em`) and the colour fields ignore the arrow keys.
 
 `rem` is kept as rem (`1.5rem` stays `1.5rem`) rather than converted to px. Any other unit typed into a field still reduces to its number and is treated as px, as it did before.
 
