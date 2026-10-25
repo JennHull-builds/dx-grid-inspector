@@ -104,9 +104,14 @@ export function DxHostOverlay({
     const onScrollOrResize = () => syncHighlight()
     window.addEventListener('scroll', onScrollOrResize, true)
     window.addEventListener('resize', onScrollOrResize)
+    // The HUD writes inline styles to the target (nudging, Apply, Escape); follow them so the
+    // ring keeps matching the element instead of showing where it used to be.
+    const styleObserver = new MutationObserver(syncHighlight)
+    styleObserver.observe(targetElement, { attributes: true, attributeFilter: ['style'] })
     return () => {
       window.removeEventListener('scroll', onScrollOrResize, true)
       window.removeEventListener('resize', onScrollOrResize)
+      styleObserver.disconnect()
     }
   }, [targetElement, syncHighlight])
 
