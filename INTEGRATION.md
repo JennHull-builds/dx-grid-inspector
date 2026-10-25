@@ -128,7 +128,7 @@ Click a length field in the HUD (radius, padding, gap or margin) and press Arrow
 
 `rem` is kept as rem (`1.5rem` stays `1.5rem`) rather than converted to px. Any other unit typed into a field still reduces to its number and is treated as px, as it did before.
 
-If you build your own layout from `TokenCalibrationUnit`, pass `onFieldEdit` to follow the nudges on your target. It receives `{ phase: 'start' | 'nudge' | 'commit' | 'revert', field, properties }`; write one field with `applyDesignFieldToElement(element, event.field, event.properties)` on `nudge`. Without it, the arrow keys still change the value in the HUD.
+If you build your own layout from `TokenCalibrationUnit`, pass `onFieldEdit` to follow the nudges on your target. It receives `{ phase: 'start' | 'nudge' | 'commit' | 'revert', field, properties, nudged? }`; write one field with `applyDesignFieldToElement(element, event.field, event.properties)` on `nudge`, and again on `commit` when `nudged` is true (Enter may keep a value typed over the last nudge). Without it, the arrow keys still change the value in the HUD.
 
 ## Gap and margin
 

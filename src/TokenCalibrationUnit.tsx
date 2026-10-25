@@ -33,6 +33,12 @@ export interface FieldEditEvent {
   phase: FieldEditPhase;
   field: DesignField;
   properties: DesignProperties;
+  /**
+   * On `commit` only: true when an arrow key changed the value during this edit. A host that
+   * follows nudges live should also write the committed value then, because Enter may have
+   * kept a different value from the one it last saw on `nudge`.
+   */
+  nudged?: boolean;
 }
 
 export interface TokenCalibrationUnitProps {
@@ -314,9 +320,10 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         return;
       }
       const next = withField(current, field.key, parsed);
+      const nudged = editStartRef.current?.key === field.key && editStartRef.current.nudged;
       onUpdateProperties(selectedNode.id, next);
       editStartRef.current = null;
-      onFieldEdit?.({ phase: 'commit', field: field.key, properties: next });
+      onFieldEdit?.({ phase: 'commit', field: field.key, properties: next, nudged });
     } else {
       const sanitized = sanitizeColour(inputValue);
       if (!sanitized) {

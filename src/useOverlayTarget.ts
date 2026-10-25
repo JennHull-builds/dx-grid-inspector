@@ -62,7 +62,7 @@ export function useOverlayTarget() {
     applyDesignPropertiesToElement(target, node.properties)
   }
 
-  /** Arrow-key nudges write one field to the target at once; Escape puts the old styles back. */
+  /** Arrow-key nudges write one field to the target at once; Enter after a nudge writes the final value; Escape puts the old styles back. */
   const onFieldEdit = (event: FieldEditEvent) => {
     if (!target) return
     switch (event.phase) {
@@ -85,6 +85,9 @@ export function useOverlayTarget() {
         break
       }
       case 'commit':
+        // A nudged field is already on the target; a value typed over it afterwards is not.
+        // Without a nudge the typed value waits for Apply, as before.
+        if (event.nudged) applyDesignFieldToElement(target, event.field, event.properties)
         styleBeforeEdit.current = null
         break
     }
