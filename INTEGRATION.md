@@ -1,8 +1,8 @@
 # Integrating DX Grid Inspector into your app
 
-DX Grid Inspector wraps your React app while you develop: an **Inspect** toolbar above it and a token HUD beside it. Click an element to read its radius, padding, fill and border colour, edit them on the live element, and copy them out as CSS, JSON or an agent prompt. There is no backend and no AI call.
+DX Grid Inspector wraps your React app while you develop: an **Inspect** toolbar above it and a token HUD beside it. Click an element to read its radius, padding, gap, margin, fill and border colour, edit them on the live element (arrow keys nudge a length while you watch it change), and copy them out as CSS, JSON or an agent prompt. There is no backend and no AI call.
 
-**Tested:** React 18.3 and 19.3 · Vite 8, in a Tailwind v4 app and in an app with no Tailwind at all · Next.js 16.3 (App Router) · Chromium, at 1280px and 390px wide.
+**Tested:** React 18.3 and 19.3 · Vite 8, in a Tailwind v4 app and in an app with no Tailwind at all · Next.js 16.3 (App Router) · Chromium, at 1280px and 390px wide. Keyboard nudging, gap, margin and Copy all were tested in Chromium at both widths, in this repo's demo and in a plain React 19.3 app with no Tailwind and a white page, installed from the packed tarball.
 **Not tested:** Firefox, Safari, touch devices, Tailwind v3 apps, webpack-based setups, screen readers.
 
 ## Install
@@ -111,16 +111,34 @@ Expect no files. Also search for a string you know **is** in your app, so an emp
 |--------|------------|
 | `DxInspector` | The ready-made wrapper used above: overlay, HUD and voice prompt. Props: `children`, `defaultEnabled` (default `true`), `showVoice` (default `true`). |
 | `DxHostOverlay` | The overlay on its own, for building your own layout. `src/DxInspector.tsx` shows how it is wired to the HUD. |
-| `TokenCalibrationUnit` | The token HUD: read, edit, apply, copy CSS / JSON / prompt, paste JSON. |
+| `TokenCalibrationUnit` | The token HUD: read, edit, apply, copy CSS / JSON / prompt, paste JSON. Optional props `onFieldEdit` (follow arrow-key nudges on your own target) and `sessionEntries` (shows the Copy all control). |
 | `DxGridVoice` | Describe a layout in words and copy a prompt for an external agent. |
-| `readDesignPropertiesFromElement`, `applyDesignPropertiesToElement`, `formatTokensAsCss`, `formatTokensAsJson`, `formatTokensAsAgentPrompt`, `parseDesignProperties`, `parseDesignPropertiesJson`, `copyTextToClipboard` | The functions behind the HUD. |
-| `DesignProperties`, `DesignNode`, `NodeCategory`, `NodeStatus` and each component's props type | TypeScript types. |
+| `readDesignPropertiesFromElement`, `applyDesignPropertiesToElement`, `applyDesignFieldToElement`, `formatTokensAsCss`, `formatTokensAsJson`, `formatTokensAsAgentPrompt`, `formatSessionAsCss`, `formatSessionAsJson`, `parseDesignProperties`, `parseDesignPropertiesJson`, `copyTextToClipboard` | The functions behind the HUD. |
+| `DesignProperties`, `DesignField`, `DesignNode`, `NodeCategory`, `NodeStatus`, `TokenSessionEntry`, `FieldEditEvent`, `FieldEditPhase` and each component's props type | TypeScript types. |
 
 If you use `DxHostOverlay` directly, its `className` is added to its own layout classes (`relative flex min-h-0 flex-1 flex-col`), and its own classes can override yours where they conflict. To size it, wrap it in an element of your own.
 
 ## Choosing the target
 
 Clicking while Inspect is on selects the innermost element under the cursor. To make a larger element the target instead, add `data-dx-inspectable="true"` to it. Clicks on the overlay's own controls are never selected, and a click while inspecting does not activate the element underneath.
+
+## Nudging with the keyboard
+
+Click a length field in the HUD (radius, padding, gap or margin) and press ArrowUp or ArrowDown. The value changes by 1 (Shift: 10) when it is in px or has no unit, and by 0.125 (Shift: 1) when it is in rem, and never goes below 0. Each press updates the field and writes **only that field** to the inspected element, so you watch it change. Enter keeps the value. Escape puts back the value from before you started, on the element too, restoring the element's earlier inline styles exactly. Keyboard focus stays in the field, and the new value is announced in the HUD's status line. Other units (`%`, `vh`, `vw`, `em`) and the colour fields ignore the arrow keys.
+
+`rem` is kept as rem (`1.5rem` stays `1.5rem`) rather than converted to px. Any other unit typed into a field still reduces to its number and is treated as px, as it did before.
+
+If you build your own layout from `TokenCalibrationUnit`, pass `onFieldEdit` to follow the nudges on your target. It receives `{ phase: 'start' | 'nudge' | 'commit' | 'revert', field, properties }`; write one field with `applyDesignFieldToElement(element, event.field, event.properties)` on `nudge`. Without it, the arrow keys still change the value in the HUD.
+
+## Gap and margin
+
+`DesignProperties` has two optional fields, `gap` and `margin`, handled like padding: one value each. Gap is the space between an element's children (it reads `row-gap` and has no effect unless the element is a flex or grid container). Margin is the space outside the element (it reads `margin-top`). Because each is one value, writing either one sets all sides, or both gaps, so an element with `margin: 0 auto` loses its centring once you change its margin. The CSS export adds `--gap` and `--margin` only when the tokens have them, and JSON without them still parses.
+
+## Copy all
+
+The **Copy all** control copies every element you have tweaked as JSON (an array of `{ label, before, after }`) or as CSS (one block per element, led by a comment with its label). **Before** is the values the element was first read with, and **after** is what the HUD holds now. An element appears once its values differ, and drops out again if you put them back. A label is the element's `data-dx-inspectable` value when it has a name there, otherwise its tag plus its first class (`section.card`), with `(2)` added to a repeat.
+
+The list lives in memory only. It is not saved to `localStorage` and it clears when you reload the page. In this repo's Harness, Copy all copies every node in the node list instead.
 
 ## Colours
 
@@ -129,6 +147,7 @@ Colours are read back as `#RRGGBB` when opaque and `rgba(r, g, b, a)` when trans
 ## Known limitations
 
 - **Apply writes only the tokens that differ from the element.** It compares the HUD with the element's current computed values and leaves every matching field alone, so applying an unchanged HUD touches nothing. A border is added (2px solid) only when the border colour is one of the changed fields and the element has no visible border; an element that already has a border keeps its width.
+- **Gap only has an effect on a flex or grid container,** and gap and margin are each one value (writing margin sets all four sides). Apply writes them only when you changed them.
 - **The CSS export uses generic property names** (`--radius`, `--padding`). Rename them if your app already defines properties with those names.
 
 ## Copying the source instead

@@ -21,14 +21,14 @@ Install it with `npm install -D dx-grid-inspector`. It does **not** run an in-ap
 Three co-ordinated panels wired together in `src/App.tsx` (Harness tab):
 
 1. **Template Grid Manager** (`src/GridOverlay.tsx`) — node list with category filters (Display, Navigation, Content, Functional), status chips (Ready / In Progress), add/purge actions, and keyboard-accessible row selection.
-2. **Token Calibration Unit** (`src/TokenCalibrationUnit.tsx`) — live spatial token HUD: corner radius, padding, surface fill, and border presets, with inline CSS unit and colour sanitisation. Includes **Read from preview**, **Copy CSS / JSON / Prompt**, and **Paste** JSON.
+2. **Token Calibration Unit** (`src/TokenCalibrationUnit.tsx`) — live spatial token HUD: corner radius, padding, gap, margin, surface fill, and border presets, with inline CSS unit and colour sanitisation. Arrow keys nudge a length field live. Includes **Read from preview**, **Copy CSS / JSON / Prompt**, **Copy all**, and **Paste** JSON.
 3. **Live Token Preview** (`src/LiveTokenPreview.tsx`) — sample card and button that apply the selected node's tokens; the card surface is the measurement target for read-back and export.
 
 ### Mode B — Overlay demo
 
 1. **DxHostOverlay** (`src/DxHostOverlay.tsx`) — wrap-around chrome with enable/disable and inspect mode (Escape exits inspect).
 2. **HostDemoSurface** (`src/HostDemoSurface.tsx`) — generic in-repo host layout (header + content card + secondary panel) used to prove the overlay on real UI.
-3. **Apply to target** — writes the four `DesignProperties` fields as inline styles on the selected host element only.
+3. **Apply to target** — writes the `DesignProperties` fields that differ from the element as inline styles on the selected host element only.
 4. **DX grid voice** (`src/DxGridVoice.tsx`) — natural-language textarea → copy a paste-ready agent prompt (no API keys, no model calls). Paste the returned JSON in the HUD.
 
 ### Layout & persistence
