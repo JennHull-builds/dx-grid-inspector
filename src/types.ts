@@ -10,12 +10,23 @@ export type NodeStatus = 'Ready' | 'In Progress';
 
 /**
  * Editable layout and surface tokens for a design node.
- * “Read from preview/target” copies computed border-radius, padding, background,
- * and border-colour into these fields. Overlay apply writes them back as inline styles.
+ * “Read from preview/target” copies computed border-radius, padding, gap, margin,
+ * background, and border-colour into these fields. Overlay apply writes them back as
+ * inline styles.
  */
 export interface DesignProperties {
   radius: number | string;
   padding: number | string;
+  /**
+   * Space between the element's children (`row-gap`), one value like padding. Absent in
+   * tokens saved before gap existed; it only has an effect on a flex or grid container.
+   */
+  gap?: number | string;
+  /**
+   * Space outside the element (`margin-top`), one value like padding. Writing it sets all
+   * four sides. Absent in tokens saved before margin existed.
+   */
+  margin?: number | string;
   bgPreset: string;
   borderPreset: string;
 }

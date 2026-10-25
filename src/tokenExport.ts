@@ -156,8 +156,8 @@ const parsePx = (value: string): number => {
 }
 
 /**
- * Copies computed border-radius, padding, background, and border-colour
- * from a preview surface into `DesignProperties`.
+ * Copies computed border-radius, padding, gap (`row-gap`), margin (`margin-top`),
+ * background, and border-colour from a preview surface into `DesignProperties`.
  */
 export const readDesignPropertiesFromElement = (
   element: HTMLElement,
@@ -166,6 +166,8 @@ export const readDesignPropertiesFromElement = (
   return {
     radius: parsePx(styles.borderTopLeftRadius || styles.borderRadius),
     padding: parsePx(styles.paddingTop),
+    gap: parsePx(styles.rowGap),
+    margin: parsePx(styles.marginTop),
     bgPreset: colourToToken(styles.backgroundColor),
     borderPreset: colourToToken(styles.borderTopColor || styles.borderColor),
   }
@@ -182,6 +184,8 @@ export const formatTokensAsCss = (
   const declarations = [
     `--radius: ${cssLength(properties.radius)};`,
     `--padding: ${cssLength(properties.padding)};`,
+    ...(properties.gap !== undefined ? [`--gap: ${cssLength(properties.gap)};`] : []),
+    ...(properties.margin !== undefined ? [`--margin: ${cssLength(properties.margin)};`] : []),
     `--surface-fill: ${properties.bgPreset};`,
     `--border-preset: ${properties.borderPreset};`,
   ].join('\n')
@@ -205,7 +209,8 @@ const isFiniteNumberOrString = (value: unknown): value is number | string =>
 
 /**
  * Rebuilds `DesignProperties` from unknown JSON. Extra keys are dropped;
- * invalid shapes return null.
+ * invalid shapes return null. `gap` and `margin` are optional: JSON without them parses as
+ * before, and a value that is not a number or string is dropped.
  */
 export const parseDesignProperties = (
   value: unknown,
@@ -234,6 +239,8 @@ export const parseDesignProperties = (
   return {
     radius: source.radius,
     padding: source.padding,
+    ...(isFiniteNumberOrString(source.gap) ? { gap: source.gap } : {}),
+    ...(isFiniteNumberOrString(source.margin) ? { margin: source.margin } : {}),
     bgPreset: source.bgPreset,
     borderPreset: source.borderPreset,
   }
@@ -295,6 +302,12 @@ export const applyDesignFieldToElement = (
     case 'padding':
       element.style.padding = cssLength(properties.padding)
       break
+    case 'gap':
+      element.style.gap = cssLength(properties.gap ?? 0)
+      break
+    case 'margin':
+      element.style.margin = cssLength(properties.margin ?? 0)
+      break
     case 'bgPreset':
       element.style.backgroundColor = properties.bgPreset
       break
@@ -334,6 +347,12 @@ export const applyDesignPropertiesToElement = (
   }
   if (!sameLength(properties.padding, current.padding)) {
     applyDesignFieldToElement(element, 'padding', properties)
+  }
+  if (properties.gap !== undefined && !sameLength(properties.gap, current.gap ?? 0)) {
+    applyDesignFieldToElement(element, 'gap', properties)
+  }
+  if (properties.margin !== undefined && !sameLength(properties.margin, current.margin ?? 0)) {
+    applyDesignFieldToElement(element, 'margin', properties)
   }
   if (!sameColour(properties.bgPreset, current.bgPreset)) {
     applyDesignFieldToElement(element, 'bgPreset', properties)

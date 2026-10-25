@@ -60,6 +60,8 @@ interface FieldConfig {
 const FIELDS: FieldConfig[] = [
   { key: 'radius', label: 'Corner Radius', kind: 'layout' },
   { key: 'padding', label: 'Internal Padding', kind: 'layout' },
+  { key: 'gap', label: 'Gap Between Children', kind: 'layout' },
+  { key: 'margin', label: 'Outer Margin', kind: 'layout' },
   { key: 'bgPreset', label: 'Surface Fill', kind: 'color' },
   { key: 'borderPreset', label: 'Border Preset', kind: 'border' },
 ];
@@ -207,7 +209,7 @@ const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
 };
 
 /**
- * Live token calibration HUD for padding, radius, surface fills, and border presets.
+ * Live token calibration HUD for padding, radius, gap, margin, surface fills, and border presets.
  * Surface Fill and Border Preset pair a native colour picker with a hex/rgba text field.
  * Copy writes CSS custom properties to the clipboard; JSON is a second export format.
  */
@@ -554,7 +556,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           <button
             type="button"
             onClick={handleReadFromPreview}
-            title="Read computed border-radius, padding, background, and border-colour from the active target into this node"
+            title="Read computed border-radius, padding, gap, margin, background, and border-colour from the active target into this node"
             className="dx-btn-secondary dx:min-h-10 dx:px-3"
           >
             {readLabel}

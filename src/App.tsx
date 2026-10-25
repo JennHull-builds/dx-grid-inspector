@@ -181,6 +181,9 @@ function App() {
   const previewRadius = selectedNode == null ? 12 : previewPx(selectedNode.properties.radius, 12)
   const previewPadding =
     selectedNode == null ? 16 : previewPx(selectedNode.properties.padding, 16)
+  const previewGap = selectedNode == null ? 0 : previewPx(selectedNode.properties.gap ?? 0, 0)
+  const previewMargin =
+    selectedNode == null ? 0 : previewPx(selectedNode.properties.margin ?? 0, 0)
 
   const panelShell = 'min-h-0 flex-col overflow-visible'
 
@@ -331,6 +334,8 @@ function App() {
                 selectedNode={selectedNode}
                 previewRadius={previewRadius}
                 previewPadding={previewPadding}
+                previewGap={previewGap}
+                previewMargin={previewMargin}
                 surfaceRef={previewSurfaceRef}
               />
             </div>
