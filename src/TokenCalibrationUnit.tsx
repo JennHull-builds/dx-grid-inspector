@@ -324,6 +324,8 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       onUpdateProperties(selectedNode.id, next);
       editStartRef.current = null;
       onFieldEdit?.({ phase: 'commit', field: field.key, properties: next, nudged });
+      // A nudge announced its own value; say what Enter kept so the line is not left stale.
+      if (nudged) announce(`${field.label} ${cssLength(parsed)}`);
     } else {
       const sanitized = sanitizeColour(inputValue);
       if (!sanitized) {
@@ -350,6 +352,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       const restored = withField(selectedNode.properties, field.key, start.value);
       onUpdateProperties(selectedNode.id, restored);
       onFieldEdit?.({ phase: 'revert', field: field.key, properties: restored });
+      announce(`${field.label} ${cssLength(start.value ?? 0)}`);
     }
     setEditingKey(null);
     setError(null);
