@@ -128,7 +128,7 @@ Colours are read back as `#RRGGBB` when opaque and `rgba(r, g, b, a)` when trans
 
 ## Known limitations
 
-- **Apply writes all four tokens**, not only the one you edited. An element with no border gets a 2px solid border so the border colour can be seen; an element that already has a border keeps its width.
+- **Apply writes only the tokens that differ from the element.** It compares the HUD with the element's current computed values and leaves every matching field alone, so applying an unchanged HUD touches nothing. A border is added (2px solid) only when the border colour is one of the changed fields and the element has no visible border; an element that already has a border keeps its width.
 - **The CSS export uses generic property names** (`--radius`, `--padding`). Rename them if your app already defines properties with those names.
 
 ## Copying the source instead

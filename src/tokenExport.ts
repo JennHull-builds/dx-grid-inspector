@@ -233,27 +233,59 @@ export const parseDesignPropertiesJson = (
 }
 
 /**
- * Writes the four spatial tokens onto a host element as inline styles.
+ * Expands `#RGB` and normalises any readable colour to the token form the HUD reads back,
+ * so `#fff`, `#FFFFFF` and `rgb(255, 255, 255)` all compare equal.
+ */
+const canonicalColour = (value: string): string => {
+  const trimmed = value.trim()
+  const short = trimmed.match(/^#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/)
+  if (short) {
+    return `#${short[1]}${short[1]}${short[2]}${short[2]}${short[3]}${short[3]}`.toUpperCase()
+  }
+  return colourToToken(trimmed)
+}
+
+const sameLength = (a: number | string, b: number | string): boolean =>
+  cssLength(a) === cssLength(b)
+
+const sameColour = (a: string, b: string): boolean =>
+  canonicalColour(a) === canonicalColour(b)
+
+/**
+ * Writes the token fields that differ from what the element has right now, as inline
+ * styles. A field that already matches the element is left alone, so applying an
+ * unchanged HUD touches nothing.
  * Does not inject global CSS — only the selected target is updated.
- * An element that already has a visible border keeps its width and style; one with no
- * border gets a 2px solid border so the border colour can be seen.
+ * The 2px solid border is added only when the border colour is one of the changed fields
+ * and the element has no visible border to carry it; an element that already has a visible
+ * border keeps its width and style.
  */
 export const applyDesignPropertiesToElement = (
   element: HTMLElement,
   properties: DesignProperties,
 ): void => {
-  const computed = window.getComputedStyle(element)
-  const hasVisibleBorder =
-    computed.borderTopStyle !== 'none' &&
-    Number.parseFloat(computed.borderTopWidth) > 0
+  const current = readDesignPropertiesFromElement(element)
 
-  element.style.borderRadius = cssLength(properties.radius)
-  element.style.padding = cssLength(properties.padding)
-  element.style.backgroundColor = properties.bgPreset
-  element.style.borderColor = properties.borderPreset
-  if (!hasVisibleBorder) {
-    element.style.borderStyle = 'solid'
-    element.style.borderWidth = '2px'
+  if (!sameLength(properties.radius, current.radius)) {
+    element.style.borderRadius = cssLength(properties.radius)
+  }
+  if (!sameLength(properties.padding, current.padding)) {
+    element.style.padding = cssLength(properties.padding)
+  }
+  if (!sameColour(properties.bgPreset, current.bgPreset)) {
+    element.style.backgroundColor = properties.bgPreset
+  }
+  if (!sameColour(properties.borderPreset, current.borderPreset)) {
+    const computed = window.getComputedStyle(element)
+    const hasVisibleBorder =
+      computed.borderTopStyle !== 'none' &&
+      Number.parseFloat(computed.borderTopWidth) > 0
+
+    element.style.borderColor = properties.borderPreset
+    if (!hasVisibleBorder) {
+      element.style.borderStyle = 'solid'
+      element.style.borderWidth = '2px'
+    }
   }
 }
 
