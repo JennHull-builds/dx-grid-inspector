@@ -16,6 +16,10 @@ blog post and README both cite it as an example of knowing when AI is the wrong 
 Do not add a model call, an API key, or a backend. If a feature seems to need one, that
 is the signal to reconsider the feature.
 
+## Agent-agnostic
+
+dx-grid works with whichever coding agent the user chooses (decided by the maintainer, 2026-10-25). Its output is plain text any agent can read. Never build a feature that works with only one agent or one model; where an integration is needed, use an open standard (MCP, or an AGENTS.md-style instruction file). The no-in-app-AI rule is part of what keeps it this way.
+
 ## Visual system
 
 Soft Bento: 16px radius, ambient glow, deep space canvas, dark only. **Not brutalist
