@@ -86,8 +86,10 @@ changed, so a release only happens when Jen asks for one.
   field edit began (`useOverlayTarget`). A new way of writing to the target during an
   edit would be wiped by it, so write through `onFieldEdit`.
 - **The selection ring follows the target through a `MutationObserver` on its `style`
-  attribute.** A change that arrives any other way (a class swap, a sibling resizing)
-  is not followed until a scroll or resize.
+  attribute, and measures again on its `transitionend` / `transitioncancel`.** A CSS
+  transition settles on the right size but is not tracked frame by frame. A change that
+  arrives any other way (a class swap, a sibling resizing) is not followed until a scroll
+  or resize.
 - **`rem` survives a save as the string `"1.5rem"`; `%`, `vh`, `vw` and `em` still reduce to
   their number and read as px.** That is how it was before 0.2 and is unfixed.
 - **The agent prompt's shape text still lists four fields**, while its "Current tokens"
