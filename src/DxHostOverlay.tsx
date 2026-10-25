@@ -7,6 +7,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react'
+import { readInspectableHint } from './inspectable'
 
 export type DxHostOverlayChildren =
   | ReactNode
@@ -142,7 +143,7 @@ export function DxHostOverlay({
       if (node === host) continue
       if (!host.contains(node)) continue
 
-      if (node.dataset.dxInspectable === 'true') {
+      if (readInspectableHint(node) !== null) {
         event.preventDefault()
         event.stopPropagation()
         onTargetSelect(node)

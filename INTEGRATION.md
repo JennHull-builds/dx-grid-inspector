@@ -120,7 +120,7 @@ If you use `DxHostOverlay` directly, its `className` is added to its own layout 
 
 ## Choosing the target
 
-Clicking while Inspect is on selects the innermost element under the cursor. To make a larger element the target instead, add `data-dx-inspectable="true"` to it. Clicks on the overlay's own controls are never selected, and a click while inspecting does not activate the element underneath.
+Clicking while Inspect is on selects the innermost element under the cursor. To make a larger element the target instead, add `data-dx-inspectable="true"` to it. Give it a name instead (`data-dx-inspectable="promo card"`) and it is selected the same way, and the name becomes its label in Copy all. An empty value or `"false"` does not mark it. Clicks on the overlay's own controls are never selected, and a click while inspecting does not activate the element underneath.
 
 ## Nudging with the keyboard
 

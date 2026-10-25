@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { readInspectableHint } from './inspectable'
 import { designPropertiesDiffer } from './tokenExport'
 import type { DesignProperties, TokenSessionEntry } from './types'
 
@@ -10,10 +11,10 @@ interface TweakRecord {
 
 /**
  * A short name for an element: its `data-dx-inspectable` value when that says something
- * (anything but empty or `"true"`), otherwise its tag plus its first class.
+ * (anything but empty, `"true"` or `"false"`), otherwise its tag plus its first class.
  */
 const describeElement = (element: HTMLElement): string => {
-  const named = element.dataset.dxInspectable?.trim()
+  const named = readInspectableHint(element)
   if (named && named !== 'true') return named
   const tag = element.tagName.toLowerCase()
   const firstClass = element.classList[0]
