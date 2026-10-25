@@ -18,8 +18,9 @@ export interface DesignProperties {
   radius: number | string;
   padding: number | string;
   /**
-   * Space between the element's children (`row-gap`), one value like padding. Absent in
-   * tokens saved before gap existed; it only has an effect on a flex or grid container.
+   * Space between the element's children, one value like padding: the `column-gap` of a
+   * flex row, otherwise the `row-gap`. Absent in tokens saved before gap existed; it only
+   * has an effect on a flex or grid container.
    */
   gap?: number | string;
   /**

@@ -132,7 +132,7 @@ If you build your own layout from `TokenCalibrationUnit`, pass `onFieldEdit` to 
 
 ## Gap and margin
 
-`DesignProperties` has two optional fields, `gap` and `margin`, handled like padding: one value each. Gap is the space between an element's children (it reads `row-gap` and has no effect unless the element is a flex or grid container). Margin is the space outside the element (it reads `margin-top`). Because each is one value, writing either one sets all sides, or both gaps, so an element with `margin: 0 auto` loses its centring once you change its margin. The CSS export adds `--gap` and `--margin` only when the tokens have them, and JSON without them still parses.
+`DesignProperties` has two optional fields, `gap` and `margin`, handled like padding: one value each. Gap is the space between an element's children. It reads the gap you can see: `column-gap` for a flex row, `row-gap` for a flex column or a grid, and it has no effect unless the element is a flex or grid container. Margin is the space outside the element (it reads `margin-top`). Each is one value. Writing gap changes only the direction it reads, so the other direction is left alone; writing margin sets all four sides, so an element with `margin: 0 auto` loses its centring once you change its margin. The CSS export adds `--gap` and `--margin` only when the tokens have them, and JSON without them still parses.
 
 ## Copy all
 

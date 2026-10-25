@@ -161,8 +161,21 @@ const parsePx = (value: string): number => {
 }
 
 /**
- * Copies computed border-radius, padding, gap (`row-gap`), margin (`margin-top`),
- * background, and border-colour from a preview surface into `DesignProperties`.
+ * The gap that shows between an element's children: the column gap for a flex row, the row
+ * gap for everything else (a flex column, a grid). Reading and writing the same one keeps
+ * the HUD, the page and Apply in step, where the `gap` shorthand would set both directions.
+ */
+const visibleGapProperty = (element: HTMLElement): 'columnGap' | 'rowGap' => {
+  const styles = window.getComputedStyle(element)
+  const isFlex = styles.display === 'flex' || styles.display === 'inline-flex'
+  const isRow = styles.flexDirection === 'row' || styles.flexDirection === 'row-reverse'
+  return isFlex && isRow ? 'columnGap' : 'rowGap'
+}
+
+/**
+ * Copies computed border-radius, padding, gap (`column-gap` for a flex row, otherwise
+ * `row-gap`), margin (`margin-top`), background, and border-colour from a preview surface
+ * into `DesignProperties`.
  */
 export const readDesignPropertiesFromElement = (
   element: HTMLElement,
@@ -171,7 +184,7 @@ export const readDesignPropertiesFromElement = (
   return {
     radius: parsePx(styles.borderTopLeftRadius || styles.borderRadius),
     padding: parsePx(styles.paddingTop),
-    gap: parsePx(styles.rowGap),
+    gap: parsePx(styles[visibleGapProperty(element)]),
     margin: parsePx(styles.marginTop),
     bgPreset: colourToToken(styles.backgroundColor),
     borderPreset: colourToToken(styles.borderTopColor || styles.borderColor),
@@ -339,7 +352,7 @@ export const applyDesignFieldToElement = (
       element.style.padding = cssLength(properties.padding)
       break
     case 'gap':
-      element.style.gap = cssLength(properties.gap ?? 0)
+      element.style[visibleGapProperty(element)] = cssLength(properties.gap ?? 0)
       break
     case 'margin':
       element.style.margin = cssLength(properties.margin ?? 0)
