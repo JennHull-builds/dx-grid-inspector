@@ -99,6 +99,21 @@ changed, so a release only happens when Jen asks for one.
   nudging at 390px in a `DxInspector` host, whose HUD is capped at 45dvh, not in the demo.
 - **The Harness preview card animates for 200ms.** A computed style read straight after a
   nudge is mid-transition (12.05px for 14px). Wait before measuring it.
+- **Apply closes an open field edit without telling the host.** `handleApplyToTarget` clears
+  the editing state but not `editStartRef`, and `onFieldEdit` gets no `commit` or `revert`,
+  so `styleBeforeEdit` in `useOverlayTarget` keeps the snapshot from before the nudge until
+  the next field edit starts. Checked 2026-10-25: Apply then Escape does not wipe the Apply
+  today, because the field's input is gone and the next `start` replaces the snapshot. A new
+  Escape handler, or anything that restores `styleBeforeEdit` outside an open edit, would put
+  back the pre-Apply `style` and wipe it.
+- **A negative margin (`-8px`) reads into the HUD, but the arrow keys ignore it and Enter
+  rejects it as "Invalid layout size".** `nudgeLayoutText` and `parseLayoutValue` only accept
+  numbers from 0 up. Seen 2026-10-25 on `margin: -8px 0 0`: the field opens at `-8px`, ArrowUp
+  leaves it there, and typing `-8` then Enter shows the error. For 0.3.
+- **Put injected test fixtures in the host demo's own `<main>`**, the parent of
+  `article[data-dx-inspectable]`. `document.querySelector('main')` finds the demo page's
+  layout, outside the inspector, so a click there selects nothing and a check silently tests
+  the wrong element.
 
 ## Code standards
 
