@@ -1,4 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { ColourPicker, type ColourPickerContrast } from './picker/ColourPicker';
+import { parseColour } from './picker/colourEngine';
+import { readPageTokens, type PageToken } from './picker/pageTokens';
 import {
   copyTextToClipboard,
   cssLength,
@@ -10,6 +13,7 @@ import {
   parseDesignPropertiesJson,
 } from './tokenExport';
 import type {
+  ContrastContext,
   DesignField,
   DesignNode,
   DesignProperties,
@@ -19,24 +23,24 @@ import type {
 const FEEDBACK_MS = 2000;
 
 /**
- * Where a length field is in an edit. `start` when editing begins; `nudge` after each
- * arrow-key press; `commit` when Enter keeps the value; `revert` when Escape puts back
- * the value from before editing started.
+ * Where a field is in an edit. `start` when editing begins; `nudge` after each arrow-key
+ * press on a length, or each change in the colour picker; `commit` when Enter keeps the
+ * value; `revert` when Escape puts back the value from before editing started.
  */
 export type FieldEditPhase = 'start' | 'nudge' | 'commit' | 'revert';
 
 /**
- * Reported by the HUD as a length field is edited, so a host can show the change on its
- * target live. `properties` already carries the new value (for `revert`, the old one).
+ * Reported by the HUD as a length or colour field is edited, so a host can show the change
+ * on its target live. `properties` already carries the new value (for `revert`, the old one).
  */
 export interface FieldEditEvent {
   phase: FieldEditPhase;
   field: DesignField;
   properties: DesignProperties;
   /**
-   * On `commit` only: true when an arrow key changed the value during this edit. A host that
-   * follows nudges live should also write the committed value then, because Enter may have
-   * kept a different value from the one it last saw on `nudge`.
+   * On `commit` only: true when an arrow key or the colour picker changed the value during
+   * this edit. A host that follows nudges live should also write the committed value then,
+   * because Enter may have kept a different value from the one it last saw on `nudge`.
    */
   nudged?: boolean;
 }
@@ -55,10 +59,15 @@ export interface TokenCalibrationUnitProps {
   /** Empty-state hint when no node is selected. */
   emptyHint?: string;
   /**
-   * Called as a length field is edited, so the target can follow arrow-key nudges live.
-   * Optional: without it, arrow keys still change the value in the HUD.
+   * Called as a length or colour field is edited, so the target can follow arrow-key nudges
+   * and colour-picker changes live. Optional: without it, the HUD still changes the value.
    */
   onFieldEdit?: (event: FieldEditEvent) => void;
+  /**
+   * The element's text colour and the background behind it, which the colour picker measures
+   * contrast against. Optional: without it the picker shows no contrast.
+   */
+  contrastContext?: ContrastContext;
   /**
    * Elements for the “Copy all” control: a label, the values each was read with, and its
    * current values. Omit it and the control is not shown.
@@ -154,7 +163,10 @@ const sanitizeHex = (val: string): string | null => {
   return null;
 };
 
-/** Accepts hex or `rgb()` / `rgba()`, the two forms the HUD reads colours back as. */
+/**
+ * Accepts hex or `rgb()` / `rgba()`, the forms the HUD reads colours back as, and the
+ * `oklch()`, `oklab()` and `color()` values the colour picker writes for colours outside sRGB.
+ */
 const sanitizeColour = (val: string): string | null => {
   const cleanVal = val.trim();
   if (!cleanVal) return null;
@@ -163,33 +175,11 @@ const sanitizeColour = (val: string): string | null => {
     return cleanVal;
   }
 
+  if (/^(?:oklch|oklab|color)\(.+\)$/i.test(cleanVal) && parseColour(cleanVal) !== null) {
+    return cleanVal;
+  }
+
   return sanitizeHex(cleanVal);
-};
-
-/**
- * Convert a colour to the `#rrggbb` form required by native colour inputs.
- * For `rgb()` / `rgba()` the swatch shows the colour without its transparency, since the
- * native picker cannot show alpha. Returns null for anything else.
- */
-const hexForColourInput = (val: string): string | null => {
-  const rgb = val.trim().match(/^rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})/i);
-  if (rgb) {
-    return `#${[rgb[1], rgb[2], rgb[3]]
-      .map((n) => Math.min(255, Number(n)).toString(16).padStart(2, '0'))
-      .join('')}`;
-  }
-
-  const sanitized = sanitizeHex(val);
-  if (!sanitized) return null;
-
-  if (sanitized.length === 4) {
-    const r = sanitized[1];
-    const g = sanitized[2];
-    const b = sanitized[3];
-    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
-  }
-
-  return sanitized.toLowerCase();
 };
 
 const displayValue = (field: FieldConfig, properties: DesignProperties): string => {
@@ -200,40 +190,59 @@ const displayValue = (field: FieldConfig, properties: DesignProperties): string 
   return String(value);
 };
 
-interface ColourPickerInputProps {
+const CHECKERBOARD = 'conic-gradient(#9ca3af 25%, #6b7280 0 50%, #9ca3af 0 75%, #6b7280 0)';
+
+interface ColourSwatchButtonProps {
   label: string;
+  /** A CSS colour, shown over a checkerboard so transparency can be seen. */
   value: string;
-  onPick: (hex: string) => void;
-  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
+  open: boolean;
+  /** The id of the picker this button opens. */
+  controls: string;
+  onToggle: () => void;
+  onKeyDown?: React.KeyboardEventHandler<HTMLButtonElement>;
+  buttonRef: (element: HTMLButtonElement | null) => void;
 }
 
 /**
- * Native HTML colour picker. The paired text field remains the source of truth for hex/rgba.
+ * The swatch beside a colour field. It opens the colour picker under the field; the paired
+ * text field remains the source of truth for the value.
  */
-const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
+const ColourSwatchButton: React.FC<ColourSwatchButtonProps> = ({
   label,
   value,
-  onPick,
+  open,
+  controls,
+  onToggle,
   onKeyDown,
-}) => {
-  const pickerValue = hexForColourInput(value) ?? '#000000';
-
-  return (
-    <input
-      type="color"
-      aria-label={`${label} colour picker`}
-      title={`${label} colour picker`}
-      value={pickerValue}
-      onChange={(e) => onPick(e.target.value.toUpperCase())}
-      onKeyDown={onKeyDown}
-      className="dx:h-10 dx:w-10 dx:min-h-10 dx:min-w-10 dx:shrink-0 dx:cursor-pointer dx:rounded-[8px] dx:border dx:border-white/10 dx:bg-dx-surface-2 dx:p-0.5 dx:[&::-webkit-color-swatch-wrapper]:p-0 dx:[&::-webkit-color-swatch]:rounded-[5px] dx:[&::-webkit-color-swatch]:border-none dx:[&::-moz-color-swatch]:rounded-[5px] dx:[&::-moz-color-swatch]:border-none"
+  buttonRef,
+}) => (
+  <button
+    ref={buttonRef}
+    type="button"
+    aria-label={`${label} colour picker`}
+    title={`${label} colour picker`}
+    aria-expanded={open}
+    aria-controls={controls}
+    onClick={onToggle}
+    onKeyDown={onKeyDown}
+    className="dx:h-10 dx:w-10 dx:min-h-10 dx:min-w-10 dx:shrink-0 dx:cursor-pointer dx:rounded-[8px] dx:border dx:border-white/10 dx:bg-dx-surface-2 dx:p-0.5 dx:focus-visible:outline-2 dx:focus-visible:outline-offset-2 dx:focus-visible:outline-dx-accent"
+  >
+    <span
+      aria-hidden="true"
+      className="dx:block dx:h-full dx:w-full dx:rounded-[5px]"
+      style={{
+        backgroundImage: `linear-gradient(${value}, ${value}), ${CHECKERBOARD}`,
+        backgroundSize: 'auto, 8px 8px',
+      }}
     />
-  );
-};
+  </button>
+);
 
 /**
  * Live token calibration HUD for padding, radius, gap, margin, surface fills, and border presets.
- * Surface Fill and Border Preset pair a native colour picker with a hex/rgba text field.
+ * Surface Fill and Border Preset pair a colour picker (a swatch that opens it under the field)
+ * with a text field that stays the source of truth.
  * Copy writes CSS custom properties to the clipboard; JSON is a second export format.
  */
 export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
@@ -244,10 +253,17 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   onApplyToTarget,
   emptyHint = 'Select a node from the Template Grid Manager to calibrate layout tokens.',
   onFieldEdit,
+  contrastContext,
   sessionEntries,
   copyAllTitle = DEFAULT_COPY_ALL_TITLE,
 }) => {
   const [editingKey, setEditingKey] = useState<EditableField | null>(null);
+  /** The colour field whose picker is open. At most one; it is always the field being edited. */
+  const [pickerKey, setPickerKey] = useState<EditableField | null>(null);
+  /** The page's colour tokens, read each time a picker opens. */
+  const [pickerTokens, setPickerTokens] = useState<PageToken[]>([]);
+  const pickerId = useId();
+  const swatchRefs = useRef<Partial<Record<EditableField, HTMLButtonElement | null>>>({});
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -296,18 +312,23 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     );
   }
 
+  /** Leaves the field being edited, and closes its colour picker if one is open. */
+  const stopEditing = () => {
+    setEditingKey(null);
+    setPickerKey(null);
+  };
+
   const startEdit = (field: FieldConfig) => {
     setEditingKey(field.key);
+    setPickerKey(null);
     setInputValue(displayValue(field, selectedNode.properties));
     setError(null);
-    if (field.kind === 'layout') {
-      editStartRef.current = {
-        key: field.key,
-        value: selectedNode.properties[field.key],
-        nudged: false,
-      };
-      onFieldEdit?.({ phase: 'start', field: field.key, properties: selectedNode.properties });
-    }
+    editStartRef.current = {
+      key: field.key,
+      value: selectedNode.properties[field.key],
+      nudged: false,
+    };
+    onFieldEdit?.({ phase: 'start', field: field.key, properties: selectedNode.properties });
   };
 
   const saveField = (field: FieldConfig) => {
@@ -329,18 +350,18 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     } else {
       const sanitized = sanitizeColour(inputValue);
       if (!sanitized) {
-        setError('Invalid colour. Use hex (#RGB or #RRGGBB) or rgba(...).');
+        setError('Invalid colour. Use hex (#RGB or #RRGGBB), rgba(...) or oklch(...).');
         return;
       }
-      onUpdateProperties(
-        selectedNode.id,
-        field.kind === 'color'
-          ? { ...current, bgPreset: sanitized }
-          : { ...current, borderPreset: sanitized },
-      );
+      const next = withField(current, field.key, sanitized);
+      const nudged = editStartRef.current?.key === field.key && editStartRef.current.nudged;
+      onUpdateProperties(selectedNode.id, next);
+      editStartRef.current = null;
+      onFieldEdit?.({ phase: 'commit', field: field.key, properties: next, nudged });
+      if (nudged) announce(`${field.label} ${sanitized}`);
     }
 
-    setEditingKey(null);
+    stopEditing();
     setError(null);
   };
 
@@ -348,14 +369,77 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   const cancelEdit = (field: FieldConfig) => {
     const start = editStartRef.current;
     editStartRef.current = null;
-    if (field.kind === 'layout' && start?.key === field.key && start.nudged) {
+    if (start?.key === field.key && start.nudged) {
       const restored = withField(selectedNode.properties, field.key, start.value);
       onUpdateProperties(selectedNode.id, restored);
       onFieldEdit?.({ phase: 'revert', field: field.key, properties: restored });
       announce(`${field.label} ${cssLength(start.value ?? 0)}`);
     }
-    setEditingKey(null);
+    stopEditing();
     setError(null);
+  };
+
+  /**
+   * Closes a colour field and keeps what it holds: the text field's colour when it reads as
+   * one, otherwise the colour the picker last set. Used when the picker is closed by Enter,
+   * by its swatch, or by opening another field's picker.
+   */
+  const keepColour = (field: FieldConfig) => {
+    const current = selectedNode.properties;
+    const kept = sanitizeColour(inputValue) ?? String(current[field.key]);
+    const next = withField(current, field.key, kept);
+    const nudged = editStartRef.current?.key === field.key && editStartRef.current.nudged;
+    if (kept !== current[field.key]) onUpdateProperties(selectedNode.id, next);
+    editStartRef.current = null;
+    onFieldEdit?.({ phase: 'commit', field: field.key, properties: next, nudged });
+    if (nudged) announce(`${field.label} ${kept}`);
+    stopEditing();
+    setError(null);
+  };
+
+  const closePicker = (field: FieldConfig, how: 'keep' | 'revert') => {
+    if (how === 'keep') keepColour(field);
+    else cancelEdit(field);
+    // The picker is gone; hand keyboard focus back to the swatch that opened it.
+    swatchRefs.current[field.key]?.focus();
+  };
+
+  /** The swatch: opens the picker under the field, or closes it keeping the colour. */
+  const togglePicker = (field: FieldConfig) => {
+    if (pickerKey === field.key) {
+      closePicker(field, 'keep');
+      return;
+    }
+    // Opening a second picker closes the first and keeps its colour.
+    const open = FIELDS.find((candidate) => candidate.key === pickerKey);
+    if (open) keepColour(open);
+    if (open || editingKey !== field.key) startEdit(field);
+    setPickerTokens(readPageTokens());
+    setPickerKey(field.key);
+  };
+
+  /** A change in the picker: shown in the text field, the HUD and, through the host, the target. */
+  const handlePickerChange = (field: FieldConfig, colour: string) => {
+    const next = withField(selectedNode.properties, field.key, colour);
+    if (editStartRef.current?.key === field.key) {
+      editStartRef.current.nudged = true;
+    }
+    setInputValue(colour);
+    setError(null);
+    onUpdateProperties(selectedNode.id, next);
+    onFieldEdit?.({ phase: 'nudge', field: field.key, properties: next });
+  };
+
+  /** What a colour field's picker measures contrast against, when the host supplied it. */
+  const contrastFor = (field: FieldConfig): ColourPickerContrast | null => {
+    if (!contrastContext) return null;
+    return field.kind === 'color'
+      ? {
+          role: 'fill',
+          against: contrastContext.textColour,
+          backdrop: contrastContext.backgroundColour,
+        }
+      : { role: 'border', against: contrastContext.backgroundColour };
   };
 
   /** ArrowUp / ArrowDown while editing a length: change the value and show it at once. */
@@ -436,7 +520,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
   const handleReadFromPreview = () => {
     if (!onReadFromPreview) return;
-    setEditingKey(null);
+    stopEditing();
     setError(null);
     onReadFromPreview();
     announce('Read tokens from target');
@@ -444,7 +528,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
   const handleApplyToTarget = () => {
     if (!onApplyToTarget) return;
-    setEditingKey(null);
+    stopEditing();
     setError(null);
     onApplyToTarget();
     announce('Applied tokens to target');
@@ -478,6 +562,10 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         {FIELDS.map((field) => {
           const isEditing = editingKey === field.key;
           const value = displayValue(field, selectedNode.properties);
+          const pickerOpen = pickerKey === field.key && isEditing;
+          const shown = isEditing ? inputValue : value;
+          // While typing, the swatch keeps the last colour that parses.
+          const swatchValue = parseColour(shown) ? shown : value;
 
           return (
             <div
@@ -500,24 +588,21 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
                 <div className="dx:flex dx:items-center dx:gap-2 dx:shrink-0 dx:w-full dx:sm:w-auto dx:justify-between dx:sm:justify-end">
                   {(field.kind === 'color' || field.kind === 'border') && (
-                    <ColourPickerInput
+                    <ColourSwatchButton
                       label={field.label}
-                      value={isEditing ? inputValue : value}
-                      onPick={(hex) => {
-                        if (isEditing) {
-                          setInputValue(hex);
-                          setError(null);
-                          return;
-                        }
-                        const current = selectedNode.properties;
-                        const next =
-                          field.key === 'bgPreset'
-                            ? { ...current, bgPreset: hex }
-                            : { ...current, borderPreset: hex };
-                        onUpdateProperties(selectedNode.id, next);
+                      value={swatchValue}
+                      open={pickerOpen}
+                      controls={`${pickerId}-${field.key}`}
+                      buttonRef={(element) => {
+                        swatchRefs.current[field.key] = element;
                       }}
+                      onToggle={() => togglePicker(field)}
                       onKeyDown={
-                        isEditing ? (e) => handleFieldKeyDown(e, field) : undefined
+                        isEditing
+                          ? (e) => {
+                              if (e.key === 'Escape') cancelEdit(field);
+                            }
+                          : undefined
                       }
                     />
                   )}
@@ -551,6 +636,21 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   )}
                 </div>
               </div>
+
+              {pickerOpen && (
+                <div id={`${pickerId}-${field.key}`} className="dx:mt-3">
+                  <ColourPicker
+                    label={field.label}
+                    value={inputValue}
+                    tokens={pickerTokens}
+                    contrast={contrastFor(field)}
+                    autoFocus
+                    onChange={(colour) => handlePickerChange(field, colour)}
+                    onCommit={() => closePicker(field, 'keep')}
+                    onRevert={() => closePicker(field, 'revert')}
+                  />
+                </div>
+              )}
             </div>
           );
         })}

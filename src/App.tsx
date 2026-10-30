@@ -14,6 +14,7 @@ import { LiveTokenPreview } from './LiveTokenPreview'
 import { TokenCalibrationUnit } from './TokenCalibrationUnit'
 import { lengthToPx, readDesignPropertiesFromElement } from './tokenExport'
 import type {
+  ContrastContext,
   DesignNode,
   DesignProperties,
   NodeCategory,
@@ -23,6 +24,9 @@ import type {
 import { useOverlayTarget } from './useOverlayTarget'
 
 type AppMode = 'harness' | 'overlay'
+
+/** What the Harness's sample card is drawn on, and its default ink, for the colour picker's contrast. */
+const HARNESS_CONTRAST: ContrastContext = { textColour: '#E2E8F0', backgroundColour: '#13131F' }
 type MobilePanel = 'nodes' | 'calibrate' | 'preview'
 
 const MOBILE_TABS: Array<{ id: MobilePanel; label: string }> = [
@@ -338,6 +342,7 @@ function App() {
                 onUpdateProperties={handleUpdateProperties}
                 onReadFromPreview={handleReadFromPreview}
                 sessionEntries={harnessEntries}
+                contrastContext={HARNESS_CONTRAST}
                 copyAllTitle="Copy every node in the Template Grid Manager as CSS or JSON. Before is each node's tokens when the page loaded."
               />
             </div>
@@ -400,6 +405,7 @@ function App() {
                 readLabel="Read from target"
                 onApplyToTarget={targetElement ? overlay.apply : undefined}
                 onFieldEdit={overlay.onFieldEdit}
+                contrastContext={overlay.contrast ?? undefined}
                 sessionEntries={overlay.sessionEntries}
                 emptyHint="Turn on Inspect and click a host surface to calibrate tokens."
               />

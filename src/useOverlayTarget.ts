@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
+import { readContrastContext } from './picker/hostContrast'
 import type { FieldEditEvent } from './TokenCalibrationUnit'
 import {
   applyDesignFieldToElement,
   applyDesignPropertiesToElement,
   readDesignPropertiesFromElement,
 } from './tokenExport'
-import type { DesignNode, DesignProperties } from './types'
+import type { ContrastContext, DesignNode, DesignProperties } from './types'
 import { useTweakSession } from './useTweakSession'
 
 const DEFAULT_PROPERTIES: DesignProperties = {
@@ -33,6 +34,8 @@ export function useOverlayTarget() {
   const [node, setNode] = useState<DesignNode>(() => createTargetNode(DEFAULT_PROPERTIES))
   /** Changes with every selection, so the HUD can drop a half-finished edit on the old element. */
   const [selection, setSelection] = useState(0)
+  /** The target's text colour and the background behind it, for the colour picker's contrast. */
+  const [contrast, setContrast] = useState<ContrastContext | null>(null)
   /** The target's `style` attribute as it was when the current field edit began. */
   const styleBeforeEdit = useRef<{ element: HTMLElement; style: string | null } | null>(null)
   const session = useTweakSession()
@@ -40,6 +43,7 @@ export function useOverlayTarget() {
   const select = (element: HTMLElement) => {
     const properties = readDesignPropertiesFromElement(element)
     setTarget(element)
+    setContrast(readContrastContext(element))
     setNode(createTargetNode(properties))
     setSelection((previous) => previous + 1)
     session.begin(element, properties)
@@ -53,6 +57,7 @@ export function useOverlayTarget() {
   const read = () => {
     if (!target) return
     const properties = readDesignPropertiesFromElement(target)
+    setContrast(readContrastContext(target))
     setNode(createTargetNode(properties))
     session.update(target, properties)
   }
@@ -68,6 +73,8 @@ export function useOverlayTarget() {
     switch (event.phase) {
       case 'start':
         styleBeforeEdit.current = { element: target, style: target.getAttribute('style') }
+        // Read again, so the colour picker measures against what the page looks like now.
+        setContrast(readContrastContext(target))
         break
       case 'nudge':
         applyDesignFieldToElement(target, event.field, event.properties)
@@ -97,6 +104,7 @@ export function useOverlayTarget() {
     target,
     node,
     selection,
+    contrast,
     /** Every element tweaked this session, for “Copy all”. */
     sessionEntries: session.entries,
     select,

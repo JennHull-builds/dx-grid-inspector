@@ -43,6 +43,17 @@ export interface TokenSessionEntry {
 }
 
 /**
+ * The colours the HUD's colour picker measures contrast against, as CSS colours. A host
+ * supplies them for the selected element.
+ */
+export interface ContrastContext {
+  /** The element's own text colour. A surface fill is measured against it. */
+  textColour: string;
+  /** The background behind the element. A border colour is measured against it. */
+  backgroundColour: string;
+}
+
+/**
  * The name of one editable token in `DesignProperties`.
  */
 export type DesignField = keyof DesignProperties;

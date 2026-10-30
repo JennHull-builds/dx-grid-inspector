@@ -81,6 +81,7 @@ export function DxInspector({
             readLabel="Read from target"
             onApplyToTarget={target ? overlay.apply : undefined}
             onFieldEdit={overlay.onFieldEdit}
+            contrastContext={overlay.contrast ?? undefined}
             sessionEntries={overlay.sessionEntries}
             emptyHint="Turn on Inspect and click a host surface to calibrate tokens."
           />

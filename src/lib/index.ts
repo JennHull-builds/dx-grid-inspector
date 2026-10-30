@@ -29,6 +29,7 @@ export {
   readDesignPropertiesFromElement,
 } from '../tokenExport'
 export type {
+  ContrastContext,
   DesignField,
   DesignNode,
   DesignProperties,

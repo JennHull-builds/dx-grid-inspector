@@ -175,26 +175,29 @@ export const ColourPicker: React.FC<ColourPickerProps> = ({
   const gamut = gamutOf(colour)
 
   /* Contrast: what the pick is measured against, and what the area draws. */
+  const role = contrast?.role
+  const againstCss = contrast?.against
+  const backdropCss = contrast?.backdrop
   const model = useMemo(() => {
-    if (!contrast) return null
-    const against = parseColour(contrast.against)
+    if (!role || !againstCss) return null
+    const against = parseColour(againstCss)
     if (!against) return null
-    if (contrast.role === 'fill') {
-      const backdrop = compositeOver(parseColour(contrast.backdrop ?? '') ?? WHITE, WHITE)
+    if (role === 'fill') {
+      const backdrop = compositeOver(parseColour(backdropCss ?? '') ?? WHITE, WHITE)
       const lines: AreaLine[] = [
         { ratio: 4.5, dashed: false },
         { ratio: 3, dashed: true },
       ]
-      return { role: contrast.role, other: compositeOver(against, backdrop), backdrop, lines }
+      return { role, other: compositeOver(against, backdrop), backdrop, lines }
     }
     const background = compositeOver(against, WHITE)
     return {
-      role: contrast.role,
+      role,
       other: background,
       backdrop: background,
       lines: [{ ratio: 3, dashed: false }] as AreaLine[],
     }
-  }, [contrast])
+  }, [role, againstCss, backdropCss])
 
   const ratio = model ? contrastRatio(compositeOver(colour, model.backdrop), model.other) : null
   const rating =
