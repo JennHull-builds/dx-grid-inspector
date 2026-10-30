@@ -41,6 +41,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --test src/picker/*.test.ts",
     "preview": "vite preview",
     "build:lib": "node scripts/check-dx-prefix.mjs && vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
     "prepack": "npm run build:lib"

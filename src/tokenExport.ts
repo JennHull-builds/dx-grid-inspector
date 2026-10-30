@@ -1,3 +1,4 @@
+import { oklabToSrgbBytes } from './picker/colourEngine.ts'
 import type {
   DesignField,
   DesignNode,
@@ -62,24 +63,6 @@ const splitComponents = (inner: string): { parts: string[]; alpha: number } => {
   return { parts, alpha: Number.isNaN(alpha) ? 1 : alpha }
 }
 
-const linearToSrgbByte = (linear: number): number => {
-  const gamma =
-    linear <= 0.0031308 ? 12.92 * linear : 1.055 * linear ** (1 / 2.4) - 0.055
-  return Math.round(clamp01(gamma) * 255)
-}
-
-/** OKLab to sRGB bytes (Björn Ottosson's reference matrices), clipped to gamut. */
-const oklabToRgb = (l: number, a: number, b: number): [number, number, number] => {
-  const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
-  const m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
-  const s_ = (l - 0.0894841775 * a - 1.291485548 * b) ** 3
-  return [
-    linearToSrgbByte(4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_),
-    linearToSrgbByte(-1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_),
-    linearToSrgbByte(-0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_),
-  ]
-}
-
 /**
  * Parses the colour forms browsers return from `getComputedStyle`: `rgb()` / `rgba()`,
  * `oklab()`, `oklch()` (what Tailwind v4 colours compute to) and `color(srgb …)`.
@@ -110,11 +93,11 @@ const parseCssColour = (value: string): Rgba | null => {
   } else if (fn === 'color') {
     rgb = parts.map((p) => Math.round(clamp01(parseComponent(p)) * 255)) as [number, number, number]
   } else if (fn === 'oklab') {
-    rgb = oklabToRgb(parseComponent(parts[0]), parseComponent(parts[1], 0.4), parseComponent(parts[2], 0.4))
+    rgb = oklabToSrgbBytes(parseComponent(parts[0]), parseComponent(parts[1], 0.4), parseComponent(parts[2], 0.4))
   } else if (fn === 'oklch') {
     const chroma = parseComponent(parts[1], 0.4)
     const hue = (parseComponent(parts[2].replace(/deg$/i, '')) * Math.PI) / 180
-    rgb = oklabToRgb(parseComponent(parts[0]), chroma * Math.cos(hue), chroma * Math.sin(hue))
+    rgb = oklabToSrgbBytes(parseComponent(parts[0]), chroma * Math.cos(hue), chroma * Math.sin(hue))
   } else {
     return null
   }
