@@ -6,12 +6,14 @@ import {
   MAGNETIC_SNAP_DISTANCE,
   P3_TO_SRGB,
   SRGB_TO_P3,
+  compositeOver,
   contrastRatio,
   deltaEOK,
   formatColour,
   formatOklch,
   gamutOf,
   hexFallback,
+  hueDistance,
   invertMatrix,
   mapToSrgb,
   nearestColour,
@@ -19,6 +21,7 @@ import {
   parseColour,
   rateNonTextContrast,
   rateTextContrast,
+  relativeLuminance,
   snapTarget,
   toSrgbBytes,
   type NamedColour,
@@ -253,6 +256,28 @@ describe('contrast', () => {
     assert.equal(rateTextContrast(2.99), 'fails')
     assert.equal(rateNonTextContrast(3), 'AA')
     assert.equal(rateNonTextContrast(2.99), 'fails')
+  })
+})
+
+describe('mixing and luminance', () => {
+  it('mixes a translucent colour over what is behind it, over white first', () => {
+    assert.equal(formatColour(compositeOver(must('rgb(0 0 0 / 50%)'), must('#fff'))), '#808080')
+    assert.equal(formatColour(compositeOver(must('#ff0000'), must('#00ff00'))), '#FF0000')
+    assert.equal(formatColour(compositeOver(must('rgb(0 0 0 / 0)'), must('rgb(255 0 0 / 0)'))), '#FFFFFF')
+    assert.equal(compositeOver(must('rgb(0 0 0 / 50%)'), must('#fff')).alpha, 1)
+  })
+
+  it('measures relative luminance on the shown sRGB colour', () => {
+    near(relativeLuminance(must('#fff')), 1, 1e-9, 'white')
+    near(relativeLuminance(must('#000')), 0, 1e-9, 'black')
+    near(relativeLuminance(must('#ff0000')), 0.2126, 1e-6, 'red')
+  })
+
+  it('finds the shortest way round the hue circle', () => {
+    assert.equal(hueDistance(350, 10), 20)
+    assert.equal(hueDistance(10, 350), 20)
+    assert.equal(hueDistance(0, 180), 180)
+    assert.equal(hueDistance(120, 120), 0)
   })
 })
 

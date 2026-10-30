@@ -431,24 +431,44 @@ const bytesToLinear = (bytes: SrgbBytes): Triple => [
 export const ratioFromLuminance = (a: number, b: number): number =>
   (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 
+const mixBytes = (top: SrgbBytes, under: SrgbBytes, alpha: number): SrgbBytes =>
+  [0, 1, 2].map((i) => Math.round(top[i] * alpha + under[i] * (1 - alpha))) as SrgbBytes
+
+const WHITE: SrgbBytes = [255, 255, 255]
+
+/**
+ * The solid colour a screen shows when `top` is drawn over `under`. A translucent `under` is
+ * first drawn over white, the colour a page starts from. Both are taken as the sRGB colours
+ * a screen would show (see `mapToSrgb`) and mixed the way browsers mix, in gamma-encoded sRGB.
+ */
+export const compositeOver = (top: Oklch, under: Oklch): Oklch => {
+  const backdrop = mixBytes(toSrgbBytes(under), WHITE, under.alpha)
+  const shown = mixBytes(toSrgbBytes(top), backdrop, top.alpha)
+  return fromLinearSrgb(bytesToLinear(shown), 1)
+}
+
+/** WCAG 2 relative luminance of the sRGB colour a screen shows for `c`, ignoring alpha. */
+export const relativeLuminance = (c: Oklch): number =>
+  luminanceOfLinear(bytesToLinear(toSrgbBytes(c)))
+
 /**
  * WCAG 2 contrast ratio between `foreground` and `background`, 1 to 21. Each colour is
  * measured as the sRGB colour a screen would show for it (see `mapToSrgb`). A translucent
  * foreground is mixed over the background first, and a translucent background over white.
  */
 export const contrastRatio = (foreground: Oklch, background: Oklch): number => {
-  const mixOver = (top: Oklch, under: SrgbBytes): SrgbBytes => {
-    const bytes = toSrgbBytes(top)
-    return [0, 1, 2].map((i) =>
-      Math.round(bytes[i] * top.alpha + under[i] * (1 - top.alpha)),
-    ) as SrgbBytes
-  }
-  const backdrop = mixOver(background, [255, 255, 255])
-  const shown = mixOver(foreground, backdrop)
+  const backdrop = mixBytes(toSrgbBytes(background), WHITE, background.alpha)
+  const shown = mixBytes(toSrgbBytes(foreground), backdrop, foreground.alpha)
   return ratioFromLuminance(
     luminanceOfLinear(bytesToLinear(shown)),
     luminanceOfLinear(bytesToLinear(backdrop)),
   )
+}
+
+/** The shortest distance between two hue angles, 0 to 180 degrees. */
+export const hueDistance = (a: number, b: number): number => {
+  const gap = Math.abs(a - b) % 360
+  return gap > 180 ? 360 - gap : gap
 }
 
 export type ContrastRating = 'AAA' | 'AA' | 'large text only' | 'fails'
