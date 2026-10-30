@@ -94,9 +94,10 @@ changed, so a release only happens when Jen asks for one.
   their number and read as px.** That is how it was before 0.2 and is unfixed.
 - **The agent prompt's shape text still lists four fields**, while its "Current tokens"
   JSON now carries `gap` and `margin`. The prompt wording was left alone on purpose.
-- **At 390px the demo's Overlay tab collapses the host area to about 2px once an element
-  is selected** (the taller HUD takes the space; also true of the 0.1.1 code). Check
-  nudging at 390px in a `DxInspector` host, whose HUD is capped at 45dvh, not in the demo.
+- **Below `lg`, the demo's Overlay `<aside>` is capped at `max-h-[45dvh]`, like
+  `DxInspector`'s HUD.** Without the cap the aside takes its full content height and the
+  host area, a `flex-1` with `min-h-0`, collapses to its 2px border once an element is
+  selected (seen at 390px before 0.2.0, fixed 2026-10-30). Keep both caps if either layout changes.
 - **The Harness preview card animates for 200ms.** A computed style read straight after a
   nudge is mid-transition (12.05px for 14px). Wait before measuring it.
 - **Apply closes an open field edit without telling the host.** `handleApplyToTarget` clears

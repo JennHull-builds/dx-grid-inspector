@@ -390,7 +390,7 @@ function App() {
             </DxHostOverlay>
           </div>
 
-          <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto lg:max-h-full">
+          <aside className="flex max-h-[45dvh] min-h-0 flex-col gap-3 overflow-y-auto lg:max-h-full">
             <div className="rounded-[16px] border border-white/5 bg-dx-surface-2">
               <TokenCalibrationUnit
                 key={targetElement ? `target-${overlay.selection}` : 'idle'}
