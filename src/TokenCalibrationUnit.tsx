@@ -1,14 +1,45 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   copyTextToClipboard,
+  cssLength,
   formatTokensAsAgentPrompt,
+  formatSessionAsCss,
+  formatSessionAsJson,
   formatTokensAsCss,
   formatTokensAsJson,
   parseDesignPropertiesJson,
 } from './tokenExport';
-import type { DesignNode, DesignProperties } from './types';
+import type {
+  DesignField,
+  DesignNode,
+  DesignProperties,
+  TokenSessionEntry,
+} from './types';
 
 const FEEDBACK_MS = 2000;
+
+/**
+ * Where a length field is in an edit. `start` when editing begins; `nudge` after each
+ * arrow-key press; `commit` when Enter keeps the value; `revert` when Escape puts back
+ * the value from before editing started.
+ */
+export type FieldEditPhase = 'start' | 'nudge' | 'commit' | 'revert';
+
+/**
+ * Reported by the HUD as a length field is edited, so a host can show the change on its
+ * target live. `properties` already carries the new value (for `revert`, the old one).
+ */
+export interface FieldEditEvent {
+  phase: FieldEditPhase;
+  field: DesignField;
+  properties: DesignProperties;
+  /**
+   * On `commit` only: true when an arrow key changed the value during this edit. A host that
+   * follows nudges live should also write the committed value then, because Enter may have
+   * kept a different value from the one it last saw on `nudge`.
+   */
+  nudged?: boolean;
+}
 
 export interface TokenCalibrationUnitProps {
   /** The node whose tokens are shown and edited; null shows the empty hint. */
@@ -23,9 +54,24 @@ export interface TokenCalibrationUnitProps {
   onApplyToTarget?: () => void;
   /** Empty-state hint when no node is selected. */
   emptyHint?: string;
+  /**
+   * Called as a length field is edited, so the target can follow arrow-key nudges live.
+   * Optional: without it, arrow keys still change the value in the HUD.
+   */
+  onFieldEdit?: (event: FieldEditEvent) => void;
+  /**
+   * Elements for the “Copy all” control: a label, the values each was read with, and its
+   * current values. Omit it and the control is not shown.
+   */
+  sessionEntries?: TokenSessionEntry[];
+  /** Tooltip for “Copy all”; says where the list is kept. Defaults to the in-memory note. */
+  copyAllTitle?: string;
 }
 
-type EditableField = keyof DesignProperties;
+const DEFAULT_COPY_ALL_TITLE =
+  'Copy every element you have tweaked this session as CSS or JSON. The list is kept in memory only and clears when you reload the page.';
+
+type EditableField = DesignField;
 type FieldKind = 'color' | 'layout' | 'border';
 
 interface FieldConfig {
@@ -37,20 +83,56 @@ interface FieldConfig {
 const FIELDS: FieldConfig[] = [
   { key: 'radius', label: 'Corner Radius', kind: 'layout' },
   { key: 'padding', label: 'Internal Padding', kind: 'layout' },
+  { key: 'gap', label: 'Gap Between Children', kind: 'layout' },
+  { key: 'margin', label: 'Outer Margin', kind: 'layout' },
   { key: 'bgPreset', label: 'Surface Fill', kind: 'color' },
   { key: 'borderPreset', label: 'Border Preset', kind: 'border' },
 ];
 
-const parseLayoutNumber = (val: string): number | null => {
+/**
+ * Reads a typed length. `rem` is kept as written (`"1.5rem"`); the other units still reduce
+ * to their number, which the HUD treats as px.
+ */
+const parseLayoutValue = (val: string): number | string | null => {
   const trimmed = val.trim();
   if (/^\d+(\.\d+)?$/.test(trimmed)) {
     return Number(trimmed);
   }
   const withUnit = trimmed.match(/^(\d+(?:\.\d+)?)(px|rem|%|vh|vw|em)$/i);
-  if (withUnit) {
-    return Number(withUnit[1]);
+  if (!withUnit) {
+    return null;
   }
-  return null;
+  return withUnit[2].toLowerCase() === 'rem'
+    ? `${Number(withUnit[1])}rem`
+    : Number(withUnit[1]);
+};
+
+/**
+ * The text after one arrow-key press on a px, unitless or rem value: 1 (Shift 10) for px,
+ * 0.125 (Shift 1) for rem, never below 0. Null for any other text, so nothing happens.
+ */
+const nudgeLayoutText = (text: string, direction: 1 | -1, large: boolean): string | null => {
+  const match = text.trim().match(/^(\d+(?:\.\d+)?)(px|rem)?$/i);
+  if (!match) return null;
+  const unit = (match[2] ?? '').toLowerCase();
+  const step = unit === 'rem' ? (large ? 1 : 0.125) : large ? 10 : 1;
+  const next = Math.max(0, Math.round((Number(match[1]) + direction * step) * 1000) / 1000);
+  return `${next}${unit}`;
+};
+
+/** A copy of `properties` with one field set, or removed when `value` is undefined. */
+const withField = (
+  properties: DesignProperties,
+  key: EditableField,
+  value: DesignProperties[EditableField],
+): DesignProperties => {
+  const next: Record<string, unknown> = { ...properties };
+  if (value === undefined) {
+    delete next[key];
+  } else {
+    next[key] = value;
+  }
+  return next as unknown as DesignProperties;
 };
 
 const sanitizeHex = (val: string): string | null => {
@@ -110,11 +192,12 @@ const hexForColourInput = (val: string): string | null => {
   return sanitized.toLowerCase();
 };
 
-const displayValue = (key: EditableField, properties: DesignProperties): string => {
-  if (key === 'radius' || key === 'padding') {
-    return `${properties[key]}px`;
+const displayValue = (field: FieldConfig, properties: DesignProperties): string => {
+  const value = properties[field.key];
+  if (field.kind === 'layout') {
+    return cssLength(value ?? 0);
   }
-  return String(properties[key]);
+  return String(value);
 };
 
 interface ColourPickerInputProps {
@@ -149,7 +232,7 @@ const ColourPickerInput: React.FC<ColourPickerInputProps> = ({
 };
 
 /**
- * Live token calibration HUD for padding, radius, surface fills, and border presets.
+ * Live token calibration HUD for padding, radius, gap, margin, surface fills, and border presets.
  * Surface Fill and Border Preset pair a native colour picker with a hex/rgba text field.
  * Copy writes CSS custom properties to the clipboard; JSON is a second export format.
  */
@@ -160,6 +243,9 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   readLabel = 'Read from preview',
   onApplyToTarget,
   emptyHint = 'Select a node from the Template Grid Manager to calibrate layout tokens.',
+  onFieldEdit,
+  sessionEntries,
+  copyAllTitle = DEFAULT_COPY_ALL_TITLE,
 }) => {
   const [editingKey, setEditingKey] = useState<EditableField | null>(null);
   const [inputValue, setInputValue] = useState('');
@@ -167,7 +253,14 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteValue, setPasteValue] = useState('');
+  const [copyAllOpen, setCopyAllOpen] = useState(false);
   const feedbackTimerRef = useRef<number | null>(null);
+  /** The field being edited, the value it had before, and whether arrow keys have moved it. */
+  const editStartRef = useRef<{
+    key: EditableField;
+    value: DesignProperties[EditableField];
+    nudged: boolean;
+  } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -205,20 +298,34 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
   const startEdit = (field: FieldConfig) => {
     setEditingKey(field.key);
-    setInputValue(displayValue(field.key, selectedNode.properties));
+    setInputValue(displayValue(field, selectedNode.properties));
     setError(null);
+    if (field.kind === 'layout') {
+      editStartRef.current = {
+        key: field.key,
+        value: selectedNode.properties[field.key],
+        nudged: false,
+      };
+      onFieldEdit?.({ phase: 'start', field: field.key, properties: selectedNode.properties });
+    }
   };
 
   const saveField = (field: FieldConfig) => {
     const current = selectedNode.properties;
 
     if (field.kind === 'layout') {
-      const parsed = parseLayoutNumber(inputValue);
-      if (parsed === null || Number.isNaN(parsed)) {
+      const parsed = parseLayoutValue(inputValue);
+      if (parsed === null) {
         setError('Invalid layout size. Use a number or units like px, rem, %.');
         return;
       }
-      onUpdateProperties(selectedNode.id, { ...current, [field.key]: parsed });
+      const next = withField(current, field.key, parsed);
+      const nudged = editStartRef.current?.key === field.key && editStartRef.current.nudged;
+      onUpdateProperties(selectedNode.id, next);
+      editStartRef.current = null;
+      onFieldEdit?.({ phase: 'commit', field: field.key, properties: next, nudged });
+      // A nudge announced its own value; say what Enter kept so the line is not left stale.
+      if (nudged) announce(`${field.label} ${cssLength(parsed)}`);
     } else {
       const sanitized = sanitizeColour(inputValue);
       if (!sanitized) {
@@ -237,14 +344,52 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
     setError(null);
   };
 
+  /** Escape: leave the field and put back what it held before editing started. */
+  const cancelEdit = (field: FieldConfig) => {
+    const start = editStartRef.current;
+    editStartRef.current = null;
+    if (field.kind === 'layout' && start?.key === field.key && start.nudged) {
+      const restored = withField(selectedNode.properties, field.key, start.value);
+      onUpdateProperties(selectedNode.id, restored);
+      onFieldEdit?.({ phase: 'revert', field: field.key, properties: restored });
+      announce(`${field.label} ${cssLength(start.value ?? 0)}`);
+    }
+    setEditingKey(null);
+    setError(null);
+  };
+
+  /** ArrowUp / ArrowDown while editing a length: change the value and show it at once. */
+  const nudgeField = (field: FieldConfig, direction: 1 | -1, large: boolean) => {
+    const text = nudgeLayoutText(inputValue, direction, large);
+    const value = text === null ? null : parseLayoutValue(text);
+    if (text === null || value === null) return;
+
+    const next = withField(selectedNode.properties, field.key, value);
+    if (editStartRef.current?.key === field.key) {
+      editStartRef.current.nudged = true;
+    }
+    setInputValue(text);
+    setError(null);
+    onUpdateProperties(selectedNode.id, next);
+    onFieldEdit?.({ phase: 'nudge', field: field.key, properties: next });
+    announce(`${field.label} ${cssLength(value)}`);
+  };
+
   const handleFieldKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     field: FieldConfig,
   ) => {
     if (e.key === 'Enter') saveField(field);
-    if (e.key === 'Escape') {
-      setEditingKey(null);
-      setError(null);
+    if (e.key === 'Escape') cancelEdit(field);
+    if (
+      (e.key === 'ArrowUp' || e.key === 'ArrowDown') &&
+      field.kind === 'layout' &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.metaKey
+    ) {
+      e.preventDefault();
+      nudgeField(field, e.key === 'ArrowUp' ? 1 : -1, e.shiftKey);
     }
   };
 
@@ -270,6 +415,21 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           : format === 'json'
             ? 'Copied JSON'
             : 'Copied agent prompt'
+        : 'Copy failed',
+    );
+  };
+
+  const copyAll = async (format: 'css' | 'json') => {
+    const entries = sessionEntries ?? [];
+    const ok = await copyTextToClipboard(
+      format === 'css' ? formatSessionAsCss(entries) : formatSessionAsJson(entries),
+    );
+    if (ok) setCopyAllOpen(false);
+    announce(
+      ok
+        ? `Copied ${entries.length} ${entries.length === 1 ? 'element' : 'elements'} as ${
+            format === 'css' ? 'CSS' : 'JSON'
+          }`
         : 'Copy failed',
     );
   };
@@ -317,7 +477,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
       <div className="dx:flex dx:flex-col dx:gap-2.5 dx:overflow-y-auto dx:overscroll-contain dx:flex-1 dx:pr-1 dx:min-h-0">
         {FIELDS.map((field) => {
           const isEditing = editingKey === field.key;
-          const value = displayValue(field.key, selectedNode.properties);
+          const value = displayValue(field, selectedNode.properties);
 
           return (
             <div
@@ -400,6 +560,46 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         <p className="dx:mt-3 dx:text-xs dx:font-mono dx:text-red-400 dx:shrink-0">{error}</p>
       )}
 
+      {copyAllOpen && sessionEntries && (
+        <div className="dx:mt-3 dx:shrink-0 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3">
+          <p className="dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
+            Copy {sessionEntries.length} {sessionEntries.length === 1 ? 'element' : 'elements'} as
+          </p>
+          <ul className="dx:mt-2 dx:max-h-24 dx:overflow-y-auto dx:font-mono dx:text-xs dx:text-slate-400">
+            {sessionEntries.map((entry) => (
+              <li key={entry.label} className="dx:truncate">
+                {entry.label}
+              </li>
+            ))}
+          </ul>
+          <div className="dx:mt-2 dx:flex dx:flex-wrap dx:gap-2">
+            <button
+              type="button"
+              onClick={() => void copyAll('css')}
+              title="Copy every listed element as CSS custom properties, one block each"
+              className="dx-btn-primary dx:min-h-10 dx:px-3"
+            >
+              CSS
+            </button>
+            <button
+              type="button"
+              onClick={() => void copyAll('json')}
+              title="Copy every listed element as a JSON array of label, before and after"
+              className="dx-btn-primary dx:min-h-10 dx:px-3"
+            >
+              JSON
+            </button>
+            <button
+              type="button"
+              onClick={() => setCopyAllOpen(false)}
+              className="dx-btn-secondary dx:min-h-10 dx:px-3"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {pasteOpen && (
         <div className="dx:mt-3 dx:shrink-0 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3">
           <label className="dx:block dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
@@ -441,7 +641,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           <button
             type="button"
             onClick={handleReadFromPreview}
-            title="Read computed border-radius, padding, background, and border-colour from the active target into this node"
+            title="Read computed border-radius, padding, gap, margin, background, and border-colour from the active target into this node"
             className="dx-btn-secondary dx:min-h-10 dx:px-3"
           >
             {readLabel}
@@ -483,10 +683,29 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         >
           Prompt
         </button>
+        {sessionEntries && (
+          <button
+            type="button"
+            onClick={() => {
+              setCopyAllOpen((open) => !open);
+              setPasteOpen(false);
+              setError(null);
+            }}
+            disabled={sessionEntries.length === 0}
+            aria-expanded={copyAllOpen}
+            title={
+              sessionEntries.length === 0 ? `Nothing to copy yet. ${copyAllTitle}` : copyAllTitle
+            }
+            className="dx-btn-secondary dx:min-h-10 dx:px-3"
+          >
+            Copy all ({sessionEntries.length})
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {
             setPasteOpen((open) => !open);
+            setCopyAllOpen(false);
             setError(null);
           }}
           title="Paste DesignProperties JSON into this node"

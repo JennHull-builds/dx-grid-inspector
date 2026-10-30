@@ -16,6 +16,10 @@ blog post and README both cite it as an example of knowing when AI is the wrong 
 Do not add a model call, an API key, or a backend. If a feature seems to need one, that
 is the signal to reconsider the feature.
 
+## Agent-agnostic
+
+dx-grid works with whichever coding agent the user chooses (decided by the maintainer, 2026-10-25). Its output is plain text any agent can read. Never build a feature that works with only one agent or one model; where an integration is needed, use an open standard (MCP, or an AGENTS.md-style instruction file). The no-in-app-AI rule is part of what keeps it this way.
+
 ## Visual system
 
 Soft Bento: 16px radius, ambient glow, deep space canvas, dark only. **Not brutalist
@@ -74,6 +78,43 @@ changed, so a release only happens when Jen asks for one.
 - **Testing a tarball:** when the tarball is unchanged, npm skips reinstalling it even if
   the installed copy was edited (seen with `'use client'` stripped by hand). Delete
   `node_modules/<package>` before reinstalling, and restart Vite, which caches package CSS.
+- **Apply keeps no baseline.** `applyDesignPropertiesToElement` compares the HUD with the
+  element's computed values and writes only the fields that differ, so a value set back
+  to what it was is still written. Do not add a "last read" copy to decide what changed;
+  it goes stale the moment something else writes the element.
+- **Escape after a nudge restores the target's whole `style` attribute**, taken when the
+  field edit began (`useOverlayTarget`). A new way of writing to the target during an
+  edit would be wiped by it, so write through `onFieldEdit`.
+- **The selection ring follows the target through a `MutationObserver` on its `style`
+  attribute, and measures again on its `transitionend` / `transitioncancel`.** A CSS
+  transition settles on the right size but is not tracked frame by frame. A change that
+  arrives any other way (a class swap, a sibling resizing) is not followed until a scroll
+  or resize.
+- **`rem` survives a save as the string `"1.5rem"`; `%`, `vh`, `vw` and `em` still reduce to
+  their number and read as px.** That is how it was before 0.2 and is unfixed.
+- **The agent prompt's shape text still lists four fields**, while its "Current tokens"
+  JSON now carries `gap` and `margin`. The prompt wording was left alone on purpose.
+- **Below `lg`, the demo's Overlay `<aside>` is capped at `max-h-[45dvh]`, like
+  `DxInspector`'s HUD.** Without the cap the aside takes its full content height and the
+  host area, a `flex-1` with `min-h-0`, collapses to its 2px border once an element is
+  selected (seen at 390px before 0.2.0, fixed 2026-10-30). Keep both caps if either layout changes.
+- **The Harness preview card animates for 200ms.** A computed style read straight after a
+  nudge is mid-transition (12.05px for 14px). Wait before measuring it.
+- **Apply closes an open field edit without telling the host.** `handleApplyToTarget` clears
+  the editing state but not `editStartRef`, and `onFieldEdit` gets no `commit` or `revert`,
+  so `styleBeforeEdit` in `useOverlayTarget` keeps the snapshot from before the nudge until
+  the next field edit starts. Checked 2026-10-25: Apply then Escape does not wipe the Apply
+  today, because the field's input is gone and the next `start` replaces the snapshot. A new
+  Escape handler, or anything that restores `styleBeforeEdit` outside an open edit, would put
+  back the pre-Apply `style` and wipe it.
+- **A negative margin (`-8px`) reads into the HUD, but the arrow keys ignore it and Enter
+  rejects it as "Invalid layout size".** `nudgeLayoutText` and `parseLayoutValue` only accept
+  numbers from 0 up. Seen 2026-10-25 on `margin: -8px 0 0`: the field opens at `-8px`, ArrowUp
+  leaves it there, and typing `-8` then Enter shows the error. For 0.3.
+- **Put injected test fixtures in the host demo's own `<main>`**, the parent of
+  `article[data-dx-inspectable]`. `document.querySelector('main')` finds the demo page's
+  layout, outside the inspector, so a click there selects nothing and a check silently tests
+  the wrong element.
 
 ## Code standards
 

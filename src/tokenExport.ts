@@ -1,8 +1,17 @@
-import type { DesignNode, DesignProperties } from './types'
+import type {
+  DesignField,
+  DesignNode,
+  DesignProperties,
+  TokenSessionEntry,
+} from './types'
 
 type TokenNodeMeta = Pick<DesignNode, 'id' | 'name' | 'category' | 'status'>
 
-const cssLength = (value: number | string): string => {
+/**
+ * A token length as CSS: numbers and bare numeric strings are pixels, anything else
+ * (`1.5rem`) is passed through as written.
+ */
+export const cssLength = (value: number | string): string => {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return `${value}px`
   }
@@ -11,6 +20,23 @@ const cssLength = (value: number | string): string => {
     return `${trimmed}px`
   }
   return trimmed
+}
+
+const rootFontSizePx = (): number =>
+  typeof window === 'undefined'
+    ? 16
+    : Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 16
+
+/**
+ * A token length in pixels: numbers, `16`, `16px`, and `rem` against the page's root font
+ * size. Null for any other unit.
+ */
+export const lengthToPx = (value: number | string): number | null => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)(px|rem)?$/i)
+  if (!match) return null
+  const amount = Number(match[1])
+  return match[2]?.toLowerCase() === 'rem' ? amount * rootFontSizePx() : amount
 }
 
 /** sRGB channels 0–255 plus alpha 0–1. */
@@ -135,8 +161,21 @@ const parsePx = (value: string): number => {
 }
 
 /**
- * Copies computed border-radius, padding, background, and border-colour
- * from a preview surface into `DesignProperties`.
+ * The gap that shows between an element's children: the column gap for a flex row, the row
+ * gap for everything else (a flex column, a grid). Reading and writing the same one keeps
+ * the HUD, the page and Apply in step, where the `gap` shorthand would set both directions.
+ */
+const visibleGapProperty = (element: HTMLElement): 'columnGap' | 'rowGap' => {
+  const styles = window.getComputedStyle(element)
+  const isFlex = styles.display === 'flex' || styles.display === 'inline-flex'
+  const isRow = styles.flexDirection === 'row' || styles.flexDirection === 'row-reverse'
+  return isFlex && isRow ? 'columnGap' : 'rowGap'
+}
+
+/**
+ * Copies computed border-radius, padding, gap (`column-gap` for a flex row, otherwise
+ * `row-gap`), margin (`margin-top`), background, and border-colour from a preview surface
+ * into `DesignProperties`.
  */
 export const readDesignPropertiesFromElement = (
   element: HTMLElement,
@@ -145,6 +184,8 @@ export const readDesignPropertiesFromElement = (
   return {
     radius: parsePx(styles.borderTopLeftRadius || styles.borderRadius),
     padding: parsePx(styles.paddingTop),
+    gap: parsePx(styles[visibleGapProperty(element)]),
+    margin: parsePx(styles.marginTop),
     bgPreset: colourToToken(styles.backgroundColor),
     borderPreset: colourToToken(styles.borderTopColor || styles.borderColor),
   }
@@ -161,6 +202,8 @@ export const formatTokensAsCss = (
   const declarations = [
     `--radius: ${cssLength(properties.radius)};`,
     `--padding: ${cssLength(properties.padding)};`,
+    ...(properties.gap !== undefined ? [`--gap: ${cssLength(properties.gap)};`] : []),
+    ...(properties.margin !== undefined ? [`--margin: ${cssLength(properties.margin)};`] : []),
     `--surface-fill: ${properties.bgPreset};`,
     `--border-preset: ${properties.borderPreset};`,
   ].join('\n')
@@ -178,13 +221,33 @@ export const formatTokensAsJson = (
 ): string =>
   `${JSON.stringify(node ? { ...node, properties } : properties, null, 2)}\n`
 
+/**
+ * Formats every entry's current tokens as CSS custom properties, one block per element,
+ * each led by a comment with its label.
+ */
+export const formatSessionAsCss = (entries: TokenSessionEntry[]): string =>
+  entries
+    .map((entry) => formatTokensAsCss(entry.after, entry.label.replaceAll('*/', '* /')))
+    .join('\n\n')
+
+/**
+ * Formats the entries as a JSON array of `{ label, before, after }`.
+ */
+export const formatSessionAsJson = (entries: TokenSessionEntry[]): string =>
+  `${JSON.stringify(
+    entries.map(({ label, before, after }) => ({ label, before, after })),
+    null,
+    2,
+  )}\n`
+
 const isFiniteNumberOrString = (value: unknown): value is number | string =>
   typeof value === 'string' ||
   (typeof value === 'number' && Number.isFinite(value))
 
 /**
  * Rebuilds `DesignProperties` from unknown JSON. Extra keys are dropped;
- * invalid shapes return null.
+ * invalid shapes return null. `gap` and `margin` are optional: JSON without them parses as
+ * before, and a value that is not a number or string is dropped.
  */
 export const parseDesignProperties = (
   value: unknown,
@@ -213,6 +276,8 @@ export const parseDesignProperties = (
   return {
     radius: source.radius,
     padding: source.padding,
+    ...(isFiniteNumberOrString(source.gap) ? { gap: source.gap } : {}),
+    ...(isFiniteNumberOrString(source.margin) ? { margin: source.margin } : {}),
     bgPreset: source.bgPreset,
     borderPreset: source.borderPreset,
   }
@@ -233,27 +298,116 @@ export const parseDesignPropertiesJson = (
 }
 
 /**
- * Writes the four spatial tokens onto a host element as inline styles.
+ * Expands `#RGB` and normalises any readable colour to the token form the HUD reads back,
+ * so `#fff`, `#FFFFFF` and `rgb(255, 255, 255)` all compare equal.
+ */
+const canonicalColour = (value: string): string => {
+  const trimmed = value.trim()
+  const short = trimmed.match(/^#([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/)
+  if (short) {
+    return `#${short[1]}${short[1]}${short[2]}${short[2]}${short[3]}${short[3]}`.toUpperCase()
+  }
+  return colourToToken(trimmed)
+}
+
+const sameLength = (a: number | string, b: number | string): boolean => {
+  const pxA = lengthToPx(a)
+  const pxB = lengthToPx(b)
+  return pxA !== null && pxB !== null
+    ? Math.abs(pxA - pxB) < 0.01
+    : cssLength(a) === cssLength(b)
+}
+
+const sameColour = (a: string, b: string): boolean =>
+  canonicalColour(a) === canonicalColour(b)
+
+/**
+ * Whether two token sets differ in any field. An absent `gap` or `margin` counts as 0, and
+ * colours are compared by value (`#fff` equals `#FFFFFF`).
+ */
+export const designPropertiesDiffer = (a: DesignProperties, b: DesignProperties): boolean =>
+  !sameLength(a.radius, b.radius) ||
+  !sameLength(a.padding, b.padding) ||
+  !sameLength(a.gap ?? 0, b.gap ?? 0) ||
+  !sameLength(a.margin ?? 0, b.margin ?? 0) ||
+  !sameColour(a.bgPreset, b.bgPreset) ||
+  !sameColour(a.borderPreset, b.borderPreset)
+
+/**
+ * Writes one token onto a host element as an inline style, leaving every other style
+ * alone. This is what live nudging uses. For `borderPreset` the 2px solid border is added
+ * only when the element has no visible border to carry the colour; an element that
+ * already has one keeps its width and style.
+ */
+export const applyDesignFieldToElement = (
+  element: HTMLElement,
+  field: DesignField,
+  properties: DesignProperties,
+): void => {
+  switch (field) {
+    case 'radius':
+      element.style.borderRadius = cssLength(properties.radius)
+      break
+    case 'padding':
+      element.style.padding = cssLength(properties.padding)
+      break
+    case 'gap':
+      element.style[visibleGapProperty(element)] = cssLength(properties.gap ?? 0)
+      break
+    case 'margin':
+      element.style.margin = cssLength(properties.margin ?? 0)
+      break
+    case 'bgPreset':
+      element.style.backgroundColor = properties.bgPreset
+      break
+    case 'borderPreset': {
+      const computed = window.getComputedStyle(element)
+      const hasVisibleBorder =
+        computed.borderTopStyle !== 'none' &&
+        Number.parseFloat(computed.borderTopWidth) > 0
+
+      element.style.borderColor = properties.borderPreset
+      if (!hasVisibleBorder) {
+        element.style.borderStyle = 'solid'
+        element.style.borderWidth = '2px'
+      }
+      break
+    }
+  }
+}
+
+/**
+ * Writes the token fields that differ from what the element has right now, as inline
+ * styles. A field that already matches the element is left alone, so applying an
+ * unchanged HUD touches nothing.
  * Does not inject global CSS — only the selected target is updated.
- * An element that already has a visible border keeps its width and style; one with no
- * border gets a 2px solid border so the border colour can be seen.
+ * The 2px solid border is added only when the border colour is one of the changed fields
+ * and the element has no visible border to carry it; an element that already has a visible
+ * border keeps its width and style.
  */
 export const applyDesignPropertiesToElement = (
   element: HTMLElement,
   properties: DesignProperties,
 ): void => {
-  const computed = window.getComputedStyle(element)
-  const hasVisibleBorder =
-    computed.borderTopStyle !== 'none' &&
-    Number.parseFloat(computed.borderTopWidth) > 0
+  const current = readDesignPropertiesFromElement(element)
 
-  element.style.borderRadius = cssLength(properties.radius)
-  element.style.padding = cssLength(properties.padding)
-  element.style.backgroundColor = properties.bgPreset
-  element.style.borderColor = properties.borderPreset
-  if (!hasVisibleBorder) {
-    element.style.borderStyle = 'solid'
-    element.style.borderWidth = '2px'
+  if (!sameLength(properties.radius, current.radius)) {
+    applyDesignFieldToElement(element, 'radius', properties)
+  }
+  if (!sameLength(properties.padding, current.padding)) {
+    applyDesignFieldToElement(element, 'padding', properties)
+  }
+  if (properties.gap !== undefined && !sameLength(properties.gap, current.gap ?? 0)) {
+    applyDesignFieldToElement(element, 'gap', properties)
+  }
+  if (properties.margin !== undefined && !sameLength(properties.margin, current.margin ?? 0)) {
+    applyDesignFieldToElement(element, 'margin', properties)
+  }
+  if (!sameColour(properties.bgPreset, current.bgPreset)) {
+    applyDesignFieldToElement(element, 'bgPreset', properties)
+  }
+  if (!sameColour(properties.borderPreset, current.borderPreset)) {
+    applyDesignFieldToElement(element, 'borderPreset', properties)
   }
 }
 
