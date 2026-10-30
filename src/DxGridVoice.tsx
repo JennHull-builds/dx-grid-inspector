@@ -68,13 +68,13 @@ export function DxGridVoice({
         <h2 className="dx:text-sm dx:font-semibold dx:uppercase dx:tracking-wide dx:text-slate-300">
           DX grid voice
         </h2>
-        <p className="dx:mt-1 dx:font-mono dx:text-[10px] dx:leading-relaxed dx:text-slate-500">
+        <p className="dx:mt-1 dx:font-mono dx:text-[10px] dx:leading-relaxed dx:text-dx-muted">
           Agent-assisted via clipboard — no in-app AI and never paste API keys
           here.
         </p>
       </div>
 
-      <label className="dx:block dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
+      <label className="dx:block dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-dx-muted">
         Describe layout
         <textarea
           value={description}

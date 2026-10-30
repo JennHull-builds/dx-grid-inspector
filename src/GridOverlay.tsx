@@ -81,7 +81,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
           <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
             Template Grid Manager
           </h2>
-          <p className="mt-1 font-mono text-xs text-slate-500">
+          <p className="mt-1 font-mono text-xs text-dx-muted">
             {filteredNodes.length} of {nodes.length} Nodes Displayed
           </p>
         </div>
@@ -129,7 +129,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
             <p className="text-sm font-medium tracking-wide text-slate-300">
               No nodes in the grid
             </p>
-            <p className="max-w-xs font-mono text-xs text-slate-500">
+            <p className="max-w-xs font-mono text-xs text-dx-muted">
               All nodes have been purged. Add a node to start inspecting spatial tokens.
             </p>
             <button
@@ -142,7 +142,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
           </div>
         ) : filteredNodes.length === 0 ? (
           <div className="rounded-[12px] border border-dashed border-white/10 p-6 text-center">
-            <p className="font-mono text-sm text-slate-500">
+            <p className="font-mono text-sm text-dx-muted">
               No framework components matching the "{activeCategory}" scope.
             </p>
           </div>
@@ -154,7 +154,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                 ? 'dx-status-ready'
                 : node.status === 'In Progress'
                   ? 'dx-status-progress'
-                  : 'text-slate-500';
+                  : 'text-dx-muted';
 
             return (
               <div
@@ -216,7 +216,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                   onKeyDown={isolateFromRow}
                   title={`Delete ${node.name}`}
                   aria-label={`Delete ${node.name}`}
-                  className="dx-btn-danger flex min-h-10 min-w-10 items-center justify-center font-mono text-xl leading-none opacity-100 lg:opacity-60 lg:group-hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dx-accent focus-visible:opacity-100"
+                  className="dx-btn-danger flex min-h-10 min-w-10 items-center justify-center font-mono text-xl leading-none opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dx-accent focus-visible:opacity-100"
                 >
                   ×
                 </button>

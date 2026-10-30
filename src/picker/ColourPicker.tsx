@@ -308,7 +308,7 @@ export const ColourPicker: React.FC<ColourPickerProps> = ({
       <section aria-label="Page colour tokens" className="dx:flex dx:flex-col dx:gap-2">
         <p className={labelClassName}>Page tokens</p>
         {tokens.length > 0 ? (
-          <ul className="dx:flex dx:max-h-40 dx:list-none dx:flex-wrap dx:gap-1.5 dx:overflow-y-auto">
+          <ul className="dx:-m-1 dx:flex dx:max-h-40 dx:list-none dx:flex-wrap dx:gap-1.5 dx:overflow-y-auto dx:p-1">
             {tokens.map((token) => {
               const isCurrent = onToken && nearest?.name === token.name
               return (

@@ -27,6 +27,7 @@
   --color-dx-secondary: #5eead4;
   --color-dx-success: #e8c47a;
   --color-dx-danger: #f87171;
+  --color-dx-muted: #74849c;
 }
 
 :root {
@@ -42,7 +43,7 @@
   --dx-ui-danger: #f87171;
   --dx-ui-border-subtle: rgb(255 255 255 / 0.1);
   --dx-ui-text: #cbd5e1;
-  --dx-ui-text-muted: #64748b;
+  --dx-ui-text-muted: #74849c;
 }
 
 /* --- Reset, scoped to the inspector's UI (same values as Tailwind's preflight) --- */
@@ -107,6 +108,14 @@
 :where([data-dx-ui]) ::placeholder {
   opacity: 1;
   color: color-mix(in oklab, currentcolor 50%, transparent);
+}
+
+/* Keyboard focus: one solid accent ring on every focusable control in the inspector's UI, at
+   3:1 or more on every surface the controls sit on (accent is 6.3:1 or more on all four).
+   Unlayered, so it also wins over a host's own focus rules and over the utilities' outline-none. */
+:where([data-dx-ui]) :is(a, button, input, textarea, select, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--dx-ui-accent);
+  outline-offset: 2px;
 }
 
 /* --- Component rules (the same .dx-* rules as the demo's src/index.css) --- */

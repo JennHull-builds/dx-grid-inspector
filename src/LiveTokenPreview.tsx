@@ -110,7 +110,7 @@ export function LiveTokenPreview({
         <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
           Live Token Preview
         </h2>
-        <p className="mt-1 font-mono text-xs text-slate-500">
+        <p className="mt-1 font-mono text-xs text-dx-muted">
           {selectedNode
             ? `Surface for ${selectedNode.name}`
             : 'Select a node to preview calibrated tokens'}
@@ -155,14 +155,14 @@ export function LiveTokenPreview({
                 </button>
               </div>
             </article>
-            <p className="text-center font-mono text-xs text-slate-500">
+            <p className="text-center font-mono text-xs text-dx-muted">
               {chrome.radius}px radius · {chrome.padding}px padding
               {chrome.gap > 0 && ` · ${chrome.gap}px gap`}
               {chrome.margin > 0 && ` · ${chrome.margin}px margin`}
             </p>
           </>
         ) : (
-          <p className="px-4 text-center font-mono text-sm text-slate-500">
+          <p className="px-4 text-center font-mono text-sm text-dx-muted">
             Choose a node from the Template Grid Manager.
           </p>
         )}

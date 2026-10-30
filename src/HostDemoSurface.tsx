@@ -20,7 +20,7 @@ export function HostDemoSurface({ toolbar }: HostDemoSurfaceProps) {
         className="flex items-center justify-between gap-4 border-b border-white/10 bg-dx-surface-2 px-6 py-4"
       >
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-dx-muted">
             Host demo
           </p>
           <h1 className="mt-1 text-lg font-semibold tracking-wide text-slate-100">
@@ -44,7 +44,7 @@ export function HostDemoSurface({ toolbar }: HostDemoSurfaceProps) {
           data-dx-inspectable="true"
           className="rounded-[16px] border-2 border-dx-accent/50 bg-dx-surface-3 p-6"
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-dx-accent/80">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-dx-accent/85">
             Content
           </p>
           <h2 className="mt-2 text-base font-semibold tracking-wide text-slate-100">
@@ -72,7 +72,7 @@ export function HostDemoSurface({ toolbar }: HostDemoSurfaceProps) {
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-300">
             Secondary panel
           </h2>
-          <p className="mt-2 text-xs leading-relaxed text-slate-500">
+          <p className="mt-2 text-xs leading-relaxed text-dx-muted">
             A quieter surface for comparing how the same four tokens feel on a
             denser block. Inspect either panel independently.
           </p>

@@ -149,6 +149,18 @@ changed, so a release only happens when the maintainer asks for one.
   its sample card picks its own ink from the fill, so its figures are indicative. The overlay
   reads the target's computed text colour and the first opaque ancestor background. WCAG 2
   only; a colour outside sRGB is measured on its sRGB hex.
+- **Muted text is `text-dx-muted` (`#74849c`), not `text-slate-500`.** Tailwind's slate-500 is a
+  separate colour and fell short of 4.5:1 on the HUD's surfaces (3.9 to 4.1:1); the muted
+  value reaches 4.5:1 on all four (5.19, 5.01, 4.84 and 4.50 on surfaces 0 to 3). Changing it
+  needs both stylesheets and a re-check against surface-3, which is the tightest. Do not fade
+  muted text with `opacity` (the delete button did, at 2.1:1), and keep `text-dx-accent` labels
+  at 85% or more on surface-3 (80% measured 4.49:1).
+- **Focus is one unlayered rule in each stylesheet**, a solid 2px accent ring with a 2px
+  offset on every focusable control (the package version is scoped to `[data-dx-ui]`). It
+  beats the utilities' `outline-none`, so a text input no longer shows only its 50% accent
+  border (2.4:1 measured). A scroll container clips a ring at its edge: pad the container by
+  4px as the picker's token list does. The Template Grid Manager's first node row is still
+  clipped at its top edge.
 
 ## Code standards
 

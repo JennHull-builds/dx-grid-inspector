@@ -218,7 +218,7 @@ function App() {
             />
             <span className="truncate">DX Spatial Grid &amp; Token Inspector</span>
           </p>
-          <p className="mt-1 font-mono text-[10px] leading-snug text-slate-500 sm:max-w-md">
+          <p className="mt-1 font-mono text-[10px] leading-snug text-dx-muted sm:max-w-md">
             Spatial token harness — start in{' '}
             <span className="text-dx-secondary">Overlay demo</span> to inspect host UI, or use
             Harness to calibrate mock nodes.
@@ -250,7 +250,7 @@ function App() {
               href="https://github.com/JennHull-builds/dx-grid-inspector"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-dx-accent"
+              className="font-mono text-xs uppercase tracking-[0.12em] text-dx-muted transition-colors hover:text-dx-accent"
             >
               GitHub
             </a>
@@ -261,7 +261,7 @@ function App() {
               href="https://github.com/JennHull-builds/dx-grid-inspector/blob/main/README.md"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-dx-accent"
+              className="font-mono text-xs uppercase tracking-[0.12em] text-dx-muted transition-colors hover:text-dx-accent"
             >
               README
             </a>
@@ -273,7 +273,7 @@ function App() {
               href="https://jenniferhull.co.za"
               target="_blank"
               rel="noopener"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-dx-accent"
+              className="font-mono text-xs uppercase tracking-[0.12em] text-dx-muted transition-colors hover:text-dx-accent"
             >
               By Jennifer Hull
             </a>
@@ -308,7 +308,7 @@ function App() {
               })}
             </nav>
             {selectedNode && (
-              <p className="mt-2 truncate font-mono text-xs text-slate-500">
+              <p className="mt-2 truncate font-mono text-xs text-dx-muted">
                 Active: {selectedNode.name}
               </p>
             )}
@@ -411,7 +411,7 @@ function App() {
               />
             </div>
             {!targetElement && (
-              <p className="px-1 font-mono text-xs text-slate-500">
+              <p className="px-1 font-mono text-xs text-dx-muted">
                 Turn on Inspect, click a host surface, then calibrate and apply
                 tokens. Copy CSS, JSON, or an agent prompt when you leave.
               </p>

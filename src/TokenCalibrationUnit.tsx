@@ -304,7 +304,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
           Token Calibration Unit
         </h2>
         <div className="dx:flex-1 dx:flex dx:items-center dx:justify-center dx:border dx:border-dashed dx:border-white/10 dx:rounded-[12px]">
-          <p className="dx:text-sm dx:font-mono dx:text-slate-500 dx:text-center dx:px-4">
+          <p className="dx:text-sm dx:font-mono dx:text-dx-muted dx:text-center dx:px-4">
             {emptyHint}
           </p>
         </div>
@@ -553,7 +553,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
         <h2 className="dx:text-base dx:font-semibold dx:tracking-wide dx:text-slate-300 dx:uppercase">
           Token Calibration Unit
         </h2>
-        <p className="dx:text-xs dx:font-mono dx:text-slate-500 dx:mt-1 dx:truncate">
+        <p className="dx:text-xs dx:font-mono dx:text-dx-muted dx:mt-1 dx:truncate">
           Editing: {selectedNode.name}
         </p>
       </div>
@@ -583,7 +583,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   className="dx:flex dx:flex-col dx:items-start dx:gap-0.5 dx:text-left dx:flex-1 dx:min-w-0"
                 >
                   <span className="dx:text-sm dx:font-medium dx:text-slate-200">{field.label}</span>
-                  <span className="dx:text-xs dx:font-mono dx:text-dx-accent/80">{field.key}</span>
+                  <span className="dx:text-xs dx:font-mono dx:text-dx-accent/85">{field.key}</span>
                 </button>
 
                 <div className="dx:flex dx:items-center dx:gap-2 dx:shrink-0 dx:w-full dx:sm:w-auto dx:justify-between dx:sm:justify-end">
@@ -662,7 +662,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
       {copyAllOpen && sessionEntries && (
         <div className="dx:mt-3 dx:shrink-0 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3">
-          <p className="dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
+          <p className="dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-dx-muted">
             Copy {sessionEntries.length} {sessionEntries.length === 1 ? 'element' : 'elements'} as
           </p>
           <ul className="dx:mt-2 dx:max-h-24 dx:overflow-y-auto dx:font-mono dx:text-xs dx:text-slate-400">
@@ -702,7 +702,7 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
 
       {pasteOpen && (
         <div className="dx:mt-3 dx:shrink-0 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3">
-          <label className="dx:block dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-slate-500">
+          <label className="dx:block dx:font-mono dx:text-xs dx:uppercase dx:tracking-wider dx:text-dx-muted">
             Paste DesignProperties JSON
             <textarea
               value={pasteValue}
