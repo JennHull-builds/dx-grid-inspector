@@ -41,16 +41,16 @@ project was never created and the deploy has never run. Treat it as untested.
 ## Releasing to npm
 
 Published as `dx-grid-inspector` (0.1.0 on 2026-10-02; 0.1.1, docs only, on 2026-10-03). A published version cannot be
-changed, so a release only happens when Jen asks for one.
+changed, so a release only happens when the maintainer asks for one.
 
-- **`npm publish` needs a one-time code from Jen.** Run `npm publish --dry-run` yourself,
-  then ask her to run `npm publish` in her own terminal. `prepack` runs `build:lib`, so the
+- **`npm publish` needs a one-time code from the maintainer.** Run `npm publish --dry-run` yourself,
+  then ask the maintainer to run `npm publish` in their own terminal. `prepack` runs `build:lib`, so the
   `dx:` check and the build happen on every publish.
 - **The npm page shows the README as it was published.** README edits on `main` reach
   npm only with the next version.
 - **A publish failing with `E404 Not Found - PUT` means logged out, not a missing
   package.** The npm login in `~/.npmrc` expires; npm answers an unauthenticated publish
-  with 404. Confirm with `npm whoami` (401 = logged out), then Jen runs `npm login` and
+  with 404. Confirm with `npm whoami` (401 = logged out), then the maintainer runs `npm login` and
   `npm publish` again. Seen 2026-10-03 on 0.1.1, one day after 0.1.0 published fine.
 - **A successful publish ends `PUT 202` and "being processed"**, and the registry can
   take a few minutes to show it. Check `dist-tags.latest` before calling it live.
@@ -60,7 +60,7 @@ changed, so a release only happens when Jen asks for one.
 ## Gotchas
 
 - **Every class in the library components must be `dx:`-prefixed.** `DxHostOverlay`,
-  `TokenCalibrationUnit`, `DxGridVoice` and `DxInspector` are styled by
+  `TokenCalibrationUnit`, `DxGridVoice`, `DxInspector` and `picker/ColourPicker` are styled by
   `src/lib/styles.css`, which only generates `dx:` classes. An unprefixed class still looks
   right in the demo, because the demo's own Tailwind generates it, and renders unstyled in
   every host. `npm run build:lib` runs `scripts/check-dx-prefix.mjs` first and fails on one.
@@ -73,8 +73,10 @@ changed, so a release only happens when Jen asks for one.
   host's own page: it did once, and only a light host shows it (the demo and the Phase A
   app are dark). Test layout changes in a light host too.
 - **Colours: `tokenExport.ts` converts `oklab()` / `oklch()` / `color(srgb)` itself**, because
-  Tailwind v4 colours compute to those. It matched Chrome's own conversion exactly on 12
-  samples. If you change it, check it against Chrome again rather than by eye.
+  Tailwind v4 colours compute to those. The OKLab to sRGB maths lives in
+  `src/picker/colourEngine.ts` (`oklabToSrgbBytes`) and `tokenExport.ts` imports it. It matched
+  Chrome's own conversion exactly on 12 samples, and again on 20 colours when it moved there. If you change it,
+  check it against Chrome again rather than by eye.
 - **Testing a tarball:** when the tarball is unchanged, npm skips reinstalling it even if
   the installed copy was edited (seen with `'use client'` stripped by hand). Delete
   `node_modules/<package>` before reinstalling, and restart Vite, which caches package CSS.
@@ -84,7 +86,7 @@ changed, so a release only happens when Jen asks for one.
   it goes stale the moment something else writes the element.
 - **Escape after a nudge restores the target's whole `style` attribute**, taken when the
   field edit began (`useOverlayTarget`). A new way of writing to the target during an
-  edit would be wiped by it, so write through `onFieldEdit`.
+  edit would be wiped by it, so write through `onFieldEdit`. The colour picker writes this way too.
 - **The selection ring follows the target through a `MutationObserver` on its `style`
   attribute, and measures again on its `transitionend` / `transitioncancel`.** A CSS
   transition settles on the right size but is not tracked frame by frame. A change that
@@ -100,7 +102,8 @@ changed, so a release only happens when Jen asks for one.
   selected (seen at 390px before 0.2.0, fixed 2026-10-30). Keep both caps if either layout changes.
 - **The Harness preview card animates for 200ms.** A computed style read straight after a
   nudge is mid-transition (12.05px for 14px). Wait before measuring it.
-- **Apply closes an open field edit without telling the host.** `handleApplyToTarget` clears
+- **Apply closes an open field edit without telling the host.** This includes an open colour
+  picker: Apply closes it and what it last wrote stays on the element. `handleApplyToTarget` clears
   the editing state but not `editStartRef`, and `onFieldEdit` gets no `commit` or `revert`,
   so `styleBeforeEdit` in `useOverlayTarget` keeps the snapshot from before the nudge until
   the next field edit starts. Checked 2026-10-25: Apply then Escape does not wipe the Apply
@@ -115,10 +118,41 @@ changed, so a release only happens when Jen asks for one.
   `article[data-dx-inspectable]`. `document.querySelector('main')` finds the demo page's
   layout, outside the inspector, so a click there selects nothing and a check silently tests
   the wrong element.
+- **A new library component file goes in two lists.** Add it to `FILES` in
+  `scripts/check-dx-prefix.mjs` and to an `@source` line in `src/lib/styles.css`. Without the
+  second, the package stylesheet never generates its `dx:` classes, and the component renders
+  unstyled in every host while the demo looks right.
+- **The package ships no list reset.** A `<ul>` in a library component shows bullets unless it
+  has `dx:list-none` (they appeared as stray dots beside the page-token chips).
+- **`src/picker/colourEngine.ts` imports nothing**, so it can move into its own package
+  unchanged. Keep DOM work (page tokens, the canvas, the eyedropper) out of it. `npm test` runs
+  `src/picker/*.test.ts` with Node's built-in runner, which runs TypeScript directly, so a file
+  a test imports must name its siblings with a `.ts` extension. Test files are excluded from
+  `tsconfig.app.json`.
+- **The `.d.ts` files in `dist-lib/types/picker/` import with `.ts` paths.** No public type
+  reaches them, so a consumer never loads them. A type-check of the built package as a
+  consumer, with library checking on, passed on TypeScript 6.0.2 (2026-10-30); other versions
+  were not tried.
+- **Page tokens skip every `--dx-` and `--tw-` variable.** The package stylesheet declares
+  `--dx-ui-*` and Tailwind's `--dx-color-*` theme colours on the host's `:root`, so a reader
+  that skipped only `--dx-ui-*` would list ten extra "tokens" in a light host. Tailwind v4 emits
+  only the theme colours a page's classes use (the demo shows `slate` 100 to 600 and `white`,
+  not the whole palette). A stylesheet from another origin cannot be read.
+- **Read from target flattens a colour outside sRGB.** `colourToToken` converts to sRGB, so a
+  colour the picker wrote as `oklch()` comes back as a clipped hex (checked 2026-10-30:
+  `oklch(0.8 0.27 150)` read back as `#00EA4F` while the element kept the `oklch()` value).
+  Unfixed, because changing it changes the colour format existing users see. For 0.3.
+- **The picker keeps its own OKLCH colour while you drag**, so a grey written as hex does not
+  lose its hue. It resyncs from its `value` prop only when that differs from the last value it
+  sent, so a host that rewrites the value on every change would pull the picker back.
+- **Contrast figures:** the Harness passes fixed colours (text `#E2E8F0` on `#13131F`) because
+  its sample card picks its own ink from the fill, so its figures are indicative. The overlay
+  reads the target's computed text colour and the first opaque ancestor background. WCAG 2
+  only; a colour outside sRGB is measured on its sRGB hex.
 
 ## Code standards
 
-Carried over from `.cursorrules` on 2026-09-10 when Jen moved to Claude Code.
+Carried over from `.cursorrules` on 2026-09-10.
 
 - TypeScript strict mode. Every imported component has an explicit props interface.
 - Tailwind v4 via `@import "tailwindcss";` in `src/index.css`, with `@tailwindcss/vite`

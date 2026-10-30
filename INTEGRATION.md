@@ -1,9 +1,9 @@
 # Integrating DX Grid Inspector into your app
 
-DX Grid Inspector wraps your React app while you develop: an **Inspect** toolbar above it and a token HUD beside it. Click an element to read its radius, padding, gap, margin, fill and border colour, edit them on the live element (arrow keys nudge a length while you watch it change), and copy them out as CSS, JSON or an agent prompt. There is no backend and no AI call.
+DX Grid Inspector wraps your React app while you develop: an **Inspect** toolbar above it and a token HUD beside it. Click an element to read its radius, padding, gap, margin, fill and border colour, edit them on the live element (arrow keys nudge a length and a colour picker sets fills and borders, while you watch it change), and copy them out as CSS, JSON or an agent prompt. There is no backend and no AI call.
 
-**Tested:** React 18.3 and 19.3 · Vite 8, in a Tailwind v4 app and in an app with no Tailwind at all · Next.js 16.3 (App Router) · Chromium, at 1280px and 390px wide. Keyboard nudging, gap, margin and Copy all were tested in Chromium at both widths, in this repo's demo and in a plain React 19.3 app with no Tailwind and a white page, installed from the packed tarball.
-**Not tested:** Firefox, Safari, touch devices, Tailwind v3 apps, webpack-based setups, screen readers.
+**Tested:** React 18.3 and 19.3 · Vite 8, in a Tailwind v4 app and in an app with no Tailwind at all · Next.js 16.3 (App Router) · Chromium, at 1280px and 390px wide. Keyboard nudging, gap, margin and Copy all were tested in Chromium at both widths, in this repo's demo and in a plain React 19.3 app with no Tailwind and a white page, installed from the packed tarball. The colour picker was tested in Chromium at both widths, in this repo's demo (Harness and Overlay) and in a plain React 19.2 app with no Tailwind and a white page, using the built package files rather than a packed tarball.
+**Not tested:** Firefox, Safari, touch devices, picking a colour with the eyedropper, the colour area on a Display P3 screen, Tailwind v3 apps, webpack-based setups, screen readers.
 
 ## Install
 
@@ -111,10 +111,10 @@ Expect no files. Also search for a string you know **is** in your app, so an emp
 |--------|------------|
 | `DxInspector` | The ready-made wrapper used above: overlay, HUD and voice prompt. Props: `children`, `defaultEnabled` (default `true`), `showVoice` (default `true`). |
 | `DxHostOverlay` | The overlay on its own, for building your own layout. `src/DxInspector.tsx` shows how it is wired to the HUD. |
-| `TokenCalibrationUnit` | The token HUD: read, edit, apply, copy CSS / JSON / prompt, paste JSON. Optional props `onFieldEdit` (follow arrow-key nudges on your own target) and `sessionEntries` (shows the Copy all control). |
+| `TokenCalibrationUnit` | The token HUD: read, edit, apply, copy CSS / JSON / prompt, paste JSON. Optional props `onFieldEdit` (follow arrow-key nudges and colour-picker changes on your own target), `contrastContext` (what the colour picker measures contrast against) and `sessionEntries` (shows the Copy all control). |
 | `DxGridVoice` | Describe a layout in words and copy a prompt for an external agent. |
 | `readDesignPropertiesFromElement`, `applyDesignPropertiesToElement`, `applyDesignFieldToElement`, `formatTokensAsCss`, `formatTokensAsJson`, `formatTokensAsAgentPrompt`, `formatSessionAsCss`, `formatSessionAsJson`, `parseDesignProperties`, `parseDesignPropertiesJson`, `copyTextToClipboard` | The functions behind the HUD. |
-| `DesignProperties`, `DesignField`, `DesignNode`, `NodeCategory`, `NodeStatus`, `TokenSessionEntry`, `FieldEditEvent`, `FieldEditPhase` and each component's props type | TypeScript types. |
+| `DesignProperties`, `DesignField`, `DesignNode`, `ContrastContext`, `NodeCategory`, `NodeStatus`, `TokenSessionEntry`, `FieldEditEvent`, `FieldEditPhase` and each component's props type | TypeScript types. |
 
 If you use `DxHostOverlay` directly, its `className` is added to its own layout classes (`relative flex min-h-0 flex-1 flex-col`), and its own classes can override yours where they conflict. To size it, wrap it in an element of your own.
 
@@ -124,11 +124,11 @@ Clicking while Inspect is on selects the innermost element under the cursor. To 
 
 ## Nudging with the keyboard
 
-Click a length field in the HUD (radius, padding, gap or margin) and press ArrowUp or ArrowDown. The value changes by 1 (Shift: 10) when it is in px or has no unit, and by 0.125 (Shift: 1) when it is in rem, and never goes below 0. Each press updates the field and writes **only that field** to the inspected element, so you watch it change. Enter keeps the value. Escape puts back the value from before you started, on the element too, restoring the element's earlier inline styles exactly. Keyboard focus stays in the field, and each new value is announced in the HUD's status line, including the one Enter keeps after a nudge and the one Escape puts back. Other units (`%`, `vh`, `vw`, `em`) and the colour fields ignore the arrow keys.
+Click a length field in the HUD (radius, padding, gap or margin) and press ArrowUp or ArrowDown. The value changes by 1 (Shift: 10) when it is in px or has no unit, and by 0.125 (Shift: 1) when it is in rem, and never goes below 0. Each press updates the field and writes **only that field** to the inspected element, so you watch it change. Enter keeps the value. Escape puts back the value from before you started, on the element too, restoring the element's earlier inline styles exactly. Keyboard focus stays in the field, and each new value is announced in the HUD's status line, including the one Enter keeps after a nudge and the one Escape puts back. Other units (`%`, `vh`, `vw`, `em`) and the text field of a colour field ignore the arrow keys (the colour picker has its own, below).
 
 `rem` is kept as rem (`1.5rem` stays `1.5rem`) rather than converted to px. Any other unit typed into a field still reduces to its number and is treated as px, as it did before.
 
-If you build your own layout from `TokenCalibrationUnit`, pass `onFieldEdit` to follow the nudges on your target. It receives `{ phase: 'start' | 'nudge' | 'commit' | 'revert', field, properties, nudged? }`; write one field with `applyDesignFieldToElement(element, event.field, event.properties)` on `nudge`, and again on `commit` when `nudged` is true (Enter may keep a value typed over the last nudge). Without it, the arrow keys still change the value in the HUD.
+If you build your own layout from `TokenCalibrationUnit`, pass `onFieldEdit` to follow the nudges on your target. A colour field reports the same phases while its picker is open, with `nudge` on every change in the picker. It receives `{ phase: 'start' | 'nudge' | 'commit' | 'revert', field, properties, nudged? }`; write one field with `applyDesignFieldToElement(element, event.field, event.properties)` on `nudge`, and again on `commit` when `nudged` is true (Enter may keep a value typed over the last nudge). Without it, the arrow keys still change the value in the HUD.
 
 ## Gap and margin
 
@@ -142,12 +142,29 @@ The list lives in memory only. It is not saved to `localStorage` and it clears w
 
 ## Colours
 
-Colours are read back as `#RRGGBB` when opaque and `rgba(r, g, b, a)` when translucent. That includes the `oklab()` and `oklch()` values Tailwind v4 colours compute to, which are converted to sRGB. The native colour picker cannot show transparency, so its swatch shows the colour without its alpha.
+Colours are read back as `#RRGGBB` when opaque and `rgba(r, g, b, a)` when translucent. That includes the `oklab()` and `oklch()` values Tailwind v4 colours compute to, which are converted to sRGB. The swatch beside a colour field shows transparency over a checkerboard.
+
+## Colour picker
+
+The swatch beside **Surface Fill** and **Border Preset** opens a colour picker under the field, so the element you are changing stays in view. The text field stays the source of truth: type a colour and the picker moves. Opening a second field's picker closes the first and keeps its colour.
+
+- **Page tokens first.** The picker lists the colour custom properties your page declares on `:root`, `html` or `:host` (for example `--brand-500`), read again each time it opens. It follows rules nested in `@layer`, `@media` and `@supports`, and turns `hsl()`, named and `color-mix()` values into a colour. It skips the inspector's own `--dx-*` variables and Tailwind's `--tw-*` helpers. A stylesheet from another origin cannot be read, and neither can variables set inside a shadow root. A value written as `lab()` is left out. Tailwind v4 emits only the theme colours your classes use, so only those appear. A page with no colour tokens gets a plain OKLCH picker.
+- **The colour area.** Lightness runs up and chroma (colourfulness) runs across, for the current hue, in OKLCH, where equal lightness looks equally light. Hue and opacity are sliders below it.
+- **Screen limits.** Colours only a Display P3 screen can show are hatched, and colours no screen can show are left empty. The readout says "every screen", "P3 screens only" or "no screen can show this", and gives the closest hex inside sRGB. The area is painted in Display P3 where the browser supports it, and in sRGB elsewhere.
+- **Magnetic tokens.** While you drag, the handle snaps onto a token once it comes within one just-noticeable difference of it (0.02 in OKLab, the figure CSS Color 4 gives), and the readout names the token. Hold **Alt** (Option on a Mac) while dragging to turn the snap off. Keyboard moves never snap. The picker also always shows the nearest token and how far away it is, with a **Snap** button.
+- **Contrast.** For Surface Fill, WCAG 2 contrast against the element's own text colour, with the 4.5:1 line drawn solid and the 3:1 line dashed across the area. For Border Preset, against the background behind the element, with the 3:1 line (the WCAG 2 minimum for non-text). The readout shows the ratio and AA, AAA or fails. APCA is not used, and a colour outside sRGB is measured on its closest sRGB hex.
+- **Eyedropper.** A button samples a colour from the screen. It appears only where the browser has the EyeDropper API: Chrome 95 and later and Edge, not Firefox or Safari ([MDN's compatibility data](https://github.com/mdn/browser-compat-data/blob/main/api/EyeDropper.json)). It needs a secure context (HTTPS or localhost).
+- **Keyboard.** The area takes focus when the picker opens. Arrow keys move lightness (up, down) and chroma (left, right), and Shift moves ten times as far. Screen readers hear the channel and value ("Lightness 72%"). **Enter** keeps the colour. **Escape** puts back the colour from before the picker opened, on the element too, and focus returns to the swatch.
+
+**What is written.** `#RRGGBB` when the colour is opaque and inside sRGB, `rgba(r, g, b, a)` when it is translucent and inside sRGB, and `oklch(L% C H)` (with ` / alpha` when translucent) only when it lies outside sRGB. The text field accepts those, and `oklab()` and `color()` values too. The picker writes the colour itself, never `var(--token)`; the nearest token is named in the picker only.
+
+**In your own layout.** `TokenCalibrationUnit` takes an optional `contrastContext`, `{ textColour, backgroundColour }`, both CSS colours. `DxInspector` fills it from the selected element: its computed text colour, and the background behind it (the first opaque ancestor, with translucent layers mixed over it, or the browser's canvas colour when none is opaque). Without it the picker shows no contrast.
 
 ## Known limitations
 
 - **Apply writes only the tokens that differ from the element.** It compares the HUD with the element's current computed values and leaves every matching field alone, so applying an unchanged HUD touches nothing. A border is added (2px solid) only when the border colour is one of the changed fields and the element has no visible border; an element that already has a border keeps its width.
 - **Gap only has an effect on a flex or grid container,** and gap and margin are each one value (writing margin sets all four sides). Apply writes them only when you changed them.
+- **Read from target turns a colour outside sRGB into a hex.** The HUD reads every colour back as sRGB, so a colour the picker wrote as `oklch()` comes back as the closest hex the browser shows for it. The element itself keeps what the picker wrote.
 - **The CSS export uses generic property names** (`--radius`, `--padding`). Rename them if your app already defines properties with those names.
 
 ## Copying the source instead
