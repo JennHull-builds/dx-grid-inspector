@@ -50,7 +50,7 @@
   --color-dx-warning: var(--warning);
   --color-dx-danger: var(--danger);
   --color-dx-muted: var(--text-muted);
-  --font-dx-wordmark: "Martian Mono", ui-monospace, monospace;
+  --font-dx-wordmark: "Geist", system-ui, sans-serif;
 }
 
 .dx-wordmark {
@@ -348,4 +348,147 @@ body {
 .dx-range:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* ---------- Site chrome (demo only: header lockup, footer). Not part of the package. ---------- */
+
+/* The mark: the pick glides from cell to cell, and the brackets lock on at each stop. */
+@keyframes site-mark-walk {
+  0%, 18% { transform: translate(0, 0); }
+  25%, 43% { transform: translate(12px, 0); }
+  50%, 68% { transform: translate(12px, 12px); }
+  75%, 93% { transform: translate(0, 12px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes site-mark-lock {
+  0%, 18%, 25%, 43%, 50%, 68%, 75%, 93%, 100% { opacity: 1; }
+  21.5%, 46.5%, 71.5%, 96.5% { opacity: 0.25; }
+}
+.site-mark-cursor {
+  animation: site-mark-walk 10s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.site-mark-brackets {
+  animation: site-mark-lock 10s ease-in-out infinite;
+}
+
+/* The lockup and hint rise in once, a beat apart. */
+@keyframes site-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.site-rise {
+  animation: site-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.site-brand-mark {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px -8px rgb(139 92 246 / 0.55);
+  transition: box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.site-brand:hover .site-brand-mark {
+  box-shadow: 0 8px 28px -6px rgb(139 92 246 / 0.8);
+  transform: translateY(-1px);
+}
+
+/* Hairlines: a quiet rule with a slow drift of accent light along it. */
+.site-hairline {
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background:
+    linear-gradient(90deg, transparent 0%, rgb(167 139 250 / 0.55) 30%, rgb(94 234 212 / 0.45) 50%, transparent 70%) 0 0 / 60% 100% no-repeat,
+    rgb(255 255 255 / 0.06);
+  animation: site-drift 14s ease-in-out infinite alternate;
+}
+.site-hairline-bottom { bottom: 0; }
+.site-hairline-top { top: 0; animation-delay: -7s; opacity: 0.6; }
+@keyframes site-drift {
+  from { background-position: -60% 0, 0 0; }
+  to { background-position: 160% 0, 0 0; }
+}
+
+/* Footer links: the icon lifts, the byline arrow nudges out. */
+.site-link-icon,
+.site-byline-arrow {
+  display: inline-flex;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.2s ease;
+}
+.site-link:hover .site-link-icon,
+.site-link:focus-visible .site-link-icon {
+  transform: translateY(-1.5px);
+  color: var(--accent);
+}
+.site-byline:hover .site-byline-arrow,
+.site-byline:focus-visible .site-byline-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* The copy tick draws itself in. */
+.site-check {
+  stroke-dasharray: 16;
+  animation: site-check 0.35s ease-out both;
+}
+@keyframes site-check {
+  from { stroke-dashoffset: 16; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Motion: the footer switch sets data-motion on <html>. With no choice made, the system setting
+   decides. "reduce" stops every animation and transition on the page, the inspector's included. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .site-mark-cursor,
+  :root:not([data-motion="full"]) .site-mark-brackets,
+  :root:not([data-motion="full"]) .site-rise,
+  :root:not([data-motion="full"]) .site-hairline,
+  :root:not([data-motion="full"]) .site-check {
+    animation: none;
+  }
+}
+:root[data-motion="reduce"] .site-mark-cursor,
+:root[data-motion="reduce"] .site-mark-brackets,
+:root[data-motion="reduce"] .site-rise,
+:root[data-motion="reduce"] .site-hairline,
+:root[data-motion="reduce"] .site-check {
+  animation: none;
+}
+:root[data-motion="reduce"] .site-hairline {
+  background-position: 20% 0, 0 0;
+}
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* The Motion switch. */
+.site-switch-track {
+  position: relative;
+  width: 26px;
+  height: 15px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+.site-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1), background-color 0.25s ease;
+}
+.site-switch[aria-checked="true"] .site-switch-track {
+  background: color-mix(in srgb, var(--secondary) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--secondary) 45%, transparent);
+}
+.site-switch[aria-checked="true"] .site-switch-knob {
+  transform: translateX(11px);
+  background: var(--secondary);
 }

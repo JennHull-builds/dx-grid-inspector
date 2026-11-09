@@ -169,6 +169,21 @@ changed, so a release only happens when the maintainer asks for one.
   4px as the picker's token list does. The Template Grid Manager's first node row is still
   clipped at its top edge.
 
+- **The demo page never scrolls vertically** (the maintainer, 2026-11-09). The root is `h-dvh` with
+  `overflow-hidden`; header and footer are `shrink-0` and the panels scroll inside. After any change to
+  the site chrome, check `scrollHeight === innerHeight` at 1440x900, 1280x720, 1024x768, 390x844 and 390x667.
+- **The site chrome lives in `src/site/`** (mark, header lockup, footer) and is demo only: plain Tailwind,
+  no `dx:` prefix, never imported by `src/lib/entry.ts`. Its CSS in `index.css` is unlayered, so it beats
+  Tailwind utilities: never set `display` in a `site-*` class, or `hidden`/`sm:hidden` on that element
+  stops working (both phone and desktop marks showed at once until this was moved into classes).
+
+- **The footer's Motion switch sets `data-motion` on `<html>`** (`full` or `reduce`), saved in
+  localStorage as `dx-motion`. A script in `index.html` applies it before first paint, defaulting to
+  the system setting. `reduce` stops every animation and transition on the page, the HUD's too. A new
+  animation needs no extra work, but a `site-*` one that should rest at a designed frame needs its own
+  `:root[data-motion="reduce"]` rule (see `.site-hairline`). One switch until there is a second setting;
+  then it becomes a settings button (the maintainer, 2026-11-09).
+
 ## Code standards
 
 Carried over from `.cursorrules` on 2026-09-10.

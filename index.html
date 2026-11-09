@@ -3,11 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // The footer's Motion switch, applied before first paint. Defaults to the system setting.
+      try {
+        var saved = localStorage.getItem('dx-motion')
+        var reduce = saved ? saved === 'reduce' : matchMedia('(prefers-reduced-motion: reduce)').matches
+        document.documentElement.dataset.motion = reduce ? 'reduce' : 'full'
+      } catch (e) {}
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@600&display=swap"
       rel="stylesheet"
     />
     <title>DX Spatial Grid &amp; Token Inspector</title>

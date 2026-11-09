@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Analytics } from '@vercel/analytics/react'
+import { SiteBrand, SiteFooter, SiteHint } from './site/SiteChrome'
 import { DxGridVoice } from './DxGridVoice'
 import { DxHostOverlay } from './DxHostOverlay'
 import { TemplateGridManager } from './GridOverlay'
@@ -209,84 +210,36 @@ function App() {
   return (
     <div className="box-border flex h-dvh w-full flex-col overflow-hidden bg-dx-surface-0 text-slate-300">
       <Analytics />
-      <header className="flex shrink-0 flex-col gap-2 border-b border-white/5 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-        <div className="min-w-0">
-          <p className="dx-wordmark flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
-            <span
-              className="size-2.5 shrink-0 border-l border-t border-dx-secondary"
-              aria-hidden="true"
-            />
-            <span className="truncate">DX Spatial Grid &amp; Token Inspector</span>
-          </p>
-          <p className="mt-1 font-mono text-[10px] leading-snug text-dx-muted sm:max-w-md">
-            Spatial token harness — start in{' '}
-            <span className="text-dx-secondary">Overlay demo</span> to inspect host UI, or use
-            Harness to calibrate mock nodes.
-          </p>
+      <header className="relative flex shrink-0 items-center justify-between gap-3 px-3 py-3 sm:gap-4 sm:px-4 lg:gap-8 lg:px-6 lg:py-3.5">
+        <h1 className="sr-only">DX Grid: spatial grid and token inspector</h1>
+        <div className="flex min-w-0 items-center gap-6">
+          <SiteBrand />
+          <SiteHint />
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-3">
-          <nav className="dx-segment-track" aria-label="App mode">
-            {MODE_TABS.map((tab) => {
-              const isActive = appMode === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleSetAppMode(tab.id)}
-                  className={`dx-segment min-h-8 px-2.5 text-[10px] sm:px-3 sm:text-xs ${
-                    isActive ? 'dx-segment-active' : ''
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              )
-            })}
-          </nav>
-          <nav
-            className="flex items-center gap-2"
-            aria-label="Project links"
-          >
-            <a
-              href="https://github.com/JennHull-builds/dx-grid-inspector"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-dx-muted transition-colors hover:text-dx-accent"
-            >
-              GitHub
-            </a>
-            <span className="text-white/20" aria-hidden="true">
-              ·
-            </span>
-            <a
-              href="https://github.com/JennHull-builds/dx-grid-inspector/blob/main/README.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-dx-muted transition-colors hover:text-dx-accent"
-            >
-              README
-            </a>
-            <span className="text-white/20" aria-hidden="true">
-              ·
-            </span>
-            {/* No noreferrer here, so the portfolio's analytics can see the visit came from this demo. */}
-            <a
-              href="https://jenniferhull.co.za"
-              target="_blank"
-              rel="noopener"
-              className="font-mono text-xs uppercase tracking-[0.12em] text-dx-muted transition-colors hover:text-dx-accent"
-            >
-              By Jennifer Hull
-            </a>
-          </nav>
-        </div>
+        <nav className="dx-segment-track site-rise shrink-0" style={{ animationDelay: '300ms' }} aria-label="App mode">
+          {MODE_TABS.map((tab) => {
+            const isActive = appMode === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleSetAppMode(tab.id)}
+                className={`dx-segment min-h-8 px-2.5 text-[10px] sm:px-3 sm:text-xs ${
+                  isActive ? 'dx-segment-active' : ''
+                }`}
+              >
+                {tab.label}
+              </button>
+            )
+          })}
+        </nav>
+        <span className="site-hairline site-hairline-bottom" aria-hidden="true" />
       </header>
 
       {appMode === 'harness' ? (
         <>
-          <header className="shrink-0 border-b border-white/5 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 lg:hidden">
-            <h1 className="mb-3 text-base font-semibold uppercase tracking-wide text-slate-100">
-              Local Testing Harness
-            </h1>
+          {/* Phones only: the panel tabs. No heading here: the site header already says where you are. */}
+          <header className="shrink-0 border-b border-white/5 px-3 pt-3 pb-3 sm:px-4 lg:hidden">
             <nav
               className="grid grid-cols-3 gap-0.5 rounded-[10px] border border-white/10 bg-dx-surface-2 p-0.5"
               aria-label="Inspector panels"
@@ -314,7 +267,7 @@ function App() {
             )}
           </header>
 
-          <main className="flex min-h-0 flex-1 flex-col gap-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:p-6">
+          <main className="flex min-h-0 flex-1 flex-col gap-0 p-3 sm:p-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:p-6 lg:pb-4">
             <div
               className={`${panelShell} ${
                 mobilePanel === 'nodes' ? 'flex flex-1' : 'hidden'
@@ -364,7 +317,7 @@ function App() {
           </main>
         </>
       ) : (
-        <main className="flex min-h-0 flex-1 flex-col gap-3 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,22rem)] lg:gap-6 lg:p-6">
+        <main className="flex min-h-0 flex-1 flex-col gap-3 p-3 sm:p-4 lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,22rem)] lg:gap-6 lg:p-6 lg:pb-4">
           <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-white/5 bg-dx-surface-0">
             <DxHostOverlay
               enabled={overlayEnabled}
@@ -423,6 +376,7 @@ function App() {
           </aside>
         </main>
       )}
+      <SiteFooter />
     </div>
   )
 }

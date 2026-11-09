@@ -76,7 +76,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
 
   return (
     <section className="flex h-full w-full flex-col rounded-[16px] border border-white/5 bg-dx-surface-2 p-4 sm:p-6">
-      <div className="mb-4 flex shrink-0 flex-col gap-3 border-b border-white/5 pb-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex shrink-0 flex-col gap-3 border-b border-white/5 pb-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-stretch 2xl:flex-row 2xl:items-center">
         <div className="min-w-0">
           <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
             Template Grid Manager
@@ -85,11 +85,11 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
             {filteredNodes.length} of {nodes.length} Nodes Displayed
           </p>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row lg:w-full 2xl:w-auto">
           <button
             type="button"
             onClick={onAddNode}
-            className="dx-btn-primary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
+            className="dx-btn-primary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto lg:flex-1 2xl:flex-none"
           >
             + Add Node
           </button>
@@ -97,7 +97,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
             <button
               type="button"
               onClick={onResetDemo}
-              className="dx-btn-secondary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
+              className="dx-btn-secondary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto lg:flex-1 2xl:flex-none"
             >
               Reset demo
             </button>
