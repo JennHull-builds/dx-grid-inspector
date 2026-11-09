@@ -1,0 +1,42 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1200px;height:630px;overflow:hidden;background:#0a0a10}
+.card{position:relative;width:1200px;height:630px;overflow:hidden;font-family:Geist,system-ui,sans-serif;color:#e2e8f0;
+ background:
+  radial-gradient(ellipse 620px 420px at 8% 0%, rgba(139,92,246,.30), transparent 70%),
+  radial-gradient(ellipse 560px 380px at 100% 100%, rgba(94,234,212,.16), transparent 70%),
+  #0a0a10}
+.grid{position:absolute;inset:0;
+ background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+ background-size:48px 48px;background-position:-1px -1px;
+ -webkit-mask-image:radial-gradient(ellipse 900px 600px at 30% 40%, #000 30%, transparent 85%)}
+.left{position:absolute;left:80px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center;gap:0}
+.mark{width:92px;height:92px;filter:drop-shadow(0 14px 30px rgba(139,92,246,.55));margin-bottom:34px}
+h1{font-size:84px;font-weight:600;letter-spacing:-.035em;line-height:.95;color:#f8fafc}
+.sub{margin-top:18px;font-family:"Geist Mono",ui-monospace,monospace;font-size:17px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#8b9ab3}
+.line{margin-top:30px;font-size:27px;line-height:1.38;color:#cbd5e1;letter-spacing:-.005em;max-width:520px}
+.line b{color:#f1f5f9;font-weight:500}
+.chips{margin-top:38px;display:flex;gap:10px;align-items:center;font-family:"Geist Mono",ui-monospace,monospace;font-size:16px}
+.chip{border-radius:999px;padding:8px 14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#cbd5e1;white-space:nowrap}
+.chip.v{border-color:rgba(167,139,250,.45);background:rgba(167,139,250,.14);color:#c4b5fd}
+.chip.ai{display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:#5eead4}
+.shot{position:absolute;left:712px;top:64px;width:420px;border-radius:22px;padding:10px;
+ background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.03));
+ box-shadow:0 0 0 1px rgba(255,255,255,.10),0 40px 80px -20px rgba(0,0,0,.8),0 0 90px -20px rgba(139,92,246,.45)}
+.shot img{display:block;width:100%;border-radius:14px}
+.fade{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(transparent,#0a0a10 85%)}
+</style></head><body><div class="card">
+<div class="grid"></div>
+<div class="shot"><img src="ui-calibration.png"></div>
+<div class="fade"></div>
+<div class="left">
+ <svg class="mark" viewBox="0 0 40 40"><defs><linearGradient id="t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2650"/><stop offset="1" stop-color="#14121f"/></linearGradient><linearGradient id="e" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4b5fd" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity=".08"/></linearGradient><linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d6c9ff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect x=".5" y=".5" width="39" height="39" rx="11" fill="url(#t)"/><rect x=".5" y=".5" width="39" height="39" rx="11" fill="none" stroke="url(#e)"/><g fill="#fff" fill-opacity=".1" stroke="#fff" stroke-opacity=".16"><rect x="22" y="10" width="8" height="8" rx="2.25"/><rect x="10" y="22" width="8" height="8" rx="2.25"/><rect x="22" y="22" width="8" height="8" rx="2.25"/></g><rect x="9.5" y="9.5" width="9" height="9" rx="2.5" fill="url(#c)"/><path d="M6.5 10V7.5a1 1 0 0 1 1-1H10M18 6.5h2.5a1 1 0 0 1 1 1V10M21.5 18v2.5a1 1 0 0 1-1 1H18M10 21.5H7.5a1 1 0 0 1-1-1V18" fill="none" stroke="#5eead4" stroke-width="1.6" stroke-linecap="round"/></svg>
+ <h1>DX Grid</h1>
+ <div class="sub">Spatial grid &amp; token inspector</div>
+ <p class="line">Click any element, change its tokens, and copy them out as <b>CSS</b>, <b>JSON</b> or <b>a prompt for your agent</b>.</p>
+ <div class="chips"><span class="chip v">v0.2.0</span><span class="chip">npm i -D dx-grid-inspector</span><span class="chip ai"><span class="dot"></span>No AI inside</span></div>
+</div>
+</div></body></html>
