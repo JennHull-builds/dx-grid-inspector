@@ -4,6 +4,8 @@ import {
   AREA_MAX_CHROMA,
   AREA_WIDTH,
   computeArea,
+  contrastPaths,
+  srgbEdge,
   type AreaContrast,
   type AreaLine,
 } from './areaPixels.ts'
@@ -207,29 +209,104 @@ export const ColourPicker: React.FC<ColourPickerProps> = ({
         ? rateTextContrast(ratio)
         : rateNonTextContrast(ratio)
 
-  /* The colour area is repainted when the hue, or what contrast is measured against, changes. */
+  /* The canvas is drawn at its real size on screen. A smaller canvas stretched to fit turns
+     every edge into steps on a sharp (Retina) screen. */
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number; scale: number } | null>(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas || typeof ResizeObserver === 'undefined') return
+    const measure = () => {
+      const rect = canvas.getBoundingClientRect()
+      if (rect.width < 2 || rect.height < 2) return
+      const scale = Math.min(3, Math.max(1, window.devicePixelRatio || 1))
+      const width = Math.round(rect.width * scale)
+      const height = Math.round(rect.height * scale)
+      setCanvasSize((prev) =>
+        prev && prev.width === width && prev.height === height && prev.scale === scale
+          ? prev
+          : { width, height, scale },
+      )
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [])
+
+  /* The colour area is repainted when the hue, its size, or what contrast is measured against, changes. */
   const alphaKey = model ? Math.round(colour.alpha * 100) : 100
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+    const width = canvasSize?.width ?? AREA_WIDTH
+    const height = canvasSize?.height ?? AREA_HEIGHT
+    const scale = canvasSize?.scale ?? 1
+    if (canvas.width !== width) canvas.width = width
+    if (canvas.height !== height) canvas.height = height
     const context = canvas.getContext('2d', wide ? { colorSpace: 'display-p3' } : undefined)
     if (!context) return
-    const areaContrast: AreaContrast | null = model
-      ? {
-          against: relativeLuminance(model.other),
-          mixOver: toSrgbBytes(model.backdrop),
-          alpha: alphaKey / 100,
-          lines: model.lines,
-        }
-      : null
-    const image = context.createImageData(
-      AREA_WIDTH,
-      AREA_HEIGHT,
-      wide ? { colorSpace: 'display-p3' } : undefined,
-    )
-    image.data.set(computeArea(colour.h, wide, areaContrast))
+    const image = context.createImageData(width, height, wide ? { colorSpace: 'display-p3' } : undefined)
+    image.data.set(computeArea(colour.h, wide, width, height))
     context.putImageData(image, 0, 0)
-  }, [colour.h, wide, model, alphaKey])
+
+    /* Where ordinary screens end: one hairline, quieter than the contrast lines. */
+    const stroke = (line: (readonly number[])[]) => {
+      context.beginPath()
+      line.forEach(([u, v], k) => {
+        const x = u * (width - 1) + 0.5
+        const y = v * (height - 1) + 0.5
+        if (k === 0) context.moveTo(x, y)
+        else context.lineTo(x, y)
+      })
+      context.stroke()
+    }
+    context.save()
+    // Flat ends: round caps on see-through segments would stack into beads at every join.
+    context.lineCap = 'butt'
+    // Drawn a segment at a time so each end fades out instead of stopping dead.
+    const edge = srgbEdge(colour.h, Math.round(height / scale))
+    for (const [lineWidth, rgb, alpha] of [
+      [2.5, '0, 0, 0', 0.16],
+      [1, '255, 255, 255', 0.72],
+    ] as const) {
+      context.lineWidth = lineWidth * scale
+      for (const line of edge) {
+        for (let k = 1; k < line.length; k += 1) {
+          const strength = (line[k - 1][2] + line[k][2]) / 2
+          if (strength <= 0) continue
+          context.strokeStyle = `rgba(${rgb}, ${alpha * strength})`
+          stroke([line[k - 1], line[k]])
+        }
+      }
+    }
+    context.restore()
+    if (!model) return
+
+    /* Contrast lines: stroked as smooth lines, a soft dark edge under a white line. */
+    const areaContrast: AreaContrast = {
+      against: relativeLuminance(model.other),
+      mixOver: toSrgbBytes(model.backdrop),
+      alpha: alphaKey / 100,
+      lines: model.lines,
+    }
+    // One column every 2 CSS pixels: each crossing is found exactly, so the line stays smooth.
+    const paths = contrastPaths(colour.h, areaContrast, Math.round(width / scale / 2), Math.round(height / scale / 2))
+    context.save()
+    context.lineJoin = 'round'
+    context.lineCap = 'round'
+    for (const path of paths) {
+      for (const [lineWidth, lineCss] of [
+        [3, 'rgba(0, 0, 0, 0.45)'],
+        [1.5, '#ffffff'],
+      ] as const) {
+        context.lineWidth = lineWidth * scale
+        context.strokeStyle = lineCss
+        context.setLineDash(path.dashed ? [5 * scale, 4 * scale] : [])
+        for (const line of path.lines) stroke(line)
+      }
+    }
+    context.restore()
+  }, [colour.h, wide, model, alphaKey, canvasSize])
 
   /* Pointer: drag on the area. The handle snaps onto a token unless Alt is held. */
   const dragTo = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -370,13 +447,13 @@ export const ColourPicker: React.FC<ColourPickerProps> = ({
             ref={canvasRef}
             width={AREA_WIDTH}
             height={AREA_HEIGHT}
-            className="dx:block dx:h-full dx:w-full dx:rounded-[8px] dx:border dx:border-white/10 dx:bg-dx-surface-1"
+            className="dx:absolute dx:inset-0 dx:block dx:h-full dx:w-full dx:rounded-[8px] dx:border dx:border-white/10 dx:bg-dx-surface-1"
           />
           {dots.map((token) => (
             <span
               key={token.name}
               aria-hidden="true"
-              className="dx:pointer-events-none dx:absolute dx:size-2 dx:-translate-x-1/2 dx:-translate-y-1/2 dx:rounded-full dx:border dx:border-white dx:shadow-[0_0_0_1px_rgb(0_0_0/0.6)]"
+              className="dx:pointer-events-none dx:absolute dx:size-[11px] dx:-translate-x-1/2 dx:-translate-y-1/2 dx:rounded-full dx:border-[1.5px] dx:border-white dx:shadow-[0_0_0_1px_rgb(0_0_0/0.55),0_1px_3px_rgb(0_0_0/0.3)]"
               style={{
                 left: `${(Math.min(token.colour.c, AREA_MAX_CHROMA) / AREA_MAX_CHROMA) * 100}%`,
                 top: `${(1 - token.colour.l) * 100}%`,
@@ -399,7 +476,7 @@ export const ColourPicker: React.FC<ColourPickerProps> = ({
           to tokens.
         </p>
         <p className={noteClassName}>
-          Hatched: P3 screens only. Empty: no screen.
+          Past the thin line: P3 screens only. Empty: no screen.
           {model &&
             (model.role === 'fill'
               ? ' White lines: 4.5:1 solid, 3:1 dashed.'

@@ -145,6 +145,13 @@ changed, so a release only happens when the maintainer asks for one.
 - **The picker keeps its own OKLCH colour while you drag**, so a grey written as hex does not
   lose its hue. It resyncs from its `value` prop only when that differs from the last value it
   sent, so a host that rewrites the value on every change would pull the picker back.
+- **The colour area's canvas is drawn at its size on screen times `devicePixelRatio`**, and it
+  sits `absolute inset-0` inside its 4:3 box. A fixed 288 by 216 canvas stretched to fit made
+  every edge and line visibly stepped on a Retina screen (the maintainer called it broken, 2026-11-09).
+  Without the absolute position, setting the canvas's pixel size changes its own layout height,
+  and the area drifted off 4:3 between repaints. Contrast lines are stroked as canvas paths from
+  `contrastPaths`, never stamped as pixels, and edge pixels are sampled 16 times for smoothness.
+  Unit tests cannot see any of this: check it in a screenshot at device scale 2.
 - **Contrast figures:** the Harness passes fixed colours (text `#E2E8F0` on `#13131F`) because
   its sample card picks its own ink from the fill, so its figures are indicative. The overlay
   reads the target's computed text colour and the first opaque ancestor background. WCAG 2
