@@ -1,6 +1,6 @@
 {
   "name": "dx-grid-inspector",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Inspect a real React UI in development, calibrate its radius, padding and colour tokens, and copy them out as CSS, JSON or an agent prompt. No backend and no AI calls.",
   "license": "MIT",
   "type": "module",
@@ -41,6 +41,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --test src/picker/*.test.ts",
     "preview": "vite preview",
     "build:lib": "node scripts/check-dx-prefix.mjs && vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
     "prepack": "npm run build:lib"

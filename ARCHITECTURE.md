@@ -53,6 +53,8 @@ npm and wraps its app in `DxInspector`, in development only. `INTEGRATION.md` is
 | `src/LiveTokenPreview.tsx` | Preview that reflects edits immediately |
 | `src/DxGridVoice.tsx` | Natural-language textarea → compiled prompt → clipboard |
 | `src/tokenExport.ts` | CSS / JSON / prompt compilation |
+| `src/picker/colourEngine.ts` | OKLCH colour maths with no imports: parsing, gamut, contrast, nearest token. Tested with `npm test` |
+| `src/picker/` (the rest) | The colour picker: page-token reader, colour-area pixels, the React component |
 | `src/harnessStorage.ts` | localStorage persistence |
 | `src/types.ts` | `DesignNode`, `DesignProperties` |
 | `src/lib/index.ts` | The package's public exports and types |

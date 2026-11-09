@@ -2,11 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { DxGridVoice } from './DxGridVoice'
 import { DxHostOverlay } from './DxHostOverlay'
 import { TokenCalibrationUnit } from './TokenCalibrationUnit'
-import {
-  applyDesignPropertiesToElement,
-  readDesignPropertiesFromElement,
-} from './tokenExport'
-import type { DesignNode, DesignProperties } from './types'
+import { useOverlayTarget } from './useOverlayTarget'
 
 export interface DxInspectorProps {
   /**
@@ -20,14 +16,6 @@ export interface DxInspectorProps {
   showVoice?: boolean
 }
 
-const createTargetNode = (properties: DesignProperties): DesignNode => ({
-  id: 'overlay-target',
-  name: 'Host inspect target',
-  category: 'Content',
-  status: 'In Progress',
-  properties,
-})
-
 /**
  * Ready-made inspector: wraps your app with the overlay toolbar and puts the token HUD
  * (and optionally the voice prompt) beside it, or below it on narrow screens.
@@ -40,19 +28,11 @@ export function DxInspector({
 }: DxInspectorProps) {
   const [enabled, setEnabled] = useState(defaultEnabled)
   const [inspecting, setInspecting] = useState(false)
-  const [target, setTarget] = useState<HTMLElement | null>(null)
-  const [node, setNode] = useState<DesignNode>(() =>
-    createTargetNode({
-      radius: 16,
-      padding: 24,
-      bgPreset: '#1A1A2B',
-      borderPreset: '#A78BFA',
-    }),
-  )
+  const overlay = useOverlayTarget()
+  const { target, node } = overlay
 
   const handleTargetSelect = (element: HTMLElement) => {
-    setTarget(element)
-    setNode(createTargetNode(readDesignPropertiesFromElement(element)))
+    overlay.select(element)
     setInspecting(false)
   }
 
@@ -94,23 +74,15 @@ export function DxInspector({
       >
         <div className="dx:rounded-[16px] dx:border dx:border-white/5 dx:bg-dx-surface-2">
           <TokenCalibrationUnit
-            key={target ? 'target' : 'idle'}
+            key={target ? `target-${overlay.selection}` : 'idle'}
             selectedNode={target ? node : null}
-            onUpdateProperties={(_id, properties) =>
-              setNode((prev) => ({ ...prev, properties }))
-            }
-            onReadFromPreview={
-              target
-                ? () =>
-                    setNode(createTargetNode(readDesignPropertiesFromElement(target)))
-                : undefined
-            }
+            onUpdateProperties={overlay.update}
+            onReadFromPreview={target ? overlay.read : undefined}
             readLabel="Read from target"
-            onApplyToTarget={
-              target
-                ? () => applyDesignPropertiesToElement(target, node.properties)
-                : undefined
-            }
+            onApplyToTarget={target ? overlay.apply : undefined}
+            onFieldEdit={overlay.onFieldEdit}
+            contrastContext={overlay.contrast ?? undefined}
+            sessionEntries={overlay.sessionEntries}
             emptyHint="Turn on Inspect and click a host surface to calibrate tokens."
           />
         </div>

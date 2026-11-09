@@ -27,7 +27,7 @@ npm install -D dx-grid-inspector
 
 ## Overview
 
-The **DX Spatial Grid & Token Inspector** is a small, self-contained tool for exploring layout-oriented design nodes and editing spatial tokens (padding, border radius, surface colours, and border presets) on screen.
+The **DX Spatial Grid & Token Inspector** is a small, self-contained tool for exploring layout-oriented design nodes and editing spatial tokens (border radius, padding, gap, margin, surface colours, and border presets) on screen.
 
 Use the **Harness** tab for the three-panel playground, or **Overlay demo** to wrap a real host surface with [`DxHostOverlay`](https://github.com/JennHull-builds/dx-grid-inspector/blob/main/src/DxHostOverlay.tsx), inspect an element, apply tokens, and export.
 
@@ -38,13 +38,17 @@ Built by [Jennifer Hull](https://jenniferhull.co.za) as an open-source learning 
 ## Features
 
 - **Template Grid Manager:** Categorise, filter, and select layout nodes (Display, Navigation, Content, Functional). Click a status chip to toggle Ready / In Progress without changing the selected row.
-- **Token Calibration Unit:** Edit corner radii, padding, surface colours, and border styles with inline validation.
-- **Live Token Preview:** Sample card and button update as you calibrate radius, padding, and colours.
+- **Token Calibration Unit:** Edit corner radii, padding, gap, margin, surface colours, and border styles with inline validation.
+- **Colour picker:** The two colour fields open a picker under the field, in place of the browser's own. It works in OKLCH (lightness that matches what the eye sees) and lists your page's colour tokens first. Drag the handle near a token and it snaps onto it; hold Alt to drag freely. It shows which screens can display the colour (every screen, P3 screens only, or none), WCAG 2 contrast against the element's text colour or the background behind it, and an eyedropper in browsers that have one. In the overlay the element changes as you drag. Enter keeps the colour and Escape puts the old one back.
+- **Arrow-key nudging:** While you edit a length field, ArrowUp and ArrowDown change it by 1px (Shift: 10px), or by 0.125rem (Shift: 1rem) when the value is in rem, and never below 0. In the overlay, each press shows on the selected element straight away and writes only that field. Enter keeps the value and Escape puts it back.
+- **Gap and margin:** Gap is the space between an element's children, so it only shows on a flex or grid container. Margin is the space outside the element. Both are optional in the JSON, so tokens saved before they existed still paste.
+- **Copy all:** Copy every element you've tweaked as one JSON array of `{ label, before, after }`, or as one CSS block per element. In the Harness it copies every node. The overlay's list lives in memory only and clears when you reload the page.
+- **Live Token Preview:** Sample card and button update as you calibrate radius, padding, gap, margin, and colours.
 - **DxInspector:** One component that wraps your app with the overlay toolbar, the token HUD and the voice prompt.
 - **DxHostOverlay:** Drop-in wrap-around chrome for host children: enable/disable and inspect mode (Escape exits).
-- **Read / apply / copy out:** Pull computed CSS into the HUD, apply tokens to a host target, or copy as CSS custom properties, JSON, or an agent prompt. Paste JSON back into the HUD.
+- **Read / apply / copy out:** Pull computed CSS into the HUD, apply tokens to a host target (only the fields that changed are written), or copy as CSS custom properties, JSON, or an agent prompt. Paste JSON back into the HUD.
 - **DX grid voice (clipboard):** Describe a layout in natural language and copy a paste-ready agent prompt. No in-app model and never paste API keys into the demo.
-- **Built-in Sanitisation:** Parses CSS layout units (`px`, `rem`, `%`, `vh`, `vw`) and validates hex / rgba colour input.
+- **Built-in Sanitisation:** Parses CSS layout units (`px`, `rem`, `%`, `vh`, `vw`) and validates hex, rgba and oklch colour input.
 - **Reads modern colours:** Tailwind v4 colours compute to `oklab()` / `oklch()`; they come back as hex, or `rgba()` when translucent.
 - **Local Test Shell:** [`src/App.tsx`](https://github.com/JennHull-builds/dx-grid-inspector/blob/main/src/App.tsx) switches between Harness and Overlay demo modes.
 - **No Tailwind needed in your app:** The package ships one compiled stylesheet whose classes are all prefixed `dx:`, so it does not touch your app's styles. The demo itself is built with Tailwind CSS v4.
@@ -236,6 +240,7 @@ dx-grid-inspector/
 │   ├── LiveTokenPreview.tsx       # Sample card + button preview
 │   ├── DxGridVoice.tsx            # Clipboard agent prompt (no in-app AI)
 │   ├── tokenExport.ts             # Read/apply CSS; CSS/JSON/prompt formatters
+│   ├── picker/                    # Colour picker: colour engine, page tokens, component
 │   ├── harnessStorage.ts          # localStorage snapshot for the harness
 │   ├── App.tsx                    # Harness | Overlay demo shell
 │   ├── main.tsx                   # Application entry point

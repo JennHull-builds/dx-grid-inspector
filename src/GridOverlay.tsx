@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { cssLength } from './tokenExport';
 import type { DesignNode, NodeCategory, NodeStatus } from './types';
 
 interface TemplateGridManagerProps {
@@ -75,20 +76,20 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
 
   return (
     <section className="flex h-full w-full flex-col rounded-[16px] border border-white/5 bg-dx-surface-2 p-4 sm:p-6">
-      <div className="mb-4 flex shrink-0 flex-col gap-3 border-b border-white/5 pb-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex shrink-0 flex-col gap-3 border-b border-white/5 pb-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-stretch 2xl:flex-row 2xl:items-center">
         <div className="min-w-0">
           <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
             Template Grid Manager
           </h2>
-          <p className="mt-1 font-mono text-xs text-slate-500">
+          <p className="mt-1 font-mono text-xs text-dx-muted">
             {filteredNodes.length} of {nodes.length} Nodes Displayed
           </p>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row lg:w-full 2xl:w-auto">
           <button
             type="button"
             onClick={onAddNode}
-            className="dx-btn-primary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
+            className="dx-btn-primary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto lg:flex-1 2xl:flex-none"
           >
             + Add Node
           </button>
@@ -96,7 +97,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
             <button
               type="button"
               onClick={onResetDemo}
-              className="dx-btn-secondary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto"
+              className="dx-btn-secondary inline-flex w-full shrink-0 items-center justify-center min-h-10 px-3 py-2 sm:w-auto lg:flex-1 2xl:flex-none"
             >
               Reset demo
             </button>
@@ -128,7 +129,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
             <p className="text-sm font-medium tracking-wide text-slate-300">
               No nodes in the grid
             </p>
-            <p className="max-w-xs font-mono text-xs text-slate-500">
+            <p className="max-w-xs font-mono text-xs text-dx-muted">
               All nodes have been purged. Add a node to start inspecting spatial tokens.
             </p>
             <button
@@ -141,7 +142,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
           </div>
         ) : filteredNodes.length === 0 ? (
           <div className="rounded-[12px] border border-dashed border-white/10 p-6 text-center">
-            <p className="font-mono text-sm text-slate-500">
+            <p className="font-mono text-sm text-dx-muted">
               No framework components matching the "{activeCategory}" scope.
             </p>
           </div>
@@ -153,7 +154,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                 ? 'dx-status-ready'
                 : node.status === 'In Progress'
                   ? 'dx-status-progress'
-                  : 'text-slate-500';
+                  : 'text-dx-muted';
 
             return (
               <div
@@ -200,7 +201,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                       {node.status}
                     </button>
                     <span className="dx-chip-accent">
-                      {node.properties.radius}px / {node.properties.padding}px
+                      {cssLength(node.properties.radius)} / {cssLength(node.properties.padding)}
                     </span>
                   </div>
                 </div>
@@ -215,7 +216,7 @@ export const TemplateGridManager: React.FC<TemplateGridManagerProps> = ({
                   onKeyDown={isolateFromRow}
                   title={`Delete ${node.name}`}
                   aria-label={`Delete ${node.name}`}
-                  className="dx-btn-danger flex min-h-10 min-w-10 items-center justify-center font-mono text-xl leading-none opacity-100 lg:opacity-60 lg:group-hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dx-accent focus-visible:opacity-100"
+                  className="dx-btn-danger flex min-h-10 min-w-10 items-center justify-center font-mono text-xl leading-none opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dx-accent focus-visible:opacity-100"
                 >
                   ×
                 </button>

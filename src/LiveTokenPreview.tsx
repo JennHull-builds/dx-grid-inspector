@@ -5,6 +5,10 @@ interface LiveTokenPreviewProps {
   selectedNode: DesignNode | null
   previewRadius: number
   previewPadding: number
+  /** Space between the card's children, in px. */
+  previewGap: number
+  /** Space outside the card, in px. */
+  previewMargin: number
   /** Measured by “Read from preview” — the token-styled card chrome. */
   surfaceRef: Ref<HTMLDivElement>
 }
@@ -12,6 +16,8 @@ interface LiveTokenPreviewProps {
 interface SampleChrome {
   radius: number
   padding: number
+  gap: number
+  margin: number
   fill: string
   border: string
 }
@@ -37,12 +43,25 @@ const contrastingInk = (colour: string, fallback: string): string => {
   return luminance > 0.55 ? FALLBACK_ON_ACCENT : FALLBACK_INK
 }
 
+/**
+ * Gap and margin only change the card's layout when they are above 0, so a node without
+ * either renders exactly as it did before they existed.
+ */
 const cardStyle = (chrome: SampleChrome): CSSProperties => ({
   borderRadius: `${chrome.radius}px`,
   padding: `${chrome.padding}px`,
   backgroundColor: chrome.fill,
   borderColor: chrome.border,
   color: contrastingInk(chrome.fill, FALLBACK_INK),
+  ...(chrome.gap > 0
+    ? { display: 'flex', flexDirection: 'column', gap: `${chrome.gap}px` }
+    : {}),
+  ...(chrome.margin > 0
+    ? {
+        margin: `${chrome.margin}px`,
+        maxWidth: `min(20rem, calc(100% - ${chrome.margin * 2}px))`,
+      }
+    : {}),
 })
 
 const buttonRadius = (radius: number): number => Math.max(radius * 0.5, 4)
@@ -70,12 +89,16 @@ export function LiveTokenPreview({
   selectedNode,
   previewRadius,
   previewPadding,
+  previewGap,
+  previewMargin,
   surfaceRef,
 }: LiveTokenPreviewProps) {
   const chrome: SampleChrome | null = selectedNode
     ? {
         radius: previewRadius,
         padding: previewPadding,
+        gap: previewGap,
+        margin: previewMargin,
         fill: selectedNode.properties.bgPreset,
         border: selectedNode.properties.borderPreset,
       }
@@ -87,7 +110,7 @@ export function LiveTokenPreview({
         <h2 className="text-base font-semibold uppercase tracking-wide text-slate-300">
           Live Token Preview
         </h2>
-        <p className="mt-1 font-mono text-xs text-slate-500">
+        <p className="mt-1 font-mono text-xs text-dx-muted">
           {selectedNode
             ? `Surface for ${selectedNode.name}`
             : 'Select a node to preview calibrated tokens'}
@@ -132,12 +155,14 @@ export function LiveTokenPreview({
                 </button>
               </div>
             </article>
-            <p className="font-mono text-xs text-slate-500">
+            <p className="text-center font-mono text-xs text-dx-muted">
               {chrome.radius}px radius · {chrome.padding}px padding
+              {chrome.gap > 0 && ` · ${chrome.gap}px gap`}
+              {chrome.margin > 0 && ` · ${chrome.margin}px margin`}
             </p>
           </>
         ) : (
-          <p className="px-4 text-center font-mono text-sm text-slate-500">
+          <p className="px-4 text-center font-mono text-sm text-dx-muted">
             Choose a node from the Template Grid Manager.
           </p>
         )}

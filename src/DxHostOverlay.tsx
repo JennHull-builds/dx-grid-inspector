@@ -7,6 +7,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react'
+import { readInspectableHint } from './inspectable'
 
 export type DxHostOverlayChildren =
   | ReactNode
@@ -104,9 +105,19 @@ export function DxHostOverlay({
     const onScrollOrResize = () => syncHighlight()
     window.addEventListener('scroll', onScrollOrResize, true)
     window.addEventListener('resize', onScrollOrResize)
+    // The HUD writes inline styles to the target (nudging, Apply, Escape); follow them so the
+    // ring keeps matching the element instead of showing where it used to be.
+    const styleObserver = new MutationObserver(syncHighlight)
+    styleObserver.observe(targetElement, { attributes: true, attributeFilter: ['style'] })
+    // A CSS transition moves the box after the style write, so measure again when it ends.
+    targetElement.addEventListener('transitionend', syncHighlight)
+    targetElement.addEventListener('transitioncancel', syncHighlight)
     return () => {
       window.removeEventListener('scroll', onScrollOrResize, true)
       window.removeEventListener('resize', onScrollOrResize)
+      styleObserver.disconnect()
+      targetElement.removeEventListener('transitionend', syncHighlight)
+      targetElement.removeEventListener('transitioncancel', syncHighlight)
     }
   }, [targetElement, syncHighlight])
 
@@ -137,7 +148,7 @@ export function DxHostOverlay({
       if (node === host) continue
       if (!host.contains(node)) continue
 
-      if (node.dataset.dxInspectable === 'true') {
+      if (readInspectableHint(node) !== null) {
         event.preventDefault()
         event.stopPropagation()
         onTargetSelect(node)

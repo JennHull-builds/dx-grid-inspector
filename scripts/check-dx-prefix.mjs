@@ -9,6 +9,7 @@ const FILES = [
   'src/TokenCalibrationUnit.tsx',
   'src/DxGridVoice.tsx',
   'src/DxInspector.tsx',
+  'src/picker/ColourPicker.tsx',
 ]
 
 // Custom component classes (.dx-*) and already-prefixed utilities are fine.
