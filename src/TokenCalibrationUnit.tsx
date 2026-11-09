@@ -576,7 +576,13 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   : 'dx-selection-idle'
               }`}
             >
-              <div className="dx:flex dx:flex-col dx:gap-3 dx:sm:flex-row dx:sm:items-center dx:sm:justify-between">
+              {/* While editing, the row always stacks: the HUD column is narrow at any screen width,
+                  and the swatch, input and Save beside the label squashed it to nothing at 1280px. */}
+              <div
+                className={`dx:flex dx:flex-col dx:gap-3 ${
+                  isEditing ? '' : 'dx:sm:flex-row dx:sm:items-center dx:sm:justify-between'
+                }`}
+              >
                 <button
                   type="button"
                   onClick={() => !isEditing && startEdit(field)}
@@ -586,7 +592,11 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   <span className="dx:text-xs dx:font-mono dx:text-dx-accent/85">{field.key}</span>
                 </button>
 
-                <div className="dx:flex dx:items-center dx:gap-2 dx:shrink-0 dx:w-full dx:sm:w-auto dx:justify-between dx:sm:justify-end">
+                <div
+                  className={`dx:flex dx:items-center dx:gap-2 dx:shrink-0 dx:w-full dx:justify-between ${
+                    isEditing ? '' : 'dx:sm:w-auto dx:sm:justify-end'
+                  }`}
+                >
                   {(field.kind === 'color' || field.kind === 'border') && (
                     <ColourSwatchButton
                       label={field.label}
@@ -608,14 +618,14 @@ export const TokenCalibrationUnit: React.FC<TokenCalibrationUnitProps> = ({
                   )}
 
                   {isEditing ? (
-                    <div className="dx:flex dx:items-center dx:gap-2 dx:w-full dx:sm:w-auto">
+                    <div className="dx:flex dx:flex-1 dx:items-center dx:gap-2 dx:min-w-0">
                       <input
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => handleFieldKeyDown(e, field)}
                         autoFocus
-                        className="dx:flex-1 dx:sm:flex-none dx:sm:w-[120px] dx:min-h-10 dx:bg-dx-surface-2 dx:text-slate-200 dx:border dx:border-white/10 dx:rounded-[8px] dx:px-3 dx:py-2 dx:font-mono dx:text-sm dx:outline-none dx:focus:border-dx-accent/50"
+                        className="dx:flex-1 dx:min-w-0 dx:min-h-10 dx:bg-dx-surface-2 dx:text-slate-200 dx:border dx:border-white/10 dx:rounded-[8px] dx:px-3 dx:py-2 dx:font-mono dx:text-sm dx:outline-none dx:focus:border-dx-accent/50"
                       />
                       <button
                         type="button"

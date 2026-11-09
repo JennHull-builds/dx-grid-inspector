@@ -184,6 +184,11 @@ changed, so a release only happens when the maintainer asks for one.
   `:root[data-motion="reduce"]` rule (see `.site-hairline`). One switch until there is a second setting;
   then it becomes a settings button (the maintainer, 2026-11-09).
 
+- **Anything `position: absolute` in the HUD needs a positioned ancestor inside the HUD**, `dx:sr-only`
+  included. With none, it escapes every `overflow: hidden`, sits at its natural place far down a
+  scrolled list, and makes the host page scroll: the picker's live region did, 451px (2026-11-09).
+  The picker's root is `dx:relative` for this. Check `scrollY` after `scrollTo(0, 9999)` with it open.
+
 ## Code standards
 
 Carried over from `.cursorrules` on 2026-09-10.

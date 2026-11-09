@@ -380,7 +380,7 @@ export const ColourPicker: React.FC<ColourPickerProps> = ({
       role="group"
       aria-label={`${label} colour picker`}
       onKeyDown={onKeyDown}
-      className="dx:flex dx:flex-col dx:gap-3 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3"
+      className="dx:relative dx:flex dx:flex-col dx:gap-3 dx:rounded-[12px] dx:border dx:border-white/10 dx:bg-dx-surface-0 dx:p-3"
     >
       <section aria-label="Page colour tokens" className="dx:flex dx:flex-col dx:gap-2">
         <p className={labelClassName}>Page tokens</p>
@@ -560,6 +560,8 @@ export const ColourPicker: React.FC<ColourPickerProps> = ({
         ) : (
           <p className={noteClassName}>No tokens to compare with.</p>
         )}
+        {/* The group is dx:relative so this stays inside it. Without that, an absolute element with no
+            positioned ancestor escapes overflow:hidden and made a no-scroll host page scroll 451px. */}
         <p className="dx:sr-only" aria-live="polite">
           {onToken && nearest ? `Snapped to ${nearest.name}` : ''}
         </p>
