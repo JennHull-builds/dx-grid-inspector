@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { ColourPicker, type ColourPickerContrast } from './picker/ColourPicker';
 import { parseColour } from './picker/colourEngine';
+import { sanitizeColour } from './picker/colourInput';
 import { readPageTokens, type PageToken } from './picker/pageTokens';
 import {
   copyTextToClipboard,
@@ -142,44 +143,6 @@ const withField = (
     next[key] = value;
   }
   return next as unknown as DesignProperties;
-};
-
-const sanitizeHex = (val: string): string | null => {
-  let cleanVal = val.trim();
-  if (!cleanVal) return null;
-
-  if (!cleanVal.startsWith('#')) {
-    if (/^[0-9A-Fa-f]{3}$|^[0-9A-Fa-f]{6}$/.test(cleanVal)) {
-      cleanVal = `#${cleanVal}`;
-    } else {
-      return null;
-    }
-  }
-
-  if (cleanVal.length === 4 || cleanVal.length === 7) {
-    return cleanVal.toUpperCase();
-  }
-
-  return null;
-};
-
-/**
- * Accepts hex or `rgb()` / `rgba()`, the forms the HUD reads colours back as, and the
- * `oklch()`, `oklab()` and `color()` values the colour picker writes for colours outside sRGB.
- */
-const sanitizeColour = (val: string): string | null => {
-  const cleanVal = val.trim();
-  if (!cleanVal) return null;
-
-  if (/^rgba?\([^)]+\)$/i.test(cleanVal)) {
-    return cleanVal;
-  }
-
-  if (/^(?:oklch|oklab|color)\(.+\)$/i.test(cleanVal) && parseColour(cleanVal) !== null) {
-    return cleanVal;
-  }
-
-  return sanitizeHex(cleanVal);
 };
 
 const displayValue = (field: FieldConfig, properties: DesignProperties): string => {
